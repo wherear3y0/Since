@@ -36,6 +36,16 @@ struct ResetEditor: View {
         }
     }
 
+    /// The chosen day already has another entry (or, on a "last time" counter, is its first day,
+    /// which counts as a time it was done), so saving would change nothing.
+    private var isDayTaken: Bool {
+        let calendar = Calendar.app
+        if counter.kind == .lastTime && calendar.isDate(date, inSameDayAs: counter.startDate) {
+            return true
+        }
+        return counter.resets.contains { $0 !== reset && calendar.isDate($0.date, inSameDayAs: date) }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -59,6 +69,10 @@ struct ResetEditor: View {
                     DatePicker("Date", selection: $date, in: counter.startDate...Date.now, displayedComponents: .date)
                         .datePickerStyle(.graphical)
                         .tint(counter.color.color)
+                } footer: {
+                    if isDayTaken {
+                        Text(counter.kind == .quit ? "This day already has a slip or a reset." : "This day is already logged.")
+                    }
                 }
                 Section("Note") {
                     TextField("Optional", text: $note, axis: .vertical)
@@ -77,6 +91,7 @@ struct ResetEditor: View {
                     Button("Save", systemImage: "checkmark", role: .confirm) {
                         save()
                     }
+                    .disabled(isDayTaken)
                 }
             }
         }

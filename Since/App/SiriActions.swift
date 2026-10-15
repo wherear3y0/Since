@@ -23,7 +23,7 @@ struct ResetCounterIntent: AppIntent {
             return .result(dialog: "That counter no longer exists.") { EmptyView() }
         }
         let kind = found.kind
-        if found.wasResetToday() {
+        if found.isDoneToday() {
             let dialog: IntentDialog = kind == .quit
                 ? "\(found.title) was already reset today."
                 : "\(found.title) is already logged for today."
@@ -81,7 +81,8 @@ struct AddPastResetIntent: AppIntent {
             let started = found.startDate.formatted(date: .long, time: .omitted)
             return .result(dialog: "\(found.title) started on \(started), after that day.") { CounterSnippet(found) }
         }
-        if found.resetDates.contains(where: { calendar.isDate($0, inSameDayAs: day) }) {
+        if found.resetDates.contains(where: { calendar.isDate($0, inSameDayAs: day) })
+            || (found.kind == .lastTime && calendar.isDate(found.startDate, inSameDayAs: day)) {
             return .result(dialog: "\(found.title) already has \(when).") { CounterSnippet(found) }
         }
 
