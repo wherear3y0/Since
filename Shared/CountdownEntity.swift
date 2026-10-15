@@ -57,9 +57,14 @@ extension CountdownEntity {
     }
 }
 
-struct CountdownQuery: EntityQuery {
+/// A string query too, so a name said to Siri finds the countdown even in another grammatical form.
+struct CountdownQuery: EntityStringQuery {
     func entities(for identifiers: [UUID]) async throws -> [CountdownEntity] {
         await allCountdowns().filter { identifiers.contains($0.id) }
+    }
+
+    func entities(matching string: String) async throws -> [CountdownEntity] {
+        await allCountdowns().filter { SpokenName.matches(title: $0.title, spoken: string) }
     }
 
     func suggestedEntities() async throws -> [CountdownEntity] {

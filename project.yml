@@ -11,6 +11,10 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
     SWIFT_APPROACHABLE_CONCURRENCY: YES
+    # As in Xcode's own project template: lets Xcode read the strings in code into the string catalogs,
+    # AppShortcuts.xcstrings with the Russian Siri phrases among them. Without it every phrase was "stale".
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
     CODE_SIGN_STYLE: Automatic
     # The free personal team from the Apple ID signed in to Xcode: enough to run on your own iPhone.
     DEVELOPMENT_TEAM: A2Z92WBNMC

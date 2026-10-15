@@ -46,6 +46,44 @@ struct ResetCounterIntent: AppIntent {
     }
 }
 
+/// "Log a slip for Smoke-free" — the count starts again, the clean days so far still count. No confirmation:
+/// a slip doesn't wipe anything, and it can be undone in the app.
+struct LogSlipIntent: AppIntent {
+    static let title: LocalizedStringResource = "Log a Slip"
+    static let description = IntentDescription("Logs a slip on a counter: the count starts again, but the days so far stay.")
+
+    @Parameter(title: "Counter", requestValueDialog: "Which counter?")
+    var counter: CounterEntity
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Log a slip for \(\.$counter)")
+    }
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
+        guard let found = Store.counter(counter.id) else {
+            return .result(dialog: "That counter no longer exists.") { EmptyView() }
+        }
+        guard found.kind == .quit else {
+            return .result(dialog: "\(found.title) counts since the last time, so it has no slips. Log it instead.") {
+                CounterSnippet(found)
+            }
+        }
+        if found.isDoneToday() {
+            return .result(dialog: "\(found.title) already has a slip or a reset today.") { CounterSnippet(found) }
+        }
+
+        let days = found.days()
+        found.resets.append(Reset(date: .now, isSlip: true))
+        saveChanges(Store.container.mainContext)
+        let clean = found.cleanDays()
+        let unit = days == 1 ? "day" : "days"
+        let kept = clean == 1 ? "1 clean day still counts" : "\(clean) clean days still count"
+        let dialog: IntentDialog = "Logged. \(found.title) starts again after \(days) \(unit), and your \(kept)."
+        return .result(dialog: dialog) { CounterSnippet(found) }
+    }
+}
+
 /// "Add a reset to Coffee on Monday" — for a slip (or a "last time") that wasn't logged on the day.
 struct AddPastResetIntent: AppIntent {
     static let title: LocalizedStringResource = "Add Past Reset"

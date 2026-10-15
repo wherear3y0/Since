@@ -58,9 +58,15 @@ extension CounterEntity {
     }
 }
 
-struct CounterQuery: EntityQuery {
+/// A string query too, so a name said to Siri ("which counter?" — "курение") finds the counter
+/// even in another grammatical form.
+struct CounterQuery: EntityStringQuery {
     func entities(for identifiers: [UUID]) async throws -> [CounterEntity] {
         await allCounters().filter { identifiers.contains($0.id) }
+    }
+
+    func entities(matching string: String) async throws -> [CounterEntity] {
+        await allCounters().filter { SpokenName.matches(title: $0.title, spoken: string) }
     }
 
     func suggestedEntities() async throws -> [CounterEntity] {
@@ -92,4 +98,39 @@ struct SelectCountersIntent: WidgetConfigurationIntent {
 
     @Parameter(title: "Counters", size: 6)
     var counters: [CounterEntity]?
+}
+
+/// Whether a name said to Siri means a counter's or countdown's title. Forgives case, punctuation,
+/// "ё" for "е" and word endings, so "курения" finds "Курение" and "smoke free" finds "Smoke-free".
+nonisolated enum SpokenName {
+    static func matches(title: String, spoken: String) -> Bool {
+        let titleWords = words(of: title)
+        let spokenWords = words(of: spoken)
+        guard !titleWords.isEmpty, !spokenWords.isEmpty else { return false }
+        if titleWords.joined(separator: " ").contains(spokenWords.joined(separator: " ")) {
+            return true
+        }
+        // Every word of the title is said, in some form. Short words ("s" from "Mom’s", "в", "on") can be left out.
+        let required = titleWords.filter { $0.count > 2 }
+        return (required.isEmpty ? titleWords : required).allSatisfy { word in
+            spokenWords.contains { isSameWord($0, word) }
+        }
+    }
+
+    /// The same word with another ending: one stem starts with the other.
+    private static func isSameWord(_ a: String, _ b: String) -> Bool {
+        let (short, long) = stem(a).count <= stem(b).count ? (stem(a), stem(b)) : (stem(b), stem(a))
+        return short == long || (short.count >= 4 && long.hasPrefix(short))
+    }
+
+    private static func words(of text: String) -> [String] {
+        text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
+            .split { !$0.isLetter && !$0.isNumber }
+            .map(String.init)
+    }
+
+    /// Longer words without their last two letters, where Russian (and English) endings change.
+    private static func stem(_ word: String) -> String {
+        word.count > 4 ? String(word.dropLast(2)) : word
+    }
 }

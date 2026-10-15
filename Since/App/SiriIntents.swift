@@ -133,6 +133,8 @@ struct SinceShortcuts: AppShortcutsProvider {
                 "How many days since \(\.$counter) in \(.applicationName)",
                 "Check \(\.$counter) in \(.applicationName)",
                 "\(.applicationName) \(\.$counter)",
+                // Without the name Siri asks which counter, which works whatever form the name is said in.
+                "Check a counter in \(.applicationName)",
             ],
             shortTitle: "Check Counter",
             systemImageName: "calendar"
@@ -143,6 +145,7 @@ struct SinceShortcuts: AppShortcutsProvider {
                 "How many days until \(\.$countdown) in \(.applicationName)",
                 "How long until \(\.$countdown) in \(.applicationName)",
                 "When is \(\.$countdown) in \(.applicationName)",
+                "Check a countdown in \(.applicationName)",
             ],
             shortTitle: "Check Countdown",
             systemImageName: "hourglass"
@@ -153,9 +156,20 @@ struct SinceShortcuts: AppShortcutsProvider {
                 "Reset \(\.$counter) in \(.applicationName)",
                 "Log \(\.$counter) in \(.applicationName)",
                 "Log today for \(\.$counter) in \(.applicationName)",
+                "Reset a counter in \(.applicationName)",
             ],
             shortTitle: "Reset Counter",
             systemImageName: "arrow.counterclockwise"
+        )
+        AppShortcut(
+            intent: LogSlipIntent(),
+            phrases: [
+                "Log a slip for \(\.$counter) in \(.applicationName)",
+                "I slipped on \(\.$counter) in \(.applicationName)",
+                "Log a slip in \(.applicationName)",
+            ],
+            shortTitle: "Log a Slip",
+            systemImageName: "arrow.uturn.backward"
         )
         AppShortcut(
             intent: AddPastResetIntent(),
