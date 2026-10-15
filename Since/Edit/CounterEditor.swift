@@ -170,9 +170,12 @@ struct CounterEditor: View {
         let tint = color.color.onCard(tinted: tinted)
         let now = Date.now
         let daysAgo = { (n: Int) in Calendar.app.date(byAdding: .day, value: -n, to: now)! }
+        // A new "last time" counter shows a few sample days it was done.
         let grid = counter == nil
-            ? DayMath.heatmap(start: daysAgo(60), resets: [], now: now, weeks: 16)
-            : DayMath.heatmap(start: startDate, resets: counter?.resetDates ?? [], now: now, weeks: 16)
+            ? DayMath.heatmap(start: daysAgo(60), resets: kind == .lastTime ? [45, 31, 17, 6].map(daysAgo) : [],
+                              logsEvents: kind == .lastTime, now: now, weeks: 16)
+            : DayMath.heatmap(start: startDate, resets: counter?.resetDates ?? [], slips: counter?.slipDates ?? [],
+                              logsEvents: kind == .lastTime, now: now, weeks: 16)
 
         return VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 6) {

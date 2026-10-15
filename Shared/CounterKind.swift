@@ -31,11 +31,15 @@ nonisolated enum CounterKind: String, CaseIterable, Identifiable {
     var lastReset: String { self == .quit ? "Last reset" : "Last logged" }
 
     var resetAction: String { self == .quit ? "Reset Counter" : "Log Today" }
-    var holdHint: String { self == .quit ? "Press and hold to reset." : "Press and hold to log today." }
-    var doneToday: String { self == .quit ? "Already reset today." : "Already logged today." }
+    var holdHint: String {
+        self == .quit
+            ? "Tap Log a Slip if you slipped: the count starts again, the days so far stay. Press and hold Reset Counter to start over."
+            : "Press and hold to log today."
+    }
+    var doneToday: String { self == .quit ? "Already slipped or reset today." : "Already logged today." }
     var toast: String { self == .quit ? "Counter reset" : "Logged today" }
 
-    var addTitle: String { self == .quit ? "Add Reset" : "Log a Past Day" }
+    var addTitle: String { self == .quit ? "Add Slip or Reset" : "Log a Past Day" }
     var editTitle: String { self == .quit ? "Edit Reset" : "Edit Entry" }
 }
 

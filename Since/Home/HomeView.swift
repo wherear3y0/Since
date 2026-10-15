@@ -88,8 +88,8 @@ struct HomeView: View {
                 CounterEditor(counter: counter)
             }
             .sheet(item: $pastResetCounter) { counter in
-                ResetEditor(counter: counter, reset: nil) { date, note in
-                    addReset(to: counter, on: date, note: note)
+                ResetEditor(counter: counter, reset: nil) { date, note, isSlip in
+                    addReset(to: counter, on: date, note: note, isSlip: isSlip)
                 }
             }
             // An alert, not a confirmation dialog: on a grid a dialog's arrow would point at whichever card
@@ -108,7 +108,8 @@ struct HomeView: View {
             }
             .overlay(alignment: .bottom) {
                 if let undoable {
-                    UndoToast(text: undoable.counter.kind.toast, tint: undoable.counter.color.color) {
+                    UndoToast(text: undoable.reset.isSlip ? "Slip logged" : undoable.counter.kind.toast,
+                              tint: undoable.counter.color.color) {
                         withAnimation {
                             undoable.counter.resets.removeAll { $0 === undoable.reset }
                             context.delete(undoable.reset)
@@ -238,11 +239,17 @@ extension HomeView {
             Button("Open", systemImage: "arrow.up.forward") {
                 path.append(counter.id)
             }
+            if kind == .quit {
+                Button("Log a Slip", systemImage: "arrow.uturn.backward") {
+                    addReset(to: counter, on: .now, note: nil, isSlip: true)
+                }
+                .disabled(counter.isDoneToday())
+            }
             Button(kind.resetAction, systemImage: "arrow.counterclockwise",
                    role: kind == .quit ? .destructive : nil) {
                 addReset(to: counter, on: .now, note: nil)
             }
-            .disabled(counter.wasResetToday())
+            .disabled(counter.isDoneToday())
             Button("\(kind.addTitle)…", systemImage: "calendar.badge.plus") {
                 pastResetCounter = counter
             }
@@ -266,8 +273,8 @@ extension HomeView {
         }
     }
 
-    private func addReset(to counter: Counter, on date: Date, note: String?) {
-        let reset = Reset(date: date, note: note)
+    private func addReset(to counter: Counter, on date: Date, note: String?, isSlip: Bool = false) {
+        let reset = Reset(date: date, note: note, isSlip: isSlip)
         withAnimation {
             counter.resets.append(reset)
             undoable = UndoableReset(counter: counter, reset: reset)

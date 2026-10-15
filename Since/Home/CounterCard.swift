@@ -66,9 +66,8 @@ struct CounterCard: View {
             // Cells exactly as big as on an M card; the extra width holds more weeks instead.
             let cell = CardSize.mCellSize(xlContentWidth: largeWidth)
             let weeks = max(Int((largeWidth - 30 + 3) / (cell + 3)), 1)
-            HeatmapView(days: DayMath.heatmap(start: counter.startDate, resets: counter.resetDates, now: .now,
-                                              weeks: weeks),
-                        tint: tint, showsWeekdays: true, cellSize: cell, animated: false)
+            HeatmapView(days: counter.heatmap(weeks: weeks), tint: tint, showsWeekdays: true, cellSize: cell,
+                        animated: false)
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { largeWidth = $0 }
             if target > 0 {
                 VStack(spacing: 8) {
@@ -115,8 +114,7 @@ struct CounterCard: View {
 
     /// No wave on the home screen: it would replay every time a card comes back on screen.
     private func heatmap(weeks: Int, tint: Color) -> some View {
-        HeatmapView(days: DayMath.heatmap(start: counter.startDate, resets: counter.resetDates, now: .now, weeks: weeks),
-                    tint: tint, animated: false)
+        HeatmapView(days: counter.heatmap(weeks: weeks), tint: tint, animated: false)
     }
 
     private func stat(_ label: String, value: String) -> some View {
@@ -138,7 +136,7 @@ struct CounterMenuPreview: View {
     var body: some View {
         let tint = counter.color.color.onCard(tinted: counter.tinted)
         let days = counter.days()
-        let week = DayMath.recentDays(7, start: counter.startDate, resets: counter.resetDates, now: .now)
+        let week = counter.recentDays(7)
 
         VStack(alignment: .leading, spacing: 0) {
             Label(counter.title, systemImage: counter.symbol)

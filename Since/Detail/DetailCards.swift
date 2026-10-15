@@ -13,14 +13,21 @@ struct HeatmapCard: View {
 
     var body: some View {
         let tint = counter.color.color.onCard(tinted: counter.tinted)
-        let grid = DayMath.heatmap(start: counter.startDate, resets: counter.resetDates, now: .now, weeks: weeks)
+        let grid = counter.heatmap(weeks: weeks)
         let streaks = counter.streaks()
         let target = counter.kind == .quit
             ? streaks.map(\.days).max() ?? 0
             : Int(counter.kind.average(of: streaks).rounded())
+        let showsSlips = grid.joined().contains { $0.state == .slip }
 
         VStack(alignment: .leading, spacing: 18) {
-            HeatmapView(days: grid, tint: tint, showsWeekdays: true, animated: animated)
+            VStack(alignment: .leading, spacing: 10) {
+                HeatmapView(days: grid, tint: tint, showsWeekdays: true, animated: animated)
+                if showsSlips {
+                    SlipLegend(tint: tint)
+                        .padding(.leading, 30)
+                }
+            }
 
             // Two rows, so each side lines up with the other: the pills sit on the "since" line,
             // the bar sits on the baseline of the big number.
@@ -56,6 +63,96 @@ struct HeatmapCard: View {
             }
         }
         .padding(.vertical, 10)
+    }
+}
+
+/// What the gray squares and the dots on a heatmap with slips mean.
+struct SlipLegend: View {
+    let tint: Color
+
+    var body: some View {
+        HStack(spacing: 14) {
+            item("Slip") {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 3, style: .continuous).fill(tint.opacity(0.18))
+                    Circle().fill(tint).scaleEffect(0.34)
+                }
+            }
+            item("Kept from before a slip") {
+                RoundedRectangle(cornerRadius: 3, style: .continuous).fill(tint.slippedDay)
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+
+    private func item<Square: View>(_ text: String, @ViewBuilder square: () -> Square) -> some View {
+        HStack(spacing: 5) {
+            square()
+                .frame(width: 11, height: 11)
+            Text(text)
+                .lineLimit(1)
+        }
+    }
+}
+
+// MARK: - Progress
+
+/// The progress since the last full reset: a slip starts the count again but doesn't undo the clean days.
+struct ProgressCard: View {
+    let counter: Counter
+
+    var body: some View {
+        let tint = counter.color.color
+        let tracked = counter.trackedDays()
+        let clean = counter.cleanDays()
+        let slips = counter.slipsSinceProgressStart
+        let percent = tracked > 0 ? Int((Double(clean) / Double(tracked) * 100).rounded()) : 100
+
+        VStack(alignment: .leading, spacing: 16) {
+            CardHeader(title: "Progress", symbol: "chart.line.uptrend.xyaxis", tint: tint,
+                       text: insight(tracked: tracked, clean: clean, slips: slips))
+            HStack(alignment: .top) {
+                stat("Clean days", value: clean, tint: tint)
+                stat("Slips", value: slips, tint: tint)
+                stat("Overall", value: percent, unit: "%", tint: tint)
+            }
+            if tracked > 0 {
+                RecordTrack(current: clean, target: tracked, tint: tint)
+            }
+        }
+        .padding(.vertical, 8)
+    }
+
+    private func insight(tracked: Int, clean: Int, slips: Int) -> String {
+        let since = counter.progressStart.formatted(date: .abbreviated, time: .omitted)
+        if tracked == 0 {
+            return "Day one. Every clean day from here counts."
+        }
+        if slips == 0 {
+            return "No slips since \(since). Every day so far counts."
+        }
+        return "\(clean) of \(tracked) days clean since \(since). A slip starts the count again, but doesn’t undo them."
+    }
+
+    private func stat(_ label: String, value: Int, unit: String? = nil, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(value, format: .number)
+                    .font(.system(size: 34, weight: .bold))
+                    .foregroundStyle(tint)
+                    .contentTransition(.numericText(value: Double(value)))
+                if let unit {
+                    Text(unit)
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

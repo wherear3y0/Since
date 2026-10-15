@@ -10,9 +10,11 @@ struct CounterSnapshot: Identifiable {
     let tinted: Bool
     let kind: CounterKind
     let start: Date
-    /// Oldest first.
+    /// Oldest first, slips included.
     let resetDates: [Date]
     let date: Date
+    /// The resets that were slips.
+    var slipDates: [Date] = []
 
     var streaks: [Streak] { DayMath.streaks(start: start, resets: resetDates, now: date) }
     var days: Int { streaks.last?.days ?? 0 }
@@ -27,11 +29,13 @@ struct CounterSnapshot: Identifiable {
     var url: URL { URL(string: "since://counter/\(id.uuidString)")! }
 
     func heatmap(weeks: Int) -> [[HeatmapDay]] {
-        DayMath.heatmap(start: start, resets: resetDates, now: date, weeks: weeks)
+        DayMath.heatmap(start: start, resets: resetDates, slips: slipDates, logsEvents: kind == .lastTime,
+                        now: date, weeks: weeks)
     }
 
     var lastWeek: [HeatmapDay] {
-        DayMath.recentDays(7, start: start, resets: resetDates, now: date)
+        DayMath.recentDays(7, start: start, resets: resetDates, slips: slipDates, logsEvents: kind == .lastTime,
+                           now: date)
     }
 }
 
@@ -39,7 +43,7 @@ extension CounterSnapshot {
     init(_ counter: Counter, at date: Date) {
         self.init(id: counter.id, title: counter.title, symbol: counter.symbol, color: counter.color,
                   tinted: counter.tinted, kind: counter.kind, start: counter.startDate,
-                  resetDates: counter.resetDates, date: date)
+                  resetDates: counter.resetDates, date: date, slipDates: counter.slipDates)
     }
 
     /// Stand-ins for the widget gallery and placeholders.

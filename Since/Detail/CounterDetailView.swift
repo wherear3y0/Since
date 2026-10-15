@@ -37,6 +37,12 @@ struct CounterDetailView: View {
                         }
                     }
 
+                if kind == .quit {
+                    ProgressCard(counter: counter)
+                        .detailCard()
+                        .blurIn(contentShown, delay: 0.06)
+                }
+
                 StreakSummary(streaks: streaks, kind: kind, tint: tint, isExpanded: $isChartExpanded)
                     .detailCard()
                     .blurIn(contentShown, delay: 0.1)
@@ -69,8 +75,24 @@ struct CounterDetailView: View {
                         .detailCard()
                 }
 
-                let resetToday = counter.wasResetToday()
+                let resetToday = counter.isDoneToday()
                 VStack(alignment: .leading, spacing: 8) {
+                    if kind == .quit {
+                        // A slip is a quick tap; starting over takes a press and hold.
+                        Button {
+                            addReset(on: .now, note: nil, isSlip: true)
+                        } label: {
+                            Text("Log a Slip")
+                                .foregroundStyle(resetToday ? AnyShapeStyle(.tertiary) : AnyShapeStyle(tint))
+                                .frame(maxWidth: .infinity, minHeight: 52)
+                                .background(Color.cardBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+                                .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(resetToday)
+                        .accessibilityHint("Starts the count again, but keeps the days so far")
+                    }
                     // Logging a "last time" event is a good thing, so it isn't red.
                     HoldToResetButton(title: kind.resetAction, color: kind == .quit ? .red : tint) {
                         addReset(on: .now, note: nil)
@@ -123,7 +145,7 @@ struct CounterDetailView: View {
         }
         .overlay(alignment: .bottom) {
             if let reset = undoableReset {
-                UndoToast(text: kind.toast, tint: tint) {
+                UndoToast(text: reset.isSlip ? "Slip logged" : kind.toast, tint: tint) {
                     undo(reset)
                 }
                 .transition(.blurRise)
@@ -144,12 +166,12 @@ struct CounterDetailView: View {
             CounterEditor(counter: counter, onDelete: onDelete)
         }
         .sheet(isPresented: $isAddingReset) {
-            ResetEditor(counter: counter, reset: nil) { date, note in
-                addReset(on: date, note: note)
+            ResetEditor(counter: counter, reset: nil) { date, note, isSlip in
+                addReset(on: date, note: note, isSlip: isSlip)
             }
         }
         .sheet(item: $editingReset) { reset in
-            ResetEditor(counter: counter, reset: reset) { _, _ in
+            ResetEditor(counter: counter, reset: reset) { _, _, _ in
                 saveChanges(context)
             }
         }
@@ -170,7 +192,17 @@ struct CounterDetailView: View {
             ForEach(resets) { reset in
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(reset.date.formatted(date: .abbreviated, time: .omitted))
+                        HStack(spacing: 6) {
+                            Text(reset.date.formatted(date: .abbreviated, time: .omitted))
+                            if reset.isSlip {
+                                Text("Slip")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(tint)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 1)
+                                    .background(tint.opacity(0.2), in: Capsule())
+                            }
+                        }
                         if let note = reset.note {
                             Text(note)
                                 .font(.subheadline)
@@ -239,7 +271,14 @@ struct CounterDetailView: View {
                                    value: days(best.days)))
         }
         rows.append(SummaryRow(symbol: "divide.circle", title: "Average \(kind.period)", value: days(average)))
-        rows.append(SummaryRow(symbol: "arrow.counterclockwise", title: kind.totalResets, value: "\(counter.resets.count)"))
+        if kind == .quit {
+            rows.append(SummaryRow(symbol: "arrow.uturn.backward", title: "Slips", value: "\(counter.slipDates.count)"))
+            rows.append(SummaryRow(symbol: "arrow.counterclockwise", title: "Full resets",
+                                   value: "\(counter.fullResetDates.count)"))
+        } else {
+            rows.append(SummaryRow(symbol: "arrow.counterclockwise", title: kind.totalResets,
+                                   value: "\(counter.resets.count)"))
+        }
         rows.append(SummaryRow(symbol: "calendar", title: "Days tracked", value: "\(tracked)"))
         if kind == .quit {
             rows.append(SummaryRow(symbol: "checkmark.seal", title: "Clean days",
@@ -276,8 +315,8 @@ struct CounterDetailView: View {
 
     // MARK: - Actions
 
-    private func addReset(on date: Date, note: String?) {
-        let reset = Reset(date: date, note: note)
+    private func addReset(on date: Date, note: String?, isSlip: Bool = false) {
+        let reset = Reset(date: date, note: note, isSlip: isSlip)
         withAnimation {
             counter.resets.append(reset)
             undoableReset = reset
