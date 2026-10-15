@@ -59,3 +59,6 @@ let symbolGroups: [SymbolGroup] = [
         "sun.max.fill", "moon.fill", "cloud.rain.fill", "snowflake", "tree.fill",
     ]),
 ]
+
+/// Every icon in the picker, in order. The tests check that each one exists.
+let counterSymbols: [String] = symbolGroups.flatMap(\.symbols)
