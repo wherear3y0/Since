@@ -3,10 +3,12 @@ import SwiftData
 
 struct CounterCard: View {
     let counter: Counter
+    /// The width of the grid the card is in, which sets how many weeks fit across an XL card.
+    /// Known before the card turns XL, so its first layout is already the right one.
+    var gridWidth: CGFloat = 0
+    /// The card is changing size: its content is faded out meanwhile.
+    var isReshaping = false
     let onOpen: () -> Void
-
-    /// Width of an XL card's heatmap, which sets how many weeks fit across it.
-    @State private var largeWidth: CGFloat = 334
 
     var body: some View {
         let tint = counter.color.color.onCard(tinted: counter.tinted)
@@ -18,7 +20,13 @@ struct CounterCard: View {
             case .xl: large(tint: tint)
             }
         }
+        .reshaping(isReshaping)
         .homeCard(size: counter.size, color: counter.color.color, tinted: counter.tinted, onOpen: onOpen)
+    }
+
+    /// The width inside an XL card's padding; a typical iPhone's until the grid has been measured.
+    private var largeWidth: CGFloat {
+        gridWidth > 0 ? gridWidth - 2 * CardSize.xl.padding : 322
     }
 
     // MARK: - Sizes
@@ -68,7 +76,6 @@ struct CounterCard: View {
             let weeks = max(Int((largeWidth - 30 + 3) / (cell + 3)), 1)
             HeatmapView(days: counter.heatmap(weeks: weeks), tint: tint, showsWeekdays: true, cellSize: cell,
                         animated: false)
-                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { largeWidth = $0 }
             if target > 0 {
                 VStack(spacing: 8) {
                     RecordPills(current: counter.days(), target: target,

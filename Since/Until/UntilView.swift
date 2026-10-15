@@ -34,6 +34,8 @@ struct UntilView: View {
     @State private var revealed: UUID?
     /// A just-created countdown stays hidden until the editor sheet is gone, then blurs in at its place.
     @State private var unrevealed: Set<UUID> = []
+    /// Cards changing size, their content faded out meanwhile.
+    @State private var reshaping: Set<UUID> = []
     /// Contacts just picked, waiting for the choice of how their birthdays are shown.
     @State private var pickedContacts: [CNContact] = []
 
@@ -236,7 +238,7 @@ struct UntilView: View {
         let slot = CardGridLayout.slots(for: items.map(\.size), firstRow: firstRow)[index]
         // A just-added countdown blurs in on its own, without the wave.
         let isNew = !unrevealed.isEmpty
-        return CountdownCard(countdown: countdown) {
+        return CountdownCard(countdown: countdown, isReshaping: reshaping.contains(countdown.id)) {
             path.append(countdown.id)
         } onCountSince: {
             converting = countdown
@@ -366,13 +368,19 @@ extension UntilView {
         }
     }
 
+    /// Like on the Since tab: the content fades out while the card takes its new shape, then back in,
+    /// and saving waits until the animation is done.
     private func setSize(_ size: CardSize, of countdown: Countdown) {
         let id = countdown.id
-        // The menu closes first, then the grid reflows around the card's new size.
         Task {
             try? await Task.sleep(for: .milliseconds(300))
-            guard let target = countdowns.first(where: { $0.id == id }) else { return }
+            guard let target = countdowns.first(where: { $0.id == id }), target.size != size else { return }
+            withAnimation(.easeOut(duration: 0.15)) { _ = reshaping.insert(id) }
+            try? await Task.sleep(for: .milliseconds(150))
             withAnimation(.smooth(duration: 0.45)) { target.size = size }
+            try? await Task.sleep(for: .milliseconds(300))
+            withAnimation(.easeOut(duration: 0.3)) { _ = reshaping.remove(id) }
+            try? await Task.sleep(for: .milliseconds(300))
             saveChanges(context)
         }
     }
@@ -384,6 +392,7 @@ extension UntilView {
             try? await Task.sleep(for: .milliseconds(300))
             guard let target = countdowns.first(where: { $0.id == id }) else { return }
             withAnimation(.smooth(duration: 0.45)) { target.isPinned = isPinned }
+            try? await Task.sleep(for: .milliseconds(450))
             saveChanges(context)
         }
     }
@@ -395,6 +404,8 @@ extension UntilView {
             try? await Task.sleep(for: .milliseconds(300))
             guard let target = countdowns.first(where: { $0.id == id }) else { return }
             withAnimation(.smooth(duration: 0.45)) { target.style = style }
+            // Saved once the blur is over, so refreshing widgets doesn't stutter it.
+            try? await Task.sleep(for: .milliseconds(450))
             saveChanges(context)
         }
     }

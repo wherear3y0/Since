@@ -6,6 +6,8 @@ import SwiftData
 /// Once a one-off day has passed, it offers to count days since it or to move it to Past.
 struct CountdownCard: View {
     let countdown: Countdown
+    /// The card is changing size: its content is faded out meanwhile.
+    var isReshaping = false
     let onOpen: () -> Void
     var onCountSince: () -> Void = {}
     var onArchive: () -> Void = {}
@@ -26,6 +28,7 @@ struct CountdownCard: View {
             .id(countdown.style)
             .transition(.blurReplace)
         }
+        .reshaping(isReshaping)
         .homeCard(size: countdown.size, color: countdown.color.color, tinted: countdown.tinted,
                   fillLevel: fills ? countdown.progress() : nil, onOpen: onOpen)
     }

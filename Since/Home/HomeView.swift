@@ -27,6 +27,10 @@ struct HomeView: View {
     @State private var revealed: UUID?
     /// A just-created counter stays hidden until the editor sheet is gone, then blurs in at its place.
     @State private var unrevealed: Set<UUID> = []
+    /// Cards changing size, their content faded out meanwhile.
+    @State private var reshaping: Set<UUID> = []
+    /// The grid's width, for laying out XL cards.
+    @State private var gridWidth: CGFloat = 0
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -136,6 +140,7 @@ struct HomeView: View {
                         .cardSize(counter.size)
                 }
             }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { gridWidth = $0 }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
         }
@@ -155,7 +160,7 @@ struct HomeView: View {
         let slot = CardGridLayout.slots(for: counters.map(\.size))[index]
         // A just-added counter blurs in on its own, without the wave.
         let isNew = !unrevealed.isEmpty
-        return CounterCard(counter: counter) {
+        return CounterCard(counter: counter, gridWidth: gridWidth, isReshaping: reshaping.contains(counter.id)) {
             path.append(counter.id)
         }
         .waveIn(cardsShown && !unrevealed.contains(counter.id),
@@ -262,13 +267,20 @@ extension HomeView {
         }
     }
 
+    /// The menu closes first. Then the card's content fades out, the card takes its new shape while the grid
+    /// reflows around it, and the content, already laid out for the new size, fades back in. Saving waits
+    /// until it's all done: it refreshes widgets, reminders and Spotlight, which would stutter the animation.
     private func setSize(_ size: CardSize, of counter: Counter) {
         let id = counter.id
-        // The menu closes first, then the grid reflows around the card's new size.
         Task {
             try? await Task.sleep(for: .milliseconds(300))
-            guard let target = counters.first(where: { $0.id == id }) else { return }
+            guard let target = counters.first(where: { $0.id == id }), target.size != size else { return }
+            withAnimation(.easeOut(duration: 0.15)) { _ = reshaping.insert(id) }
+            try? await Task.sleep(for: .milliseconds(150))
             withAnimation(.smooth(duration: 0.45)) { target.size = size }
+            try? await Task.sleep(for: .milliseconds(300))
+            withAnimation(.easeOut(duration: 0.3)) { _ = reshaping.remove(id) }
+            try? await Task.sleep(for: .milliseconds(300))
             saveChanges(context)
         }
     }

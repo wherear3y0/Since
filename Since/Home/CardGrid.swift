@@ -75,6 +75,16 @@ extension CardSize {
 }
 
 extension View {
+    /// A card's content while the card changes size: faded out while the card takes its new shape,
+    /// then back in, already laid out for the new size, so it doesn't jump.
+    func reshaping(_ isReshaping: Bool) -> some View {
+        self
+            .opacity(isReshaping ? 0 : 1)
+            .blur(radius: isReshaping ? 6 : 0)
+    }
+}
+
+extension View {
     /// The frame every home card shares: padding, colored background and edge, tap to open,
     /// and shapes for dragging and the context menu. `fillLevel` raises color from the bottom.
     /// The grids add the glow under the finger (`pressEffect`) outside the zoom transition source.
@@ -84,6 +94,8 @@ extension View {
         return self
             .padding(size.padding)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            // While a card changes size, its content never spills over the neighbors.
+            .clipShape(shape)
             .background {
                 if let fillLevel {
                     FillLevel(level: fillLevel, tint: color.onCard(tinted: tinted))
