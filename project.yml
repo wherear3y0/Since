@@ -1,0 +1,100 @@
+name: Since
+options:
+  bundleIdPrefix: me.wherar3y0
+  deploymentTarget:
+    iOS: "27.2"
+  createIntermediateGroups: true
+  developmentLanguage: en
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    CODE_SIGN_STYLE: Automatic
+    # The free personal team from the Apple ID signed in to Xcode: enough to run on your own iPhone.
+    DEVELOPMENT_TEAM: A2Z92WBNMC
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  Since:
+    type: application
+    platform: iOS
+    sources:
+      - path: Since
+        excludes: [App/AppIcon.icon]
+      - Shared
+      # The Icon Composer icon is one file to Xcode, not a folder of SVGs.
+      - path: Since/App/AppIcon.icon
+        type: file
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.wherar3y0.since
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: Since/Info.plist
+      properties:
+        CFBundleDisplayName: Since
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleLocalizations: [en, ru]
+        INAlternativeAppNames:
+          - INAlternativeAppName: Синс
+        NSUserActivityTypes: [me.wherar3y0.since.counter, me.wherar3y0.since.countdown]
+        NSCalendarsFullAccessUsageDescription: Since reads your calendars so you can pick events to count down to. Nothing leaves your iPhone.
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        CFBundleURLTypes:
+          - CFBundleURLName: me.wherar3y0.since
+            CFBundleURLSchemes: [since]
+    entitlements:
+      path: Since/Since.entitlements
+      properties:
+        com.apple.security.application-groups: [group.me.wherar3y0.since]
+    dependencies:
+      - target: SinceWidgets
+
+  SinceWidgets:
+    type: app-extension
+    platform: iOS
+    sources: [SinceWidgets, Shared]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.wherar3y0.since.widgets
+        TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: SinceWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Since
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: SinceWidgets/SinceWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.me.wherar3y0.since]
+
+  SinceTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [SinceTests]
+    dependencies:
+      - target: Since
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.wherar3y0.since.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Since:
+    build:
+      targets:
+        Since: all
+    test:
+      targets: [SinceTests]

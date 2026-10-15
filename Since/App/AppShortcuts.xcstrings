@@ -1,0 +1,215 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "${applicationName} ${counter}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${applicationName} ${counter}"
+          }
+        }
+      }
+    },
+    "Add a countdown in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавь отсчёт в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Add a reset to ${counter} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавь сброс в ${counter} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Check ${counter} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверь ${counter} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Count down in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начни отсчёт в ${applicationName}"
+          }
+        }
+      }
+    },
+    "How long since ${counter} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сколько прошло с ${counter} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "How long until ${countdown} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сколько осталось до ${countdown} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "How many days since ${counter} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сколько дней ${counter} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "How many days until ${countdown} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сколько дней до ${countdown} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Log ${counter} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отметь ${counter} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Log a past day for ${counter} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отметь прошлый день ${counter} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Log today for ${counter} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отметь сегодня ${counter} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "New countdown in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новый отсчёт в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Open ${target} countdown in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открой отсчёт ${target} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Open ${target} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открой ${target} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Reset ${counter} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбрось ${counter} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Show ${target} countdown in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Покажи отсчёт ${target} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Show ${target} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Покажи ${target} в ${applicationName}"
+          }
+        }
+      }
+    },
+    "When is ${countdown} in ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Когда ${countdown} в ${applicationName}"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
