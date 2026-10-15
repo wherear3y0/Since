@@ -18,6 +18,13 @@ struct CounterEditor: View {
     @State private var notifyMilestones: Bool
     @State private var kind: CounterKind
     @State private var note: String
+    // Savings, for "quit" counters.
+    @State private var unitName: String
+    @State private var unitsPerDay: Double
+    @State private var price: Double
+    @State private var unitsPerPrice: Int
+    @State private var minutesPerUnit: Double
+    @State private var showsHealth: Bool
     @State private var isPickingSymbol = false
     @State private var savedEdits = 0
     @State private var isConfirmingDelete = false
@@ -38,6 +45,12 @@ struct CounterEditor: View {
         _notifyMilestones = State(initialValue: counter?.notifyMilestones ?? false)
         _kind = State(initialValue: counter?.kind ?? .quit)
         _note = State(initialValue: counter?.note ?? "")
+        _unitName = State(initialValue: counter?.unitName ?? "")
+        _unitsPerDay = State(initialValue: counter?.unitsPerDay ?? 0)
+        _price = State(initialValue: counter?.price ?? 0)
+        _unitsPerPrice = State(initialValue: max(1, counter?.unitsPerPrice ?? 1))
+        _minutesPerUnit = State(initialValue: counter?.minutesPerUnit ?? 0)
+        _showsHealth = State(initialValue: counter?.showsHealth ?? false)
     }
 
     private var trimmedTitle: String {
@@ -106,6 +119,11 @@ struct CounterEditor: View {
                 }
                 .sectionReveal(isPreviewShown, delay: 0.26)
 
+                if kind == .quit {
+                    savingsSection
+                        .sectionReveal(isPreviewShown, delay: 0.29)
+                }
+
                 Section("Note") {
                     TextField("Optional", text: $note, axis: .vertical)
                         .lineLimit(3...8)
@@ -164,6 +182,62 @@ struct CounterEditor: View {
         }
     }
 
+    /// What the habit cost, so the counter can show what's been saved. Shown for "quit" counters.
+    private var savingsSection: some View {
+        let unit = unitName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let units = unit.isEmpty ? "units" : unit
+        return Section {
+            LabeledContent("What") {
+                TextField("cigarettes", text: $unitName)
+                    .multilineTextAlignment(.trailing)
+                    .autocorrectionDisabled()
+            }
+            LabeledContent("A day") {
+                TextField("0", value: $unitsPerDay, format: .number)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+            }
+            LabeledContent("Price") {
+                TextField("0", value: $price, format: .currency(code: Savings.currencyCode))
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+            }
+            LabeledContent("Price is for") {
+                HStack(spacing: 4) {
+                    TextField("1", value: $unitsPerPrice, format: .number)
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.trailing)
+                    Text(units)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            LabeledContent("Minutes each") {
+                TextField("0", value: $minutesPerUnit, format: .number)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+            }
+            Toggle("Health Recovery", isOn: $showsHealth)
+                .tint(color.color)
+            Button("Fill In for Smoking", systemImage: "lungs") {
+                withAnimation {
+                    unitName = "cigarettes"
+                    unitsPerPrice = 20
+                    if minutesPerUnit == 0 {
+                        minutesPerUnit = 5
+                    }
+                    showsHealth = true
+                }
+            }
+            .tint(color.color)
+        } header: {
+            Text("Savings")
+        } footer: {
+            Text("For smoking: cigarettes a day, the price of a pack and how many are in it. "
+                 + "Since then shows the money, time and cigarettes saved over the clean days, "
+                 + "and how the body recovers.")
+        }
+    }
+
     /// Live preview of the counter: recolors smoothly when a color is picked.
     /// A new counter shows a sample pattern so the color has something to fill.
     private var preview: some View {
@@ -213,6 +287,7 @@ struct CounterEditor: View {
             counter.notifyMilestones = notifyMilestones
             counter.kind = kind
             counter.note = finalNote
+            applySavings(to: counter)
             savedEdits += 1
         } else {
             let nextOrder = (counters.map(\.sortOrder).max() ?? -1) + 1
@@ -220,6 +295,7 @@ struct CounterEditor: View {
                                      startDate: startDate, note: finalNote, sortOrder: nextOrder)
             newCounter.tinted = tinted
             newCounter.notifyMilestones = notifyMilestones
+            applySavings(to: newCounter)
             context.insert(newCounter)
         }
         saveChanges(context)
@@ -230,6 +306,17 @@ struct CounterEditor: View {
             }
         }
         dismiss()
+    }
+
+    /// Savings only mean something for "quit" counters; a "last time" counter keeps whatever it had.
+    private func applySavings(to counter: Counter) {
+        guard kind == .quit else { return }
+        counter.unitName = unitName.trimmingCharacters(in: .whitespacesAndNewlines)
+        counter.unitsPerDay = max(0, unitsPerDay)
+        counter.price = max(0, price)
+        counter.unitsPerPrice = max(1, unitsPerPrice)
+        counter.minutesPerUnit = max(0, minutesPerUnit)
+        counter.showsHealth = showsHealth
     }
 
     private func delete() {

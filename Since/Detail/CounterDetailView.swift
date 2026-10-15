@@ -41,6 +41,16 @@ struct CounterDetailView: View {
                     ProgressCard(counter: counter)
                         .detailCard()
                         .blurIn(contentShown, delay: 0.06)
+                    if counter.tracksSavings {
+                        SavingsCard(counter: counter)
+                            .detailCard()
+                            .blurIn(contentShown, delay: 0.08)
+                    }
+                    if counter.showsHealth {
+                        HealthCard(counter: counter)
+                            .detailCard()
+                            .blurIn(contentShown, delay: 0.09)
+                    }
                 }
 
                 StreakSummary(streaks: streaks, kind: kind, tint: tint, isExpanded: $isChartExpanded)

@@ -78,7 +78,13 @@ struct CounterCard: View {
             }
             HStack(alignment: .top) {
                 stat(counter.kind.longest.capitalized, value: "\(best)d")
-                stat("Average", value: "\(average)d")
+                // A counter that tracks money shows what's been saved instead of the average.
+                if counter.tracksSavings && counter.price > 0 {
+                    let saved = counter.savings.money(days: counter.cleanDays())
+                    stat("Saved", value: saved.formatted(.currency(code: Savings.currencyCode).precision(.fractionLength(0))))
+                } else {
+                    stat("Average", value: "\(average)d")
+                }
                 stat(counter.kind.resetsTitle, value: "\(counter.resets.count)")
             }
         }
@@ -124,6 +130,8 @@ struct CounterCard: View {
                 .foregroundStyle(.secondary)
             Text(value)
                 .font(.title3.bold())
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

@@ -156,6 +156,150 @@ struct ProgressCard: View {
     }
 }
 
+// MARK: - Savings
+
+/// Money, time and cigarettes (or cups, or drinks) saved over the clean days since the last full reset.
+struct SavingsCard: View {
+    let counter: Counter
+
+    var body: some View {
+        let tint = counter.color.color
+        let days = counter.cleanDays()
+        let savings = counter.savings
+        let unit = counter.unitName.isEmpty ? "Not had" : counter.unitName.capitalized
+
+        VStack(alignment: .leading, spacing: 16) {
+            CardHeader(title: "Saved", symbol: "banknote.fill", tint: tint, text: insight(days: days))
+            HStack(alignment: .top) {
+                if savings.price > 0 {
+                    stat("Money", value: money(savings.money(days: days)), tint: tint)
+                }
+                if savings.minutesPerUnit > 0 {
+                    stat("Time", value: Savings.timeText(minutes: savings.minutes(days: days)), tint: tint)
+                }
+                stat(unit, value: savings.units(days: days).formatted(.number.precision(.fractionLength(0))), tint: tint)
+            }
+            if savings.price > 0 {
+                Text("\(money(savings.moneyPerDay * 30)) a month, \(money(savings.moneyPerDay * 365)) a year.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 8)
+    }
+
+    private func insight(days: Int) -> String {
+        let since = counter.progressStart.formatted(date: .abbreviated, time: .omitted)
+        switch days {
+        case 0: return "Counted from the first whole day since \(since)."
+        case 1: return "Over 1 clean day since \(since)."
+        default: return "Over \(days) clean days since \(since). Slip days don’t count."
+        }
+    }
+
+    private func money(_ amount: Double) -> String {
+        amount.formatted(.currency(code: Savings.currencyCode).precision(.fractionLength(amount < 100 ? 2 : 0)))
+    }
+
+    private func stat(_ label: String, value: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            Text(value)
+                .font(.title2.bold())
+                .foregroundStyle(tint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Health
+
+/// How the body recovers after the last cigarette: the steps behind, and how far it is to the next one.
+struct HealthCard: View {
+    let counter: Counter
+
+    var body: some View {
+        let tint = counter.color.color
+        let start = counter.currentStreakStart
+        let progress = HealthMilestone.progress(since: start)
+
+        VStack(alignment: .leading, spacing: 16) {
+            CardHeader(title: "Health", symbol: "heart.fill", tint: tint,
+                       text: insight(reached: progress.reached.count, isDone: progress.next == nil))
+
+            if let next = progress.next {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Next: \(next.when)")
+                            .font(.subheadline.weight(.semibold))
+                        Spacer(minLength: 8)
+                        Text(next.date(from: start).formatted(.relative(presentation: .named, unitsStyle: .wide)))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    GeometryReader { proxy in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(tint.opacity(0.25))
+                            Capsule().fill(tint)
+                                .frame(width: max(8, proxy.size.width * progress.fraction))
+                        }
+                    }
+                    .frame(height: 8)
+                }
+            }
+
+            VStack(spacing: 0) {
+                ForEach(Array(HealthMilestone.smoking.enumerated()), id: \.element.id) { index, milestone in
+                    if index > 0 {
+                        Divider().padding(.leading, 34)
+                    }
+                    row(milestone, isReached: progress.reached.contains(milestone), tint: tint)
+                }
+            }
+
+            Text("From the WHO. It counts from the last slip or reset.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 8)
+    }
+
+    private func insight(reached: Int, isDone: Bool) -> String {
+        if isDone {
+            return "Every step is behind you."
+        }
+        if reached == 0 {
+            return "The first changes come within minutes."
+        }
+        return "\(reached) of \(HealthMilestone.smoking.count) steps behind you."
+    }
+
+    private func row(_ milestone: HealthMilestone, isReached: Bool, tint: Color) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: isReached ? "checkmark.circle.fill" : "circle")
+                .font(.title3)
+                .foregroundStyle(isReached ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
+                .frame(width: 22)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(milestone.when)
+                    .font(.subheadline.weight(.semibold))
+                Text(milestone.text)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 8)
+        .opacity(isReached ? 1 : 0.75)
+    }
+}
+
 /// "16 days" between two days, big. Tapping it cycles 127 days → 18w 1d → 4m 5d, everywhere at once.
 struct DurationButton: View {
     let from: Date

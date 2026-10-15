@@ -25,6 +25,24 @@ nonisolated struct Savings: Equatable {
     func minutes(days: Int) -> Double {
         unitsPerDay * minutesPerUnit * Double(max(0, days))
     }
+
+    /// The currency prices are entered and shown in: the one of the iPhone's region.
+    static var currencyCode: String {
+        Locale.current.currency?.identifier ?? "USD"
+    }
+
+    /// "45 min", "7 h 30 min", "3 d 4 h".
+    static func timeText(minutes: Double) -> String {
+        let total = Int(minutes.rounded())
+        if total < 60 {
+            return "\(total) min"
+        }
+        let hours = total / 60
+        if hours < 24 {
+            return total % 60 == 0 ? "\(hours) h" : "\(hours) h \(total % 60) min"
+        }
+        return hours % 24 == 0 ? "\(hours / 24) d" : "\(hours / 24) d \(hours % 24) h"
+    }
 }
 
 /// A step in how the body recovers after the last cigarette, as the WHO lists them.
