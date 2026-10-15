@@ -154,8 +154,8 @@ struct BirthdayImportSheet: View {
     }
 
     var body: some View {
-        let people = people
-        let newCount = people.filter { !$0.isAdded }.count
+        let picked = people
+        let newCount = picked.filter { !$0.isAdded }.count
 
         NavigationStack {
             Form {
@@ -202,7 +202,7 @@ struct BirthdayImportSheet: View {
                 }
 
                 Section("Birthdays") {
-                    ForEach(people) { person in
+                    ForEach(picked) { person in
                         row(person.info, isAdded: person.isAdded)
                     }
                 }
@@ -219,7 +219,7 @@ struct BirthdayImportSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add", systemImage: "checkmark", role: .confirm) {
-                        add(people.filter { !$0.isAdded }.map(\.contact))
+                        add(picked.filter { !$0.isAdded }.map(\.contact))
                     }
                     .disabled(newCount == 0)
                 }
