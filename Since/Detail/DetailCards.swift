@@ -164,20 +164,21 @@ struct SavingsCard: View {
 
     var body: some View {
         let tint = counter.color.color
-        let days = counter.cleanDays()
         let savings = counter.savings
+        let units = counter.savedUnits()
         let unit = counter.unitName.isEmpty ? "Not had" : counter.unitName.capitalized
 
         VStack(alignment: .leading, spacing: 16) {
-            CardHeader(title: "Saved", symbol: "banknote.fill", tint: tint, text: insight(days: days))
+            CardHeader(title: "Saved", symbol: "banknote.fill", tint: tint,
+                       text: insight(days: counter.trackedDays(), slipped: counter.slippedAmountSinceProgressStart))
             HStack(alignment: .top) {
                 if savings.price > 0 {
-                    stat("Money", value: money(savings.money(days: days)), tint: tint)
+                    stat("Money", value: money(savings.money(units: units)), tint: tint)
                 }
                 if savings.minutesPerUnit > 0 {
-                    stat("Time", value: Savings.timeText(minutes: savings.minutes(days: days)), tint: tint)
+                    stat("Time", value: Savings.timeText(minutes: savings.minutes(units: units)), tint: tint)
                 }
-                stat(unit, value: savings.units(days: days).formatted(.number.precision(.fractionLength(0))), tint: tint)
+                stat(unit, value: units.formatted(.number.precision(.fractionLength(0))), tint: tint)
             }
             if savings.price > 0 {
                 Text("\(money(savings.moneyPerDay * 30)) a month, \(money(savings.moneyPerDay * 365)) a year.")
@@ -188,13 +189,16 @@ struct SavingsCard: View {
         .padding(.vertical, 8)
     }
 
-    private func insight(days: Int) -> String {
+    private func insight(days: Int, slipped: Int) -> String {
         let since = counter.progressStart.formatted(date: .abbreviated, time: .omitted)
-        switch days {
-        case 0: return "Counted from the first whole day since \(since)."
-        case 1: return "Over 1 clean day since \(since)."
-        default: return "Over \(days) clean days since \(since). Slip days don’t count."
+        let over = switch days {
+        case 0: "Counted from the first whole day since \(since)."
+        case 1: "Over 1 day since \(since)."
+        default: "Over \(days) days since \(since)."
         }
+        guard slipped > 0 else { return over }
+        let what = counter.unitName.isEmpty ? "" : " \(counter.unitName)"
+        return "\(over) Less \(slipped)\(what) had in slips."
     }
 
     private func money(_ amount: Double) -> String {

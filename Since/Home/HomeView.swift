@@ -20,6 +20,8 @@ struct HomeView: View {
     @State private var pastResetCounter: Counter?
     @State private var deletingCounter: Counter?
     @State private var undoable: UndoableReset?
+    /// Restarts the toast's timer on every new action, even one on the same slip.
+    @State private var toastTick = 0
     @State private var reorderTick = 0
     /// Ties each card to its detail screen for the zoom transition.
     @Namespace private var zoom
@@ -58,7 +60,7 @@ struct HomeView: View {
             }
             .sensoryFeedback(.selection, trigger: reorderTick)
             .sensoryFeedback(.selection, trigger: counters.map(\.sizeRaw))
-            .sensoryFeedback(.success, trigger: undoable?.reset.id) { _, new in new != nil }
+            .sensoryFeedback(.success, trigger: toastTick)
             .sensoryFeedback(trigger: counters.count) { old, new in
                 new > old ? .success : .impact(weight: .medium)
             }
@@ -92,8 +94,8 @@ struct HomeView: View {
                 CounterEditor(counter: counter)
             }
             .sheet(item: $pastResetCounter) { counter in
-                ResetEditor(counter: counter, reset: nil) { date, note, isSlip in
-                    addReset(to: counter, on: date, note: note, isSlip: isSlip)
+                ResetEditor(counter: counter, reset: nil) { entry in
+                    addReset(to: counter, on: entry.date, note: entry.note, isSlip: entry.isSlip, amount: entry.amount)
                 }
             }
             // An alert, not a confirmation dialog: on a grid a dialog's arrow would point at whichever card
@@ -112,11 +114,14 @@ struct HomeView: View {
             }
             .overlay(alignment: .bottom) {
                 if let undoable {
-                    UndoToast(text: undoable.reset.isSlip ? "Slip logged" : undoable.counter.kind.toast,
-                              tint: undoable.counter.color.color) {
+                    UndoToast(text: undoable.text, tint: undoable.counter.color.color) {
                         withAnimation {
-                            undoable.counter.resets.removeAll { $0 === undoable.reset }
-                            context.delete(undoable.reset)
+                            if undoable.takesOne && undoable.reset.amount > 1 {
+                                undoable.reset.amount -= 1
+                            } else {
+                                undoable.counter.resets.removeAll { $0 === undoable.reset }
+                                context.delete(undoable.reset)
+                            }
                             self.undoable = nil
                         }
                         saveChanges(context)
@@ -124,7 +129,7 @@ struct HomeView: View {
                     .transition(.blurRise)
                 }
             }
-            .task(id: undoable?.reset.id) {
+            .task(id: toastTick) {
                 guard undoable != nil else { return }
                 try? await Task.sleep(for: .seconds(5))
                 withAnimation { undoable = nil }
@@ -245,10 +250,11 @@ extension HomeView {
                 path.append(counter.id)
             }
             if kind == .quit {
-                Button("Log a Slip", systemImage: "arrow.uturn.backward") {
-                    addReset(to: counter, on: .now, note: nil, isSlip: true)
+                Button(counter.slipToday() == nil ? "Log a Slip" : "One More Slip Today",
+                       systemImage: "arrow.uturn.backward") {
+                    logSlip(on: counter)
                 }
-                .disabled(counter.isDoneToday())
+                .disabled(!counter.canSlipToday())
             }
             Button(kind.resetAction, systemImage: "arrow.counterclockwise",
                    role: kind == .quit ? .destructive : nil) {
@@ -285,20 +291,37 @@ extension HomeView {
         }
     }
 
-    private func addReset(to counter: Counter, on date: Date, note: String?, isSlip: Bool = false) {
-        let reset = Reset(date: date, note: note, isSlip: isSlip)
+    private func addReset(to counter: Counter, on date: Date, note: String?, isSlip: Bool = false, amount: Int = 1) {
+        let reset = Reset(date: date, note: note, isSlip: isSlip, amount: amount)
         withAnimation {
             counter.resets.append(reset)
-            undoable = UndoableReset(counter: counter, reset: reset)
+            undoable = UndoableReset(counter: counter, reset: reset, takesOne: false)
+            toastTick += 1
+        }
+        saveChanges(context)
+    }
+
+    private func logSlip(on counter: Counter) {
+        withAnimation {
+            let logged = counter.logSlip()
+            undoable = UndoableReset(counter: counter, reset: logged.slip, takesOne: logged.addedToToday)
+            toastTick += 1
         }
         saveChanges(context)
     }
 }
 
-/// A reset made from the home screen that the toast can still take back.
+/// A reset or slip made from the home screen that the toast can still take back.
 struct UndoableReset {
     let counter: Counter
     let reset: Reset
+    /// One was added to today's slip: Undo takes it off instead of removing the slip.
+    let takesOne: Bool
+
+    var text: String {
+        guard reset.isSlip else { return counter.kind.toast }
+        return takesOne ? "Slips today: \(reset.amount)" : "Slip logged"
+    }
 }
 
 #Preview(traits: .sampleData) {

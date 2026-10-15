@@ -12,6 +12,10 @@ struct CounterDetailView: View {
     @State private var isAddingReset = false
     @State private var editingReset: Reset?
     @State private var undoableReset: Reset?
+    /// The toast's Undo takes one off today's slip instead of removing the entry.
+    @State private var undoTakesOne = false
+    /// Restarts the toast's timer on every new action, even one on the same slip.
+    @State private var toastTick = 0
     /// The heatmap wave plays once per opening, not again when the card scrolls back into view.
     @State private var heatmapRevealed = false
     /// The streak chart starts folded into its summary.
@@ -86,22 +90,27 @@ struct CounterDetailView: View {
                 }
 
                 let resetToday = counter.isDoneToday()
+                let slipToday = counter.slipToday()
+                let canSlip = counter.canSlipToday()
                 VStack(alignment: .leading, spacing: 8) {
                     if kind == .quit {
-                        // A slip is a quick tap; starting over takes a press and hold.
+                        // A slip is a quick tap (another tap the same day adds one more);
+                        // starting over takes a press and hold.
                         Button {
-                            addReset(on: .now, note: nil, isSlip: true)
+                            logSlip()
                         } label: {
-                            Text("Log a Slip")
-                                .foregroundStyle(resetToday ? AnyShapeStyle(.tertiary) : AnyShapeStyle(tint))
+                            Text(slipToday.map { "One More Today · \(max(1, $0.amount))" } ?? "Log a Slip")
+                                .contentTransition(.numericText())
+                                .foregroundStyle(canSlip ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
                                 .frame(maxWidth: .infinity, minHeight: 52)
                                 .background(Color.cardBackground)
                                 .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
                                 .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
                         }
                         .buttonStyle(.plain)
-                        .disabled(resetToday)
-                        .accessibilityHint("Starts the count again, but keeps the days so far")
+                        .disabled(!canSlip)
+                        .accessibilityHint(slipToday == nil ? "Starts the count again, but keeps the days so far"
+                                                            : "Adds one more to today's slip")
                     }
                     // Logging a "last time" event is a good thing, so it isn't red.
                     HoldToResetButton(title: kind.resetAction, color: kind == .quit ? .red : tint) {
@@ -112,7 +121,9 @@ struct CounterDetailView: View {
                     .background(Color.cardBackground)
                     .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
 
-                    Text(resetToday ? kind.doneToday : kind.holdHint)
+                    Text(slipToday != nil
+                         ? "Tap again for each one more today. Press and hold Reset Counter on another day to start over."
+                         : (resetToday ? kind.doneToday : kind.holdHint))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 20)
@@ -155,7 +166,8 @@ struct CounterDetailView: View {
         }
         .overlay(alignment: .bottom) {
             if let reset = undoableReset {
-                UndoToast(text: reset.isSlip ? "Slip logged" : kind.toast, tint: tint) {
+                UndoToast(text: reset.isSlip ? (undoTakesOne ? "Slips today: \(reset.amount)" : "Slip logged") : kind.toast,
+                          tint: tint) {
                     undo(reset)
                 }
                 .transition(.blurRise)
@@ -167,7 +179,7 @@ struct CounterDetailView: View {
             activity.title = counter.title
             activity.appEntityIdentifier = EntityIdentifier(for: CounterEntity.self, identifier: counter.id)
         }
-        .task(id: undoableReset?.id) {
+        .task(id: toastTick) {
             guard undoableReset != nil else { return }
             try? await Task.sleep(for: .seconds(5))
             withAnimation { undoableReset = nil }
@@ -176,13 +188,15 @@ struct CounterDetailView: View {
             CounterEditor(counter: counter, onDelete: onDelete)
         }
         .sheet(isPresented: $isAddingReset) {
-            ResetEditor(counter: counter, reset: nil) { date, note, isSlip in
-                addReset(on: date, note: note, isSlip: isSlip)
+            ResetEditor(counter: counter, reset: nil) { entry in
+                addReset(on: entry.date, note: entry.note, isSlip: entry.isSlip, amount: entry.amount)
             }
         }
         .sheet(item: $editingReset) { reset in
-            ResetEditor(counter: counter, reset: reset) { _, _, _ in
+            ResetEditor(counter: counter, reset: reset) { _ in
                 saveChanges(context)
+            } onDelete: {
+                delete(reset)
             }
         }
     }
@@ -205,7 +219,7 @@ struct CounterDetailView: View {
                         HStack(spacing: 6) {
                             Text(reset.date.formatted(date: .abbreviated, time: .omitted))
                             if reset.isSlip {
-                                Text("Slip")
+                                Text(reset.amount > 1 ? "Slip ×\(reset.amount)" : "Slip")
                                     .font(.caption.bold())
                                     .foregroundStyle(tint)
                                     .padding(.horizontal, 6)
@@ -228,6 +242,15 @@ struct CounterDetailView: View {
                 }
                 .frame(height: rowHeight)
                 .historyRow()
+                // The same actions as the swipe, for anyone who doesn't know to swipe.
+                .contextMenu {
+                    Button("Edit", systemImage: "pencil") {
+                        editingReset = reset
+                    }
+                    Button("Delete", systemImage: "trash", role: .destructive) {
+                        delete(reset)
+                    }
+                }
                 .swipeActions(edge: .trailing) {
                     Button("Delete", systemImage: "trash", role: .destructive) {
                         delete(reset)
@@ -282,7 +305,13 @@ struct CounterDetailView: View {
         }
         rows.append(SummaryRow(symbol: "divide.circle", title: "Average \(kind.period)", value: days(average)))
         if kind == .quit {
-            rows.append(SummaryRow(symbol: "arrow.uturn.backward", title: "Slips", value: "\(counter.slipDates.count)"))
+            rows.append(SummaryRow(symbol: "arrow.uturn.backward", title: "Slips",
+                                   subtitle: counter.extraSlips > 0 ? "\(counter.extraSlips) added by hand" : nil,
+                                   value: "\(counter.totalSlips)"))
+            if !counter.slipDates.isEmpty && (counter.slippedAmount != counter.slipDates.count || !counter.unitName.isEmpty) {
+                let what = counter.unitName.isEmpty ? "" : " \(counter.unitName)"
+                rows.append(SummaryRow(symbol: "smoke", title: "Had in slips", value: "\(counter.slippedAmount)\(what)"))
+            }
             rows.append(SummaryRow(symbol: "arrow.counterclockwise", title: "Full resets",
                                    value: "\(counter.fullResetDates.count)"))
         } else {
@@ -325,18 +354,36 @@ struct CounterDetailView: View {
 
     // MARK: - Actions
 
-    private func addReset(on date: Date, note: String?, isSlip: Bool = false) {
-        let reset = Reset(date: date, note: note, isSlip: isSlip)
+    private func addReset(on date: Date, note: String?, isSlip: Bool = false, amount: Int = 1) {
+        let reset = Reset(date: date, note: note, isSlip: isSlip, amount: amount)
         withAnimation {
             counter.resets.append(reset)
             undoableReset = reset
+            undoTakesOne = false
+            toastTick += 1
+        }
+        saveChanges(context)
+    }
+
+    private func logSlip() {
+        withAnimation {
+            let logged = counter.logSlip()
+            undoableReset = logged.slip
+            undoTakesOne = logged.addedToToday
+            toastTick += 1
         }
         saveChanges(context)
     }
 
     private func undo(_ reset: Reset) {
-        withAnimation {
-            undoableReset = nil
+        if undoTakesOne && reset.amount > 1 {
+            withAnimation {
+                undoableReset = nil
+                reset.amount -= 1
+            }
+            saveChanges(context)
+        } else {
+            withAnimation { undoableReset = nil }
             delete(reset)
         }
     }

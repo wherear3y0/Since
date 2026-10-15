@@ -26,6 +26,8 @@ struct Backup: Codable {
         var unitsPerPrice: Int?
         var minutesPerUnit: Double?
         var showsHealth: Bool?
+        /// Missing in backups made before slips could be added by hand.
+        var extraSlips: Int?
     }
 
     struct ResetData: Codable {
@@ -34,6 +36,8 @@ struct Backup: Codable {
         var note: String?
         /// Missing in backups made before slips existed: those were all full resets.
         var isSlip: Bool?
+        /// Missing in backups made before slips had an amount: one each.
+        var amount: Int?
     }
 
     struct CountdownData: Codable {
@@ -84,11 +88,11 @@ struct Backup: Codable {
                         note: counter.note, sortOrder: counter.sortOrder, createdAt: counter.createdAt,
                         notifyMilestones: counter.notifyMilestones,
                         resets: counter.resets.sorted { $0.date < $1.date }.map {
-                            ResetData(id: $0.id, date: $0.date, note: $0.note, isSlip: $0.isSlip)
+                            ResetData(id: $0.id, date: $0.date, note: $0.note, isSlip: $0.isSlip, amount: $0.amount)
                         },
                         unitName: counter.unitName, unitsPerDay: counter.unitsPerDay, price: counter.price,
                         unitsPerPrice: counter.unitsPerPrice, minutesPerUnit: counter.minutesPerUnit,
-                        showsHealth: counter.showsHealth)
+                        showsHealth: counter.showsHealth, extraSlips: counter.extraSlips)
         }
     }
 
@@ -128,9 +132,11 @@ struct Backup: Codable {
             counter.unitsPerPrice = data.unitsPerPrice ?? 1
             counter.minutesPerUnit = data.minutesPerUnit ?? 0
             counter.showsHealth = data.showsHealth ?? false
+            counter.extraSlips = data.extraSlips ?? 0
             context.insert(counter)
             for resetData in data.resets {
-                let reset = Reset(date: resetData.date, note: resetData.note, isSlip: resetData.isSlip ?? false)
+                let reset = Reset(date: resetData.date, note: resetData.note, isSlip: resetData.isSlip ?? false,
+                                  amount: resetData.amount ?? 1)
                 reset.id = resetData.id
                 counter.resets.append(reset)
             }

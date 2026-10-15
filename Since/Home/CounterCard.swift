@@ -87,7 +87,7 @@ struct CounterCard: View {
                 stat(counter.kind.longest.capitalized, value: "\(best)d")
                 // A counter that tracks money shows what's been saved instead of the average.
                 if counter.tracksSavings && counter.price > 0 {
-                    let saved = counter.savings.money(days: counter.cleanDays())
+                    let saved = counter.savings.money(units: counter.savedUnits())
                     stat("Saved", value: saved.formatted(.currency(code: Savings.currencyCode).precision(.fractionLength(0))))
                 } else {
                     stat("Average", value: "\(average)d")

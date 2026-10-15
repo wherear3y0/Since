@@ -31,6 +31,8 @@ final class Counter {
     var minutesPerUnit: Double = 0
     /// Shows how the body recovers after quitting smoking.
     var showsHealth: Bool = false
+    /// Slips that aren't in the history (from before tracking, or never logged), added to the total.
+    var extraSlips: Int = 0
 
     @Relationship(deleteRule: .cascade, inverse: \Reset.counter)
     var resets: [Reset] = []
@@ -107,10 +109,33 @@ final class Counter {
         max(startDate, fullResetDates.last ?? startDate)
     }
 
-    /// Slips since the last full reset.
+    /// Slips since the last full reset. The slips added by hand happened before tracking, so they count
+    /// toward the run that was going on then: the current one until the first full reset.
     var slipsSinceProgressStart: Int {
         let start = progressStart
-        return resets.filter { $0.isSlip && $0.date > start }.count
+        let logged = resets.filter { $0.isSlip && $0.date > start }.count
+        return logged + (fullResetDates.isEmpty ? extraSlips : 0)
+    }
+
+    /// Every slip: the logged ones and the ones added by hand.
+    var totalSlips: Int {
+        slipDates.count + extraSlips
+    }
+
+    /// How many were had in all the logged slips (cigarettes, drinks), each slip at least one.
+    var slippedAmount: Int {
+        resets.filter(\.isSlip).map { max(1, $0.amount) }.reduce(0, +)
+    }
+
+    /// How many were had in the slips since the last full reset.
+    var slippedAmountSinceProgressStart: Int {
+        let start = progressStart
+        return resets.filter { $0.isSlip && $0.date > start }.map { max(1, $0.amount) }.reduce(0, +)
+    }
+
+    /// What wasn't had since the last full reset: every whole day's worth, less what the slips took.
+    func savedUnits(now: Date = .now, calendar: Calendar = .app) -> Double {
+        savings.units(days: trackedDays(now: now, calendar: calendar), less: Double(slippedAmountSinceProgressStart))
     }
 
     /// Days since the progress start, like the day count: the first day is day 0.
@@ -119,7 +144,7 @@ final class Counter {
     }
 
     /// Whole days without a slip since the progress start, today not included: the first day counts,
-    /// slip days don't. Without slips it's the same as `trackedDays`. Savings are counted over these days.
+    /// slip days don't. Without slips it's the same as `trackedDays`.
     func cleanDays(now: Date = .now, calendar: Calendar = .app) -> Int {
         let start = progressStart
         let slips = slipDates.filter { $0 > start }
@@ -151,6 +176,16 @@ final class Counter {
     func resetToday(calendar: Calendar = .app) -> Reset? {
         resets.first { calendar.isDateInToday($0.date) }
     }
+
+    /// Today's slip, which another slip today adds to instead of making a second entry.
+    func slipToday(calendar: Calendar = .app) -> Reset? {
+        resets.first { $0.isSlip && calendar.isDateInToday($0.date) }
+    }
+
+    /// A slip can be logged now: a new one, or one more on today's. Not after a full reset today.
+    func canSlipToday(calendar: Calendar = .app) -> Bool {
+        kind == .quit && !resets.contains { !$0.isSlip && calendar.isDateInToday($0.date) }
+    }
 }
 
 @Model
@@ -161,17 +196,33 @@ final class Reset {
     /// A slip: the count starts again, but the days before stay on the heatmap, dimmed.
     /// A full reset (`false`) starts over with a clean heatmap.
     var isSlip: Bool = false
+    /// For a slip: how many were had (cigarettes, drinks). Taken off what's been saved.
+    var amount: Int = 1
     var counter: Counter?
 
-    init(date: Date, note: String? = nil, isSlip: Bool = false) {
+    init(date: Date, note: String? = nil, isSlip: Bool = false, amount: Int = 1) {
         self.date = date
         self.note = note
         self.isSlip = isSlip
+        self.amount = max(1, amount)
     }
 }
 
 extension Counter {
     func addReset(on date: Date = .now, note: String? = nil, isSlip: Bool = false) {
         resets.append(Reset(date: date, note: note, isSlip: isSlip))
+    }
+
+    /// Logs a slip now: one more on today's slip if there is one, otherwise a new slip of one.
+    /// Returns the slip and whether one was added to today's.
+    @discardableResult
+    func logSlip(calendar: Calendar = .app) -> (slip: Reset, addedToToday: Bool) {
+        if let today = slipToday(calendar: calendar) {
+            today.amount = max(1, today.amount) + 1
+            return (today, true)
+        }
+        let slip = Reset(date: .now, isSlip: true)
+        resets.append(slip)
+        return (slip, false)
     }
 }

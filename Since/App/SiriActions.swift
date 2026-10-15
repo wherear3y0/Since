@@ -46,8 +46,8 @@ struct ResetCounterIntent: AppIntent {
     }
 }
 
-/// "Log a slip for Smoke-free" — the count starts again, the clean days so far still count. No confirmation:
-/// a slip doesn't wipe anything, and it can be undone in the app.
+/// "Log a slip for Smoke-free" — the count starts again, the clean days so far still count; another slip the same
+/// day adds one to today's. No confirmation: a slip doesn't wipe anything, and it can be undone in the app.
 struct LogSlipIntent: AppIntent {
     static let title: LocalizedStringResource = "Log a Slip"
     static let description = IntentDescription("Logs a slip on a counter: the count starts again, but the days so far stay.")
@@ -69,13 +69,19 @@ struct LogSlipIntent: AppIntent {
                 CounterSnippet(found)
             }
         }
-        if found.isDoneToday() {
-            return .result(dialog: "\(found.title) already has a slip or a reset today.") { CounterSnippet(found) }
+        guard found.canSlipToday() else {
+            return .result(dialog: "\(found.title) was reset today, so it starts over from today anyway.") {
+                CounterSnippet(found)
+            }
         }
 
         let days = found.days()
-        found.resets.append(Reset(date: .now, isSlip: true))
+        let logged = found.logSlip()
         saveChanges(Store.container.mainContext)
+        if logged.addedToToday {
+            let dialog: IntentDialog = "Logged one more. That’s \(logged.slip.amount) today for \(found.title)."
+            return .result(dialog: dialog) { CounterSnippet(found) }
+        }
         let clean = found.cleanDays()
         let unit = days == 1 ? "day" : "days"
         let kept = clean == 1 ? "1 clean day still counts" : "\(clean) clean days still count"

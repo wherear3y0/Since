@@ -26,6 +26,8 @@ struct CounterEditor: View {
     @State private var unitsPerPriceText: String
     @State private var minutesPerUnitText: String
     @State private var showsHealth: Bool
+    /// Slips not in the history, edited as part of the total.
+    @State private var extraSlips: Int
     @State private var isPickingSymbol = false
     @State private var savedEdits = 0
     @State private var isConfirmingDelete = false
@@ -52,6 +54,7 @@ struct CounterEditor: View {
         _unitsPerPriceText = State(initialValue: Self.text(for: Double(counter?.unitsPerPrice ?? 0)))
         _minutesPerUnitText = State(initialValue: Self.text(for: counter?.minutesPerUnit ?? 0))
         _showsHealth = State(initialValue: counter?.showsHealth ?? false)
+        _extraSlips = State(initialValue: max(0, counter?.extraSlips ?? 0))
     }
 
     private var trimmedTitle: String {
@@ -121,6 +124,8 @@ struct CounterEditor: View {
                 .sectionReveal(isPreviewShown, delay: 0.26)
 
                 if kind == .quit {
+                    slipsSection
+                        .sectionReveal(isPreviewShown, delay: 0.28)
                     savingsSection
                         .sectionReveal(isPreviewShown, delay: 0.29)
                 }
@@ -180,6 +185,26 @@ struct CounterEditor: View {
                     isTitleFocused = true
                 }
             }
+        }
+    }
+
+    /// The total number of slips, for slips that aren't in the history: from before tracking, or never logged.
+    /// It can't go below the logged ones; those are deleted from the history.
+    private var slipsSection: some View {
+        let logged = counter?.slipDates.count ?? 0
+        let total = Binding {
+            logged + extraSlips
+        } set: { newTotal in
+            extraSlips = max(0, newTotal - logged)
+        }
+        return Section {
+            Stepper(value: total, in: logged...9999) {
+                LabeledContent("Total Slips", value: "\(logged + extraSlips)")
+            }
+        } footer: {
+            Text(logged > 0
+                 ? "\(logged) in the history. Raise it for slips you didn’t log, like ones from before you started tracking. To lower it, delete slips from the history."
+                 : "For slips you had before you started tracking, if you want them counted.")
         }
     }
 
@@ -335,6 +360,7 @@ struct CounterEditor: View {
         counter.unitsPerPrice = Int(min(10_000, max(1, Self.number(from: unitsPerPriceText))).rounded())
         counter.minutesPerUnit = max(0, Self.number(from: minutesPerUnitText))
         counter.showsHealth = showsHealth
+        counter.extraSlips = max(0, extraSlips)
     }
 
     private func delete() {

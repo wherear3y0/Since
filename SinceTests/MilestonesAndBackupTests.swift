@@ -48,6 +48,38 @@ struct MilestonesAndBackupTests {
         #expect(counter.slipsSinceProgressStart == 0)
     }
 
+    @Test func slipAmountsComeOffTheSavings() {
+        let counter = Counter(title: "Smoke-free", symbol: "lungs.fill", color: .mint, startDate: date(2026, 1, 1))
+        counter.unitsPerDay = 10
+        counter.price = 8
+        counter.unitsPerPrice = 20
+        counter.resets.append(Reset(date: date(2026, 1, 5), isSlip: true, amount: 3))
+        let now = date(2026, 1, 11)
+        // Ten days' worth, less the three had in the slip.
+        #expect(counter.savedUnits(now: now, calendar: calendar) == 97)
+        #expect(abs(counter.savings.money(units: counter.savedUnits(now: now, calendar: calendar)) - 38.8) < 0.001)
+
+        counter.extraSlips = 2
+        #expect(counter.totalSlips == 3)
+        #expect(counter.slipsSinceProgressStart == 3)
+        // A full reset starts a new run: the slips added by hand belong to the old one.
+        counter.resets.append(Reset(date: date(2026, 1, 8)))
+        #expect(counter.slipsSinceProgressStart == 0)
+        #expect(counter.savedUnits(now: now, calendar: calendar) == 30)
+    }
+
+    @Test func anotherSlipTodayAddsToIt() {
+        let counter = Counter(title: "Smoke-free", symbol: "lungs.fill", color: .mint,
+                              startDate: Calendar.app.date(byAdding: .day, value: -5, to: .now)!)
+        let first = counter.logSlip()
+        #expect(!first.addedToToday)
+        let second = counter.logSlip()
+        #expect(second.addedToToday)
+        #expect(second.slip === first.slip)
+        #expect(counter.resets.count == 1)
+        #expect(counter.slippedAmount == 2)
+    }
+
     @Test func lastTimeStartedTodayIsDoneToday() {
         let counter = Counter(title: "Called mom", symbol: "phone.fill", color: .blue, kind: .lastTime, startDate: .now)
         #expect(counter.isDoneToday())
@@ -74,7 +106,8 @@ struct MilestonesAndBackupTests {
         counter.showsHealth = true
         context.insert(counter)
         counter.resets.append(Reset(date: date(2026, 9, 1), note: "Long call"))
-        counter.resets.append(Reset(date: date(2026, 9, 10), isSlip: true))
+        counter.resets.append(Reset(date: date(2026, 9, 10), isSlip: true, amount: 3))
+        counter.extraSlips = 4
 
         let countdown = Countdown(title: "Mom", symbol: "birthday.cake.fill", color: .pink,
                                   date: date(1968, 10, 27), rule: RepeatRule(frequency: .weekly, interval: 2, weekdays: [2, 6]))
@@ -97,6 +130,8 @@ struct MilestonesAndBackupTests {
         #expect(restored[0].resetDates.count == 2)
         #expect(restored[0].resets.first { !$0.isSlip }?.note == "Long call")
         #expect(restored[0].slipDates.count == 1)
+        #expect(restored[0].slippedAmount == 3)
+        #expect(restored[0].totalSlips == 5)
         #expect(restored[0].savings == Savings(unitsPerDay: 12, price: 9.5, unitsPerPrice: 20, minutesPerUnit: 5))
         #expect(restored[0].unitName == "cigarettes")
         #expect(restored[0].showsHealth)

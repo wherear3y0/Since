@@ -9,21 +9,25 @@ nonisolated struct Savings: Equatable {
     var unitsPerPrice: Int
     var minutesPerUnit: Double
 
+    var moneyPerUnit: Double {
+        unitsPerPrice > 0 ? price / Double(unitsPerPrice) : 0
+    }
+
     var moneyPerDay: Double {
-        unitsPerPrice > 0 ? unitsPerDay / Double(unitsPerPrice) * price : 0
+        unitsPerDay * moneyPerUnit
     }
 
-    /// Cigarettes (or cups, or drinks) not had over `days` days.
-    func units(days: Int) -> Double {
-        unitsPerDay * Double(max(0, days))
+    /// Cigarettes (or cups, or drinks) not had over `days` days, less the ones had in slips.
+    func units(days: Int, less slipped: Double = 0) -> Double {
+        max(0, unitsPerDay * Double(max(0, days)) - slipped)
     }
 
-    func money(days: Int) -> Double {
-        moneyPerDay * Double(max(0, days))
+    func money(units: Double) -> Double {
+        units * moneyPerUnit
     }
 
-    func minutes(days: Int) -> Double {
-        unitsPerDay * minutesPerUnit * Double(max(0, days))
+    func minutes(units: Double) -> Double {
+        units * minutesPerUnit
     }
 
     /// The currency prices are entered and shown in: the one of the iPhone's region.

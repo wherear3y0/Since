@@ -134,10 +134,13 @@ struct DayMathTests {
     @Test func savings() {
         let savings = Savings(unitsPerDay: 10, price: 8, unitsPerPrice: 20, minutesPerUnit: 5)
         #expect(savings.moneyPerDay == 4)
-        #expect(savings.money(days: 9) == 36)
         #expect(savings.units(days: 9) == 90)
-        #expect(savings.minutes(days: 9) == 450)
-        #expect(savings.money(days: -3) == 0)
+        #expect(savings.money(units: savings.units(days: 9)) == 36)
+        #expect(savings.minutes(units: savings.units(days: 9)) == 450)
+        #expect(savings.units(days: -3) == 0)
+        // Three cigarettes in slips come off what's been saved, never below zero.
+        #expect(savings.units(days: 9, less: 3) == 87)
+        #expect(savings.units(days: 0, less: 3) == 0)
     }
 
     @Test func healthMilestones() {
