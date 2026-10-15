@@ -131,7 +131,7 @@ struct CreateCountdownIntent: AppIntent {
         let countdown = Countdown(title: title, symbol: CalendarEvent.symbol(for: title),
                                   color: colors[existing.count % colors.count], date: date,
                                   rule: repeatsYearly ? RepeatRule(frequency: .yearly) : .never,
-                                  sortOrder: (existing.map(\.sortOrder).max() ?? -1) + 1)
+                                  sortOrder: Countdown.topOrders(1, above: existing)[0])
         context.insert(countdown)
         saveChanges(context)
 

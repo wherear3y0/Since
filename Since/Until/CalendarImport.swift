@@ -197,14 +197,15 @@ struct CalendarImportView: View {
     }
 
     private func add() {
-        var order = (countdowns.map(\.sortOrder).max() ?? -1) + 1
-        for event in events where selected.contains(event.id) {
+        let picked = events.filter { selected.contains($0.id) }
+        // New countdowns go on top, in the order of the list.
+        for (event, order) in zip(picked, Countdown.topOrders(picked.count, above: countdowns)) {
             let countdown = Countdown(title: event.title, symbol: event.symbol, color: event.color,
                                       date: event.date, rule: event.rule ?? .never, sortOrder: order)
             // Calendar gives the next time, not the first, so there's no telling how many years it's been.
             countdown.countsYears = false
+            countdown.isBirthday = event.symbol == "birthday.cake.fill" && event.rule?.frequency == .yearly
             context.insert(countdown)
-            order += 1
         }
         saveChanges(context)
         dismiss()

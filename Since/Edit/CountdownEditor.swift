@@ -19,6 +19,7 @@ struct CountdownEditor: View {
     @State private var style: CountdownStyle
     @State private var notifyBefore: Bool
     @State private var note: String
+    @State private var isBirthday: Bool
     @State private var isPickingSymbol = false
     @State private var savedEdits = 0
     @State private var isConfirmingDelete = false
@@ -39,6 +40,7 @@ struct CountdownEditor: View {
         _style = State(initialValue: countdown?.style ?? .calendar)
         _notifyBefore = State(initialValue: countdown?.notifyBefore ?? false)
         _note = State(initialValue: countdown?.note ?? "")
+        _isBirthday = State(initialValue: countdown?.isBirthday ?? false)
     }
 
     private var trimmedTitle: String {
@@ -122,6 +124,28 @@ struct CountdownEditor: View {
                         .blurIn(isPreviewShown, delay: 0.2)
                 }
                 .sectionReveal(isPreviewShown, delay: 0.2)
+
+                Section {
+                    Toggle(isOn: $isBirthday.animation(.smooth)) {
+                        Label {
+                            Text("Birthday")
+                        } icon: {
+                            Image(systemName: "birthday.cake.fill")
+                                .foregroundStyle(color.color)
+                        }
+                    }
+                    .tint(color.color)
+                    .onChange(of: isBirthday) { _, isOn in
+                        // A birthday comes round every year.
+                        if isOn && !rule.repeats {
+                            withAnimation(.smooth) { rule = RepeatRule(frequency: .yearly) }
+                        }
+                    }
+                } footer: {
+                    Text("Birthdays get a section of their own on the Until tab, soonest first.")
+                        .blurIn(isPreviewShown, delay: 0.23)
+                }
+                .sectionReveal(isPreviewShown, delay: 0.23)
 
                 Section {
                     Toggle("Reminders", isOn: $notifyBefore)
@@ -288,18 +312,21 @@ struct CountdownEditor: View {
             countdown.style = style
             countdown.notifyBefore = notifyBefore
             countdown.note = finalNote
+            countdown.isBirthday = isBirthday
             // Moved to a day still ahead, or made to repeat: it's upcoming again.
             if !countdown.hasPassed() {
                 countdown.isArchived = false
             }
             savedEdits += 1
         } else {
-            let nextOrder = (countdowns.map(\.sortOrder).max() ?? -1) + 1
+            // New countdowns go on top.
             let newCountdown = Countdown(title: trimmedTitle, symbol: symbol, color: color, date: date,
-                                         rule: finalRule, note: finalNote, sortOrder: nextOrder)
+                                         rule: finalRule, note: finalNote,
+                                         sortOrder: Countdown.topOrders(1, above: countdowns)[0])
             newCountdown.tinted = tinted
             newCountdown.style = style
             newCountdown.notifyBefore = notifyBefore
+            newCountdown.isBirthday = isBirthday
             context.insert(newCountdown)
         }
         saveChanges(context)

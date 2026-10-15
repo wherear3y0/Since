@@ -91,8 +91,19 @@ struct CountdownDetailView: View {
                     isEditing = true
                 }
             }
+            if !countdown.isArchived {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(countdown.isPinned ? "Unpin" : "Pin to Top",
+                           systemImage: countdown.isPinned ? "pin.fill" : "pin") {
+                        countdown.isPinned.toggle()
+                        saveChanges(context)
+                    }
+                }
+            }
         }
         .sensoryFeedback(.impact(weight: .light), trigger: countdown.isArchived)
+        .sensoryFeedback(.selection, trigger: countdown.isPinned)
         .onAppear { contentShown = true }
         // Siri knows this is the countdown on screen: "how long until this".
         .userActivity("me.wherar3y0.since.countdown") { activity in
@@ -162,6 +173,9 @@ struct CountdownDetailView: View {
                                value: start.relativeDayDescription))
         rows.append(SummaryRow(symbol: countdown.notifyBefore ? "bell" : "bell.slash", title: "Reminders",
                                value: countdown.notifyBefore ? "On" : "Off"))
+        if countdown.isPinned {
+            rows.append(SummaryRow(symbol: "pin", title: "Pinned", value: "On top of Until"))
+        }
 
         return VStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.offset) { index, row in

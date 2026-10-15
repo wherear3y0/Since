@@ -41,6 +41,26 @@ struct ImportTests {
                 == DateComponents(month: 1, day: 19))
     }
 
+    @Test func birthdayNameStyles() throws {
+        let contact = CNMutableContact()
+        contact.givenName = "Anna"
+        contact.familyName = "Haro"
+        contact.birthday = DateComponents(year: 1985, month: 8, day: 29)
+
+        let first = try #require(Countdown.birthday(of: contact, color: .pink, sortOrder: 0, nameStyle: .firstName))
+        #expect(first.title == "Anna")
+        #expect(first.isBirthday)
+        let birthdayOf = try #require(Countdown.birthdayInfo(of: contact, nameStyle: .birthdayOf))
+        #expect(birthdayOf.title == "Anna’s Birthday")
+    }
+
+    @Test func newCountdownsGoOnTop() {
+        let existing = [Countdown(title: "A", symbol: "star.fill", color: .blue, date: .now, sortOrder: 3),
+                        Countdown(title: "B", symbol: "star.fill", color: .blue, date: .now, sortOrder: 5)]
+        #expect(Countdown.topOrders(2, above: existing) == [1, 2])
+        #expect(Countdown.topOrders(1, above: []) == [-1])
+    }
+
     @Test func contactWithoutBirthdayIsSkipped() {
         let contact = CNMutableContact()
         contact.givenName = "Hank"

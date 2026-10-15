@@ -34,37 +34,59 @@ struct UntilView: View {
     @State private var revealed: UUID?
     /// A just-created countdown stays hidden until the editor sheet is gone, then blurs in at its place.
     @State private var unrevealed: Set<UUID> = []
+    /// Contacts just picked, waiting for the choice of how their birthdays are shown.
+    @State private var pickedContacts: [CNContact] = []
 
-    private var upcoming: [Countdown] {
-        countdowns.filter { !$0.isArchived }
+    /// A group of cards under its own heading.
+    private struct CardSection: Identifiable {
+        let id: String
+        /// Nil for the events when they're the only cards ahead: no heading is needed then.
+        let title: String?
+        let items: [Countdown]
+        /// Cards can be dragged into a new order; birthdays and Past keep an order of their own.
+        let reorders: Bool
     }
 
-    /// Kept after their day, latest first.
-    private var past: [Countdown] {
-        countdowns.filter(\.isArchived).sorted { $0.date > $1.date }
+    /// Pinned first, then the other days ahead, then birthdays (soonest first), then the ones kept in Past.
+    private var sections: [CardSection] {
+        let upcoming = countdowns.filter { !$0.isArchived }
+        let pinned = upcoming.filter(\.isPinned)
+        let events = upcoming.filter { !$0.isPinned && !$0.isBirthday }
+        let birthdays = upcoming.filter { !$0.isPinned && $0.isBirthday }
+            .sorted { $0.daysLeft() < $1.daysLeft() }
+        // Kept after their day, latest first.
+        let past = countdowns.filter(\.isArchived).sorted { $0.date > $1.date }
+        let needsHeadings = !pinned.isEmpty || !birthdays.isEmpty
+        return [
+            CardSection(id: "pinned", title: "Pinned", items: pinned, reorders: true),
+            CardSection(id: "events", title: needsHeadings ? "Events" : nil, items: events, reorders: true),
+            CardSection(id: "birthdays", title: "Birthdays", items: birthdays, reorders: false),
+            CardSection(id: "past", title: "Past", items: past, reorders: false),
+        ]
+        .filter { !$0.items.isEmpty }
     }
 
     var body: some View {
         NavigationStack(path: $path) {
             ScrollViewReader { scroller in
                 ScrollView {
+                    let shown = sections
+                    let firstRows = Self.firstRows(of: shown)
                     VStack(alignment: .leading, spacing: 12) {
-                        CardGridLayout {
-                            ForEach(upcoming) { countdown in
-                                card(for: countdown, in: upcoming)
-                                    .cardSize(countdown.size)
+                        ForEach(Array(shown.enumerated()), id: \.element.id) { index, section in
+                            if let title = section.title {
+                                Text(title)
+                                    .font(.title3.bold())
+                                    .padding(.leading, 4)
+                                    .padding(.top, index == 0 ? 0 : 16)
+                                    .waveIn(cardsShown,
+                                            delay: arrival.delay(for: CardSlot(row: firstRows[index] - 1, column: 0)),
+                                            from: arrival.edge)
                             }
-                        }
-                        if !past.isEmpty {
-                            Text("Past")
-                                .font(.title3.bold())
-                                .padding(.leading, 4)
-                                .padding(.top, 16)
-                                .waveIn(cardsShown, delay: arrival.delay(for: CardSlot(row: pastFirstRow - 1, column: 0)),
-                                        from: arrival.edge)
                             CardGridLayout {
-                                ForEach(past) { countdown in
-                                    card(for: countdown, in: past, firstRow: pastFirstRow)
+                                ForEach(section.items) { countdown in
+                                    card(for: countdown, in: section.items, firstRow: firstRows[index],
+                                         reorders: section.reorders)
                                         .cardSize(countdown.size)
                                 }
                             }
@@ -102,6 +124,7 @@ struct UntilView: View {
             .sensoryFeedback(.selection, trigger: countdowns.map(\.sizeRaw))
             .sensoryFeedback(.selection, trigger: countdowns.map(\.styleRaw))
             .sensoryFeedback(.impact(weight: .light), trigger: countdowns.map(\.isArchived))
+            .sensoryFeedback(.selection, trigger: countdowns.map(\.isPinned))
             .sensoryFeedback(trigger: countdowns.count) { old, new in
                 new > old ? .success : .impact(weight: .medium)
             }
@@ -144,8 +167,15 @@ struct UntilView: View {
             }
             .background {
                 ContactBirthdayPicker(isPresented: $isPickingContacts) { contacts in
-                    addBirthdays(of: contacts)
+                    // Asked once the picker is gone, so the two sheets don't collide.
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(400))
+                        pickedContacts = contacts
+                    }
                 }
+            }
+            .sheet(isPresented: Binding(get: { !pickedContacts.isEmpty }, set: { if !$0 { pickedContacts = [] } })) {
+                BirthdayImportSheet(contacts: pickedContacts, existing: countdowns)
             }
             .sheet(isPresented: $isShowingSettings) {
                 SettingsView()
@@ -186,12 +216,22 @@ struct UntilView: View {
         revealed == arrival.id
     }
 
-    /// The Past grid's rows come after the upcoming ones and the heading between them.
-    private var pastFirstRow: Int {
-        (CardGridLayout.slots(for: upcoming.map(\.size)).last?.row ?? -1) + 2
+    /// The row each section's first card lands on, counting the cards and headings above it, for the wave.
+    private static func firstRows(of sections: [CardSection]) -> [Int] {
+        var rows: [Int] = []
+        var next = 0
+        for section in sections {
+            if section.title != nil {
+                next += 1
+            }
+            rows.append(next)
+            next = (CardGridLayout.slots(for: section.items.map(\.size), firstRow: next).last?.row ?? next - 1) + 1
+        }
+        return rows
     }
 
-    private func card(for countdown: Countdown, in items: [Countdown], firstRow: Int = 0) -> some View {
+    private func card(for countdown: Countdown, in items: [Countdown], firstRow: Int = 0,
+                      reorders: Bool = true) -> some View {
         let index = items.firstIndex(of: countdown) ?? 0
         let slot = CardGridLayout.slots(for: items.map(\.size), firstRow: firstRow)[index]
         // A just-added countdown blurs in on its own, without the wave.
@@ -225,8 +265,9 @@ struct UntilView: View {
             dragged = countdown
             return NSItemProvider(object: countdown.id.uuidString as NSString)
         }
-        .onDrop(of: [.text], delegate: ReorderDropDelegate(target: countdown, items: items, dragged: $dragged,
-                                                           onMove: { reorderTick += 1 }) {
+        // Dropping onto a card of another section, or of one with its own order, moves nothing.
+        .onDrop(of: [.text], delegate: ReorderDropDelegate(target: countdown, items: reorders ? items : [],
+                                                           dragged: $dragged, onMove: { reorderTick += 1 }) {
             saveChanges(context)
         })
     }
@@ -297,6 +338,11 @@ extension UntilView {
             Button("Open", systemImage: "arrow.up.forward") {
                 path.append(countdown.id)
             }
+            if !countdown.isArchived {
+                Button(countdown.isPinned ? "Unpin" : "Pin to Top", systemImage: countdown.isPinned ? "pin.slash" : "pin") {
+                    setPinned(!countdown.isPinned, countdown)
+                }
+            }
             if countdown.hasPassed() {
                 Button("Count Since…", systemImage: "arrow.counterclockwise") {
                     converting = countdown
@@ -331,18 +377,15 @@ extension UntilView {
         }
     }
 
-    /// A yearly countdown per person, each in its own color; people already counted down to are skipped.
-    private func addBirthdays(of contacts: [CNContact]) {
-        let colors: [CounterColor] = [.pink, .purple, .orange, .cyan, .yellow, .mint, .red, .blue, .lime, .green]
-        var order = (countdowns.map(\.sortOrder).max() ?? -1) + 1
-        for contact in contacts {
-            guard let countdown = Countdown.birthday(of: contact, color: colors[order % colors.count], sortOrder: order),
-                  !countdowns.contains(where: { $0.title == countdown.title && $0.rule.frequency == .yearly })
-            else { continue }
-            context.insert(countdown)
-            order += 1
+    private func setPinned(_ isPinned: Bool, _ countdown: Countdown) {
+        let id = countdown.id
+        // The menu closes first, then the card moves to its section.
+        Task {
+            try? await Task.sleep(for: .milliseconds(300))
+            guard let target = countdowns.first(where: { $0.id == id }) else { return }
+            withAnimation(.smooth(duration: 0.45)) { target.isPinned = isPinned }
+            saveChanges(context)
         }
-        saveChanges(context)
     }
 
     private func setStyle(_ style: CountdownStyle, of countdown: Countdown) {

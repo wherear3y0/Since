@@ -129,6 +129,12 @@ final class Countdown {
         return min(1, Double(DayMath.days(from: start, to: now, calendar: calendar)) / Double(total))
     }
 
+    /// Sort orders that put `count` new countdowns at the top of the Until tab, in the order given.
+    static func topOrders(_ count: Int, above countdowns: [Countdown]) -> [Int] {
+        let first = (countdowns.map(\.sortOrder).min() ?? 0) - count
+        return (0..<max(0, count)).map { first + $0 }
+    }
+
     /// For a yearly day, how many years the next one marks: a birthday's age, an anniversary's year.
     func turns(now: Date = .now, calendar: Calendar = .app) -> Int? {
         guard rule.frequency == .yearly, countsYears else { return nil }

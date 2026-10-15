@@ -75,7 +75,9 @@ struct CountdownProvider: AppIntentTimelineProvider {
 
     private func entry(for configuration: SelectCountdownIntent, at date: Date) -> CountdownEntry {
         let countdowns = Store.countdowns()
+        // Without a choice: the first pinned one, else the first one ahead.
         let chosen = countdowns.first { $0.id == configuration.countdown?.id }
+            ?? countdowns.first { $0.isPinned && !$0.isArchived }
             ?? countdowns.first { !$0.isArchived }
         return CountdownEntry(date: date, countdown: chosen.map { CountdownSnapshot($0, at: date) })
     }
