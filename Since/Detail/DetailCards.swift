@@ -223,84 +223,208 @@ struct SavingsCard: View {
 
 // MARK: - Health
 
-/// How the body recovers after the last cigarette: the steps behind, and how far it is to the next one.
+/// How the body recovers after the last cigarette. Folded, a ring of the steps behind and the next step;
+/// tapped open, every step on a timeline. Whether it's open is remembered.
 struct HealthCard: View {
     let counter: Counter
+
+    @AppStorage("healthCardExpanded") private var isExpanded = false
 
     var body: some View {
         let tint = counter.color.color
         let start = counter.currentStreakStart
         let progress = HealthMilestone.progress(since: start)
+        let total = HealthMilestone.smoking.count
+        let overall = (Double(progress.reached.count) + (progress.next == nil ? 0 : progress.fraction)) / Double(total)
 
-        VStack(alignment: .leading, spacing: 16) {
-            CardHeader(title: "Health", symbol: "heart.fill", tint: tint,
-                       text: insight(reached: progress.reached.count, isDone: progress.next == nil))
-
-            if let next = progress.next {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("Next: \(next.when)")
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center, spacing: 16) {
+                HealthRing(fraction: overall, reached: progress.reached.count, total: total, tint: tint)
+                    .frame(width: 68, height: 68)
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("Health", systemImage: "heart.fill")
+                        .font(.headline)
+                        .foregroundStyle(tint)
+                    if let next = progress.next {
+                        Text(next.text)
                             .font(.subheadline.weight(.semibold))
-                        Spacer(minLength: 8)
-                        Text(next.date(from: start).formatted(.relative(presentation: .named, unitsStyle: .wide)))
-                            .font(.subheadline)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Next, \(next.date(from: start).formatted(.relative(presentation: .named, unitsStyle: .wide)))")
+                            .font(.footnote)
                             .foregroundStyle(.secondary)
+                    } else {
+                        Text("Every step is behind you.")
+                            .font(.subheadline.weight(.semibold))
                     }
-                    GeometryReader { proxy in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(tint.opacity(0.25))
-                            Capsule().fill(tint)
-                                .frame(width: max(8, proxy.size.width * progress.fraction))
-                        }
-                    }
-                    .frame(height: 8)
                 }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.down")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
             }
 
-            VStack(spacing: 0) {
-                ForEach(Array(HealthMilestone.smoking.enumerated()), id: \.element.id) { index, milestone in
-                    if index > 0 {
-                        Divider().padding(.leading, 34)
+            // Always laid out and revealed by animating its height, like the streak chart.
+            HealthTimeline(start: start, reached: Set(progress.reached.map(\.id)), nextID: progress.next?.id,
+                           fraction: progress.fraction, tint: tint)
+                .padding(.top, 20)
+                .blur(radius: isExpanded ? 0 : 10)
+                .opacity(isExpanded ? 1 : 0)
+                .frame(height: isExpanded ? nil : 0, alignment: .top)
+                .clipped()
+                .allowsHitTesting(isExpanded)
+                .accessibilityHidden(!isExpanded)
+        }
+        .padding(.vertical, 8)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            withAnimation(.smooth(duration: 0.45)) { isExpanded.toggle() }
+        }
+        .sensoryFeedback(.selection, trigger: isExpanded)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(isExpanded ? "Hides the steps" : "Shows every step")
+    }
+}
+
+/// The steps behind, and the way to the next one, around a ring. Fills in once when it first appears.
+private struct HealthRing: View {
+    let fraction: Double
+    let reached: Int
+    let total: Int
+    let tint: Color
+
+    @State private var isShown = false
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(tint.opacity(0.18), lineWidth: 7)
+            Circle()
+                .trim(from: 0, to: isShown ? max(0.02, min(1, fraction)) : 0)
+                .stroke(tint, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            VStack(spacing: -2) {
+                Text(reached, format: .number)
+                    .font(.title3.bold())
+                Text("of \(total)")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(3.5)
+        .onAppear {
+            withAnimation(.spring(duration: 0.9, bounce: 0.2).delay(0.25)) { isShown = true }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(reached) of \(total) steps behind")
+    }
+}
+
+/// Every step, joined by a line: filled with a check once reached, a ring filling up for the next one,
+/// hollow for the ones ahead.
+private struct HealthTimeline: View {
+    let start: Date
+    let reached: Set<Int>
+    let nextID: Int?
+    let fraction: Double
+    let tint: Color
+
+    private enum StepState { case reached, next, ahead }
+
+    var body: some View {
+        let steps = HealthMilestone.smoking
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(steps.enumerated()), id: \.element.id) { index, step in
+                let state: StepState = reached.contains(step.id) ? .reached : (step.id == nextID ? .next : .ahead)
+                let isLast = index == steps.count - 1
+                HStack(alignment: .top, spacing: 12) {
+                    ZStack(alignment: .top) {
+                        if !isLast {
+                            Rectangle()
+                                .fill(lineColor(after: state, nextReached: reached.contains(steps[index + 1].id)))
+                                .frame(width: 2)
+                                .frame(maxHeight: .infinity)
+                                .padding(.top, 24)
+                        }
+                        marker(state)
                     }
-                    row(milestone, isReached: progress.reached.contains(milestone), tint: tint)
+                    .frame(width: 22)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(step.when)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(state == .ahead ? Color.secondary : Color.primary)
+                            Spacer(minLength: 8)
+                            Text(dateText(of: step, state: state))
+                                .font(.caption)
+                                .foregroundStyle(state == .next ? tint : Color.secondary)
+                        }
+                        Text(step.text)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.bottom, isLast ? 0 : 16)
                 }
+                // The row takes the height of its text, and the line beside it stretches to that height.
+                .fixedSize(horizontal: false, vertical: true)
             }
 
             Text("From the WHO. It counts from the last slip or reset.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .padding(.top, 16)
         }
-        .padding(.vertical, 8)
     }
 
-    private func insight(reached: Int, isDone: Bool) -> String {
-        if isDone {
-            return "Every step is behind you."
-        }
-        if reached == 0 {
-            return "The first changes come within minutes."
-        }
-        return "\(reached) of \(HealthMilestone.smoking.count) steps behind you."
-    }
-
-    private func row(_ milestone: HealthMilestone, isReached: Bool, tint: Color) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: isReached ? "checkmark.circle.fill" : "circle")
-                .font(.title3)
-                .foregroundStyle(isReached ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
-                .frame(width: 22)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(milestone.when)
-                    .font(.subheadline.weight(.semibold))
-                Text(milestone.text)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+    @ViewBuilder
+    private func marker(_ state: StepState) -> some View {
+        switch state {
+        case .reached:
+            Circle()
+                .fill(tint)
+                .overlay {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.75))
+                }
+                .frame(width: 22, height: 22)
+        case .next:
+            ZStack {
+                Circle()
+                    .stroke(tint.opacity(0.25), lineWidth: 3)
+                Circle()
+                    .trim(from: 0, to: max(0.03, min(1, fraction)))
+                    .stroke(tint, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                Circle()
+                    .fill(tint)
+                    .frame(width: 7, height: 7)
             }
-            Spacer(minLength: 0)
+            .frame(width: 22, height: 22)
+        case .ahead:
+            Circle()
+                .strokeBorder(Color.secondary.opacity(0.35), lineWidth: 2)
+                .frame(width: 22, height: 22)
         }
-        .padding(.vertical, 8)
-        .opacity(isReached ? 1 : 0.75)
+    }
+
+    /// The line down to the next step: colored once that one is reached, half-colored on the way to it.
+    private func lineColor(after state: StepState, nextReached: Bool) -> Color {
+        if nextReached {
+            return tint
+        }
+        return state == .reached ? tint.opacity(0.4) : Color.secondary.opacity(0.25)
+    }
+
+    /// When a step was reached ("Oct 3"), or when it comes ("in 5 days").
+    private func dateText(of step: HealthMilestone, state: StepState) -> String {
+        let date = step.date(from: start)
+        if state == .reached {
+            return date.sinceFormat
+        }
+        return date.formatted(.relative(presentation: .named, unitsStyle: .wide))
     }
 }
 
