@@ -21,15 +21,41 @@ nonisolated enum CounterColor: String, CaseIterable, Identifiable {
     }
 }
 
-/// Hand-picked SF Symbols for the icon picker.
-let counterSymbols: [String] = [
-    "star.fill", "heart.fill", "flame.fill", "bolt.fill", "leaf.fill", "drop.fill",
-    "sun.max.fill", "moon.fill", "cloud.rain.fill", "snowflake",
-    "lungs.fill", "brain.head.profile", "pills.fill", "cross.case.fill", "bandage.fill", "bed.double.fill",
-    "figure.run", "figure.strengthtraining.traditional", "figure.yoga", "bicycle", "dumbbell.fill",
-    "cup.and.saucer.fill", "wineglass.fill", "mug.fill", "fork.knife", "birthday.cake.fill", "carrot.fill",
-    "smoke.fill", "nosign", "iphone", "gamecontroller.fill", "tv.fill", "laptopcomputer",
-    "book.fill", "graduationcap.fill", "music.note", "paintbrush.fill",
-    "house.fill", "car.fill", "airplane", "cart.fill", "creditcard.fill",
-    "phone.fill", "person.2.fill", "pawprint.fill", "scissors", "sparkles", "trophy.fill",
+/// A group of icons in the icon picker.
+struct SymbolGroup: Identifiable {
+    let title: String
+    let symbols: [String]
+
+    var id: String { title }
+}
+
+/// Hand-picked SF Symbols for the icon picker, by what they're for. Only symbols that exist on every
+/// supported system: a name SF Symbols doesn't know draws nothing.
+let symbolGroups: [SymbolGroup] = [
+    SymbolGroup(title: "Habits", symbols: [
+        "smoke.fill", "lungs.fill", "nosign", "wineglass.fill", "mug.fill", "cup.and.saucer.fill",
+        "cube.fill", "birthday.cake.fill", "popcorn.fill", "takeoutbag.and.cup.and.straw.fill", "fork.knife",
+        "pills.fill", "syringe.fill", "dice.fill", "suit.spade.fill", "cart.fill", "bag.fill", "creditcard.fill",
+        "banknote.fill", "iphone", "gamecontroller.fill", "tv.fill", "play.rectangle.fill", "laptopcomputer",
+        "bubble.left.and.bubble.right.fill", "moon.zzz.fill",
+    ]),
+    SymbolGroup(title: "Health", symbols: [
+        "heart.fill", "bolt.heart.fill", "brain.head.profile", "cross.case.fill", "bandage.fill", "stethoscope",
+        "bed.double.fill", "drop.fill", "carrot.fill", "leaf.fill", "eyes", "mouth.fill",
+    ]),
+    SymbolGroup(title: "Activity", symbols: [
+        "figure.run", "figure.walk", "figure.yoga", "figure.strengthtraining.traditional", "dumbbell.fill",
+        "bicycle", "figure.mind.and.body",
+    ]),
+    SymbolGroup(title: "Life", symbols: [
+        "house.fill", "phone.fill", "person.2.fill", "pawprint.fill", "scissors", "book.fill",
+        "graduationcap.fill", "music.note", "paintbrush.fill", "car.fill", "tshirt.fill", "alarm.fill",
+    ]),
+    SymbolGroup(title: "Days", symbols: [
+        "star.fill", "sparkles", "trophy.fill", "gift.fill", "party.popper.fill", "airplane", "suitcase.fill",
+        "beach.umbrella.fill", "tent.fill", "ticket.fill", "flame.fill", "bolt.fill",
+    ]),
+    SymbolGroup(title: "Nature", symbols: [
+        "sun.max.fill", "moon.fill", "cloud.rain.fill", "snowflake", "tree.fill",
+    ]),
 ]
