@@ -15,6 +15,11 @@ extension Color {
     func onCard(tinted: Bool) -> Color {
         tinted ? self : mix(with: Color(white: 0.5), by: 0.35)
     }
+
+    /// A clean day before a slip on a heatmap: the counter's color faded toward gray.
+    var slippedDay: Color {
+        mix(with: Color(white: 0.5), by: 0.7).opacity(0.5)
+    }
 }
 
 /// Plain card fill with a soft, blurred patch of the counter's color glowing from the center.

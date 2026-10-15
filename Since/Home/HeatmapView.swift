@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// A grid of the last weeks, one column per week: bright = a day of the current streak,
-/// faint = before it, outline = today.
+/// A grid of the last weeks, one column per week: bright = a day of the current streak (or, for a
+/// "last time" counter, a day it was done), faint = before it, gray = a day before a slip, dot = the slip,
+/// outline = today.
 /// When `animated`, the filled cells sweep in from left to right on first appearance.
 struct HeatmapView: View {
     let days: [[HeatmapDay]]
@@ -75,9 +76,9 @@ struct HeatmapView: View {
     /// from today back into the past (and an undo fills it back in the same way).
     private func cell(for day: HeatmapDay, delay: Double, wave: Double) -> some View {
         let shape = RoundedRectangle(cornerRadius: 4, style: .continuous)
-        let lit = revealed && day.state == .clean
+        let lit = revealed && (day.state == .clean || day.state == .logged)
         return shape
-            .fill(day.state == .future ? Color.clear : tint.opacity(0.18))
+            .fill(baseFill(for: day.state))
             .overlay {
                 shape
                     .fill(tint)
@@ -86,12 +87,28 @@ struct HeatmapView: View {
                     .blur(radius: lit ? 0 : 2)
             }
             .overlay {
+                if day.state == .slip {
+                    Circle()
+                        .fill(tint)
+                        .scaleEffect(0.34)
+                }
+            }
+            .overlay {
                 if day.isToday {
                     shape.strokeBorder(.primary.opacity(0.85), lineWidth: 1.5)
                 }
             }
             .animation(.spring(duration: 0.45, bounce: 0.3).delay(delay), value: revealed)
             .animation(.spring(duration: 0.5, bounce: 0.25).delay(wave), value: day.state)
+    }
+
+    /// The square under the bright fill.
+    private func baseFill(for state: DayState) -> Color {
+        switch state {
+        case .future: .clear
+        case .slipped: tint.slippedDay
+        case .before, .clean, .slip, .logged: tint.opacity(0.18)
+        }
     }
 }
 

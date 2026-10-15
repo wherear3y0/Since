@@ -191,9 +191,17 @@ private struct WeekCell: View {
         let shape = RoundedRectangle(cornerRadius: 4, style: .continuous)
         ZStack {
             switch day.state {
-            case .clean: shape.fill(tint)
-            case .before: shape.fill(tint.opacity(0.18))
-            case .future: Color.clear
+            case .clean, .logged:
+                shape.fill(tint)
+            case .before:
+                shape.fill(tint.opacity(0.18))
+            case .slipped:
+                shape.fill(tint.slippedDay)
+            case .slip:
+                shape.fill(tint.opacity(0.18))
+                Circle().fill(tint).scaleEffect(0.34)
+            case .future:
+                Color.clear
             }
             if day.isToday {
                 shape.strokeBorder(.primary.opacity(0.85), lineWidth: 1.5)

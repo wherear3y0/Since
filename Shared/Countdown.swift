@@ -33,7 +33,8 @@ final class Countdown {
     var isPinned: Bool = false
     /// Listed with the birthdays instead of the other events.
     var isBirthday: Bool = false
-    /// A Live Activity on the Lock Screen from the evening before through the day.
+    /// A Live Activity on the Lock Screen and in the Dynamic Island on the day itself. Off by default:
+    /// meant only for the days that really matter.
     var showsLiveActivity: Bool = false
 
     init(title: String, symbol: String, color: CounterColor, date: Date, rule: RepeatRule = .never,
@@ -100,6 +101,11 @@ final class Countdown {
 
     func hasPassed(now: Date = .now, calendar: Calendar = .app) -> Bool {
         daysLeft(now: now, calendar: calendar) < 0
+    }
+
+    /// Today is the day and its Live Activity is turned on.
+    func wantsLiveActivity(now: Date = .now, calendar: Calendar = .app) -> Bool {
+        showsLiveActivity && !isArchived && daysLeft(now: now, calendar: calendar) == 0
     }
 
     /// Where the wait starts: the last time a repeating day came round, or when the countdown was added.

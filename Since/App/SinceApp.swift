@@ -24,6 +24,7 @@ struct SinceApp: App {
             SampleCalendarEvents.insert()
         }
         #endif
+        Store.upgradeData()
     }
 
     var body: some Scene {

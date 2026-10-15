@@ -45,7 +45,8 @@ struct WidgetDayCount: View {
     }
 }
 
-/// One square of a heatmap, matching the app: bright = current streak, faint = before it, outlined = today.
+/// One square of a heatmap, matching the app: bright = current streak (or a day a "last time" counter
+/// was logged), faint = before it, gray = a day before a slip, dot = the slip, outlined = today.
 struct WidgetDayCell: View {
     let day: HeatmapDay
     let tint: Color
@@ -55,10 +56,15 @@ struct WidgetDayCell: View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         ZStack {
             switch day.state {
-            case .clean:
+            case .clean, .logged:
                 shape.fill(tint).widgetAccentable()
             case .before:
                 shape.fill(tint.opacity(0.22))
+            case .slipped:
+                shape.fill(tint.slippedDay)
+            case .slip:
+                shape.fill(tint.opacity(0.22))
+                Circle().fill(tint).scaleEffect(0.34).widgetAccentable()
             case .future:
                 Color.clear
             }

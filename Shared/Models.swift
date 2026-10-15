@@ -1,6 +1,10 @@
 import Foundation
 import SwiftData
 
+// Every stored property of a model has a default value. That lets SwiftData upgrade a database made by
+// an older version of the app on its own (a lightweight migration) when properties are added.
+// Don't rename, retype or remove stored properties: that's what breaks opening an existing database.
+
 @Model
 final class Counter {
     var id: UUID = UUID()
@@ -88,9 +92,41 @@ final class Counter {
         Savings(unitsPerDay: unitsPerDay, price: price, unitsPerPrice: unitsPerPrice, minutesPerUnit: minutesPerUnit)
     }
 
-    /// Start of the current streak: the last reset, or the start date if there are none.
+    /// Start of the current streak: the last reset or slip, or the start date if there are none.
     var currentStreakStart: Date {
         max(startDate, resetDates.last ?? startDate)
+    }
+
+    /// Dates of full resets, the ones that clear the heatmap, oldest first.
+    var fullResetDates: [Date] {
+        resets.filter { !$0.isSlip }.map(\.date).sorted()
+    }
+
+    /// Where the overall progress counts from: the last full reset, or the start. Slips don't move it.
+    var progressStart: Date {
+        max(startDate, fullResetDates.last ?? startDate)
+    }
+
+    /// Slips since the last full reset.
+    var slipsSinceProgressStart: Int {
+        let start = progressStart
+        return resets.filter { $0.isSlip && $0.date > start }.count
+    }
+
+    /// Days since the progress start, like the day count: the first day is day 0.
+    func trackedDays(now: Date = .now, calendar: Calendar = .app) -> Int {
+        DayMath.days(from: progressStart, to: now, calendar: calendar)
+    }
+
+    /// Whole days without a slip since the progress start, today not included: the first day counts,
+    /// slip days don't. Without slips it's the same as `trackedDays`. Savings are counted over these days.
+    func cleanDays(now: Date = .now, calendar: Calendar = .app) -> Int {
+        let start = progressStart
+        let slips = slipDates.filter { $0 > start }
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: now))!
+        return DayMath.cleanRuns(start: start, resets: slips, now: yesterday, calendar: calendar)
+            .map { DayMath.days(from: $0.lowerBound, to: $0.upperBound, calendar: calendar) + 1 }
+            .reduce(0, +)
     }
 
     func days(on date: Date = .now, calendar: Calendar = .app) -> Int {
@@ -103,6 +139,12 @@ final class Counter {
 
     func wasResetToday(calendar: Calendar = .app) -> Bool {
         resetDates.contains { calendar.isDateInToday($0) }
+    }
+
+    /// Nothing left to do today: reset or slipped already, or, for a "last time" counter,
+    /// already logged (a counter started today counts as done today).
+    func isDoneToday(calendar: Calendar = .app) -> Bool {
+        wasResetToday(calendar: calendar) || (kind == .lastTime && calendar.isDateInToday(startDate))
     }
 
     /// Today's reset or slip, if there is one.
@@ -129,7 +171,7 @@ final class Reset {
 }
 
 extension Counter {
-    func addReset(on date: Date = .now, note: String? = nil) {
-        resets.append(Reset(date: date, note: note))
+    func addReset(on date: Date = .now, note: String? = nil, isSlip: Bool = false) {
+        resets.append(Reset(date: date, note: note, isSlip: isSlip))
     }
 }

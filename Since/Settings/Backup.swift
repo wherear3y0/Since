@@ -19,12 +19,21 @@ struct Backup: Codable {
         var createdAt: Date
         var notifyMilestones: Bool
         var resets: [ResetData]
+        // Savings; missing in backups made before savings existed.
+        var unitName: String?
+        var unitsPerDay: Double?
+        var price: Double?
+        var unitsPerPrice: Int?
+        var minutesPerUnit: Double?
+        var showsHealth: Bool?
     }
 
     struct ResetData: Codable {
         var id: UUID
         var date: Date
         var note: String?
+        /// Missing in backups made before slips existed: those were all full resets.
+        var isSlip: Bool?
     }
 
     struct CountdownData: Codable {
@@ -47,6 +56,10 @@ struct Backup: Codable {
         var countsYears: Bool?
         /// Missing in backups made before countdown styles.
         var style: String?
+        /// Missing in backups made before pins, the Birthdays section and Live Activities.
+        var isPinned: Bool?
+        var isBirthday: Bool?
+        var showsLiveActivity: Bool?
     }
 
     var version = 1
@@ -62,7 +75,8 @@ struct Backup: Codable {
                           repeatRule: countdown.rule, note: countdown.note, sortOrder: countdown.sortOrder,
                           createdAt: countdown.createdAt, notifyBefore: countdown.notifyBefore,
                           isArchived: countdown.isArchived, countsYears: countdown.countsYears,
-                          style: countdown.styleRaw)
+                          style: countdown.styleRaw, isPinned: countdown.isPinned, isBirthday: countdown.isBirthday,
+                          showsLiveActivity: countdown.showsLiveActivity)
         }
         self.counters = counters.map { counter in
             CounterData(id: counter.id, title: counter.title, symbol: counter.symbol, color: counter.colorName,
@@ -70,8 +84,11 @@ struct Backup: Codable {
                         note: counter.note, sortOrder: counter.sortOrder, createdAt: counter.createdAt,
                         notifyMilestones: counter.notifyMilestones,
                         resets: counter.resets.sorted { $0.date < $1.date }.map {
-                            ResetData(id: $0.id, date: $0.date, note: $0.note)
-                        })
+                            ResetData(id: $0.id, date: $0.date, note: $0.note, isSlip: $0.isSlip)
+                        },
+                        unitName: counter.unitName, unitsPerDay: counter.unitsPerDay, price: counter.price,
+                        unitsPerPrice: counter.unitsPerPrice, minutesPerUnit: counter.minutesPerUnit,
+                        showsHealth: counter.showsHealth)
         }
     }
 
@@ -105,9 +122,15 @@ struct Backup: Codable {
             counter.sizeRaw = data.size ?? CardSize.m.rawValue
             counter.createdAt = data.createdAt
             counter.notifyMilestones = data.notifyMilestones
+            counter.unitName = data.unitName ?? ""
+            counter.unitsPerDay = data.unitsPerDay ?? 0
+            counter.price = data.price ?? 0
+            counter.unitsPerPrice = data.unitsPerPrice ?? 1
+            counter.minutesPerUnit = data.minutesPerUnit ?? 0
+            counter.showsHealth = data.showsHealth ?? false
             context.insert(counter)
             for resetData in data.resets {
-                let reset = Reset(date: resetData.date, note: resetData.note)
+                let reset = Reset(date: resetData.date, note: resetData.note, isSlip: resetData.isSlip ?? false)
                 reset.id = resetData.id
                 counter.resets.append(reset)
             }
@@ -130,6 +153,9 @@ struct Backup: Codable {
             countdown.isArchived = data.isArchived
             countdown.countsYears = data.countsYears ?? true
             countdown.styleRaw = data.style ?? CountdownStyle.calendar.rawValue
+            countdown.isPinned = data.isPinned ?? false
+            countdown.isBirthday = data.isBirthday ?? false
+            countdown.showsLiveActivity = data.showsLiveActivity ?? false
             context.insert(countdown)
         }
     }

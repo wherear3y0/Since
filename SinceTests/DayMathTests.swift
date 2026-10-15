@@ -100,6 +100,54 @@ struct DayMathTests {
         #expect(days.map(\.state) == [.before, .before, .before, .before, .before, .clean, .clean])
     }
 
+    @Test func slipKeepsTheDaysBeforeItDimmed() {
+        let grid = DayMath.heatmap(start: date("2026-10-01T09:00:00"), resets: [date("2026-10-07T09:00:00")],
+                                   slips: [date("2026-10-07T09:00:00")], now: date("2026-10-13T12:00:00"),
+                                   calendar: calendar)
+        let days = grid.flatMap { $0 }
+        #expect(days.filter { $0.state == .slipped }.count == 6) // Oct 1–6
+        #expect(days.filter { $0.state == .slip }.count == 1)
+        #expect(days.filter { $0.state == .clean }.count == 6) // Oct 8–13
+    }
+
+    @Test func fullResetStillClearsBeforeLaterSlips() {
+        let reset = date("2026-10-03T09:00:00")
+        let slip = date("2026-10-07T09:00:00")
+        let grid = DayMath.heatmap(start: date("2026-10-01T09:00:00"), resets: [slip, reset], slips: [slip],
+                                   now: date("2026-10-13T12:00:00"), calendar: calendar)
+        let days = grid.flatMap { $0 }
+        #expect(days.filter { $0.state == .slipped }.count == 3) // Oct 4–6
+        #expect(days.filter { $0.state == .slip }.count == 1)
+        #expect(days.filter { $0.state == .clean }.count == 6)
+        #expect(days.first { calendar.isDate($0.date, inSameDayAs: reset) }?.state == .before)
+    }
+
+    @Test func lastTimeMarksTheDaysItWasDone() {
+        let days = DayMath.recentDays(14, start: date("2026-10-01T09:00:00"),
+                                      resets: [date("2026-10-07T09:00:00"), date("2026-10-13T08:00:00")],
+                                      logsEvents: true, now: date("2026-10-13T12:00:00"), calendar: calendar)
+        #expect(days.filter { $0.state == .logged }.count == 3) // Oct 1, 7 and today
+        #expect(days.last?.state == .logged)
+        #expect(!days.contains { $0.state == .clean })
+    }
+
+    @Test func savings() {
+        let savings = Savings(unitsPerDay: 10, price: 8, unitsPerPrice: 20, minutesPerUnit: 5)
+        #expect(savings.moneyPerDay == 4)
+        #expect(savings.money(days: 9) == 36)
+        #expect(savings.units(days: 9) == 90)
+        #expect(savings.minutes(days: 9) == 450)
+        #expect(savings.money(days: -3) == 0)
+    }
+
+    @Test func healthMilestones() {
+        let start = date("2026-10-01T09:00:00")
+        let progress = HealthMilestone.progress(since: start, now: date("2026-10-04T09:00:00"), calendar: calendar)
+        #expect(progress.reached.map(\.when) == ["20 minutes", "12 hours"])
+        #expect(progress.next?.when == "2 weeks")
+        #expect(abs(progress.fraction - 2.5 / 13.5) < 0.01)
+    }
+
     @Test func longUnits() {
         #expect(DurationPart(value: 1, unit: "d").longUnit == "day")
         #expect(DurationPart(value: 18, unit: "w").longUnit == "weeks")

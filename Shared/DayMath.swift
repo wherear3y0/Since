@@ -10,13 +10,20 @@ nonisolated struct Streak: Identifiable, Hashable {
     var id: Date { start }
 }
 
-/// How a day on the heatmap looks. The heatmap shows the current streak only, so a reset clears it:
-/// everything up to and including the last reset is drawn faint. Past streaks live in the timeline.
+/// How a day on the heatmap looks. A full reset clears the heatmap: everything up to and including it
+/// is drawn faint. A slip starts the count again but keeps the days before it, dimmed.
+/// "Last time" counters draw the days something was done instead (see `logged`).
 nonisolated enum DayState {
-    /// Before the current streak (or before the counter started): drawn faint.
+    /// Before the counter started, or up to and including the last full reset: drawn faint.
     case before
     /// A day of the current streak: drawn bright.
     case clean
+    /// A clean day before a slip (after the last full reset): kept, but drawn dim and gray.
+    case slipped
+    /// The day of a slip.
+    case slip
+    /// For "last time" counters: a day it was done (the start or a logged day), drawn bright.
+    case logged
     case future
 }
 
@@ -96,11 +103,15 @@ nonisolated enum DayMath {
     }
 
     /// The last `weeks` weeks, oldest first, split into columns of 7 days (one column per week).
-    static func heatmap(start: Date, resets: [Date], now: Date, weeks: Int = 7, calendar: Calendar = .app) -> [[HeatmapDay]] {
+    /// `resets` are all resets, slips included; `slips` are the ones among them that were slips.
+    /// With `logsEvents` ("last time" counters) the start and every reset are drawn as days it was done.
+    static func heatmap(start: Date, resets: [Date], slips: [Date] = [], logsEvents: Bool = false, now: Date,
+                        weeks: Int = 7, calendar: Calendar = .app) -> [[HeatmapDay]] {
         let today = calendar.startOfDay(for: now)
         let thisWeek = calendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
         let firstWeek = calendar.date(byAdding: .weekOfYear, value: -(weeks - 1), to: thisWeek)!
-        let day = dayMaker(start: start, resets: resets, today: today, calendar: calendar)
+        let day = dayMaker(start: start, resets: resets, slips: slips, logsEvents: logsEvents, today: today,
+                           calendar: calendar)
 
         return (0..<weeks).map { week in
             (0..<7).map { weekday in
@@ -110,26 +121,48 @@ nonisolated enum DayMath {
     }
 
     /// The last `count` days ending today, oldest first.
-    static func recentDays(_ count: Int, start: Date, resets: [Date], now: Date, calendar: Calendar = .app) -> [HeatmapDay] {
+    static func recentDays(_ count: Int, start: Date, resets: [Date], slips: [Date] = [], logsEvents: Bool = false,
+                           now: Date, calendar: Calendar = .app) -> [HeatmapDay] {
         let today = calendar.startOfDay(for: now)
-        let day = dayMaker(start: start, resets: resets, today: today, calendar: calendar)
+        let day = dayMaker(start: start, resets: resets, slips: slips, logsEvents: logsEvents, today: today,
+                           calendar: calendar)
         return (0..<count).reversed().map { offset in
             day(calendar.date(byAdding: .day, value: -offset, to: today)!)
         }
     }
 
-    private static func dayMaker(start: Date, resets: [Date], today: Date, calendar: Calendar) -> (Date) -> HeatmapDay {
+    private static func dayMaker(start: Date, resets: [Date], slips: [Date], logsEvents: Bool, today: Date,
+                                 calendar: Calendar) -> (Date) -> HeatmapDay {
         let startDay = calendar.startOfDay(for: start)
-        let lastReset = resets.map { calendar.startOfDay(for: $0) }.filter { $0 >= startDay && $0 <= today }.max()
+        let counted = resets.filter { calendar.startOfDay(for: $0) >= startDay && calendar.startOfDay(for: $0) <= today }
+
+        if logsEvents {
+            let logged = Set(counted.map { calendar.startOfDay(for: $0) } + [startDay])
+            return { date in
+                let state: DayState = date > today ? .future : (logged.contains(date) ? .logged : .before)
+                return HeatmapDay(date: date, state: state, isToday: date == today)
+            }
+        }
+
+        // Slips are matched by their exact moment, so a slip and a full reset on the same day stay apart.
+        let slipMoments = Set(slips)
+        let lastFullReset = counted.filter { !slipMoments.contains($0) }.map { calendar.startOfDay(for: $0) }.max()
+        let slipDays = Set(counted.filter { slipMoments.contains($0) }.map { calendar.startOfDay(for: $0) })
+        let lastReset = counted.map { calendar.startOfDay(for: $0) }.max()
         return { date in
             let state: DayState
             if date > today {
                 state = .future
             } else if date < startDay {
                 state = .before
-            } else if let lastReset, date <= lastReset {
+            } else if let lastFullReset, date <= lastFullReset {
                 // The reset day itself is day 0 of the new streak, not a clean day.
                 state = .before
+            } else if slipDays.contains(date) {
+                state = .slip
+            } else if let lastReset, date < lastReset {
+                // Only slips can be left after the last full reset: the days before them stay, dimmed.
+                state = .slipped
             } else {
                 state = .clean
             }
