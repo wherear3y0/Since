@@ -18,12 +18,13 @@ struct CounterEditor: View {
     @State private var notifyMilestones: Bool
     @State private var kind: CounterKind
     @State private var note: String
-    // Savings, for "quit" counters.
+    // Savings, for "quit" counters. The numbers are kept as typed and read on Save: a number field only
+    // takes its value when editing ends, and a number pad has no key to end it before Save is tapped.
     @State private var unitName: String
-    @State private var unitsPerDay: Double
-    @State private var price: Double
-    @State private var unitsPerPrice: Int
-    @State private var minutesPerUnit: Double
+    @State private var unitsPerDayText: String
+    @State private var priceText: String
+    @State private var unitsPerPriceText: String
+    @State private var minutesPerUnitText: String
     @State private var showsHealth: Bool
     @State private var isPickingSymbol = false
     @State private var savedEdits = 0
@@ -46,10 +47,10 @@ struct CounterEditor: View {
         _kind = State(initialValue: counter?.kind ?? .quit)
         _note = State(initialValue: counter?.note ?? "")
         _unitName = State(initialValue: counter?.unitName ?? "")
-        _unitsPerDay = State(initialValue: counter?.unitsPerDay ?? 0)
-        _price = State(initialValue: counter?.price ?? 0)
-        _unitsPerPrice = State(initialValue: max(1, counter?.unitsPerPrice ?? 1))
-        _minutesPerUnit = State(initialValue: counter?.minutesPerUnit ?? 0)
+        _unitsPerDayText = State(initialValue: Self.text(for: counter?.unitsPerDay ?? 0))
+        _priceText = State(initialValue: Self.text(for: counter?.price ?? 0))
+        _unitsPerPriceText = State(initialValue: Self.text(for: Double(counter?.unitsPerPrice ?? 0)))
+        _minutesPerUnitText = State(initialValue: Self.text(for: counter?.minutesPerUnit ?? 0))
         _showsHealth = State(initialValue: counter?.showsHealth ?? false)
     }
 
@@ -193,37 +194,33 @@ struct CounterEditor: View {
                     .autocorrectionDisabled()
             }
             LabeledContent("A day") {
-                TextField("0", value: $unitsPerDay, format: .number)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
+                numberField("0", text: $unitsPerDayText)
             }
             LabeledContent("Price") {
-                TextField("0", value: $price, format: .currency(code: Savings.currencyCode))
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
+                HStack(spacing: 4) {
+                    numberField("0", text: $priceText)
+                    Text(Locale.current.currencySymbol ?? Savings.currencyCode)
+                        .foregroundStyle(.secondary)
+                }
             }
             LabeledContent("Price is for") {
                 HStack(spacing: 4) {
-                    TextField("1", value: $unitsPerPrice, format: .number)
-                        .keyboardType(.numberPad)
-                        .multilineTextAlignment(.trailing)
+                    numberField("1", text: $unitsPerPriceText, keyboard: .numberPad)
                     Text(units)
                         .foregroundStyle(.secondary)
                 }
             }
             LabeledContent("Minutes each") {
-                TextField("0", value: $minutesPerUnit, format: .number)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
+                numberField("0", text: $minutesPerUnitText)
             }
             Toggle("Health Recovery", isOn: $showsHealth)
                 .tint(color.color)
             Button("Fill In for Smoking", systemImage: "lungs") {
                 withAnimation {
                     unitName = "cigarettes"
-                    unitsPerPrice = 20
-                    if minutesPerUnit == 0 {
-                        minutesPerUnit = 5
+                    unitsPerPriceText = "20"
+                    if Self.number(from: minutesPerUnitText) == 0 {
+                        minutesPerUnitText = "5"
                     }
                     showsHealth = true
                 }
@@ -236,6 +233,27 @@ struct CounterEditor: View {
                  + "Since then shows the money, time and cigarettes saved over the clean days, "
                  + "and how the body recovers.")
         }
+    }
+
+    private func numberField(_ placeholder: String, text: Binding<String>,
+                             keyboard: UIKeyboardType = .decimalPad) -> some View {
+        TextField(placeholder, text: text)
+            .keyboardType(keyboard)
+            .multilineTextAlignment(.trailing)
+    }
+
+    /// A number as it's shown for editing: empty for 0, no grouping, decimals only when there are some.
+    private static func text(for value: Double) -> String {
+        value == 0 ? "" : value.formatted(.number.grouping(.never))
+    }
+
+    /// A number typed in the region's format ("9,50") or with a point ("9.50"); 0 when it isn't one.
+    private static func number(from text: String) -> Double {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        if let value = try? Double(trimmed, format: .number) {
+            return value
+        }
+        return Double(trimmed.replacingOccurrences(of: ",", with: ".")) ?? 0
     }
 
     /// Live preview of the counter: recolors smoothly when a color is picked.
@@ -312,10 +330,10 @@ struct CounterEditor: View {
     private func applySavings(to counter: Counter) {
         guard kind == .quit else { return }
         counter.unitName = unitName.trimmingCharacters(in: .whitespacesAndNewlines)
-        counter.unitsPerDay = max(0, unitsPerDay)
-        counter.price = max(0, price)
-        counter.unitsPerPrice = max(1, unitsPerPrice)
-        counter.minutesPerUnit = max(0, minutesPerUnit)
+        counter.unitsPerDay = max(0, Self.number(from: unitsPerDayText))
+        counter.price = max(0, Self.number(from: priceText))
+        counter.unitsPerPrice = Int(min(10_000, max(1, Self.number(from: unitsPerPriceText))).rounded())
+        counter.minutesPerUnit = max(0, Self.number(from: minutesPerUnitText))
         counter.showsHealth = showsHealth
     }
 
