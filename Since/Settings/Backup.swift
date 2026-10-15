@@ -64,6 +64,9 @@ struct Backup: Codable {
         var isPinned: Bool?
         var isBirthday: Bool?
         var showsLiveActivity: Bool?
+        /// The Calendar event it was picked from, if any.
+        var calendarItemID: String?
+        var calendarExternalID: String?
     }
 
     var version = 1
@@ -80,7 +83,8 @@ struct Backup: Codable {
                           createdAt: countdown.createdAt, notifyBefore: countdown.notifyBefore,
                           isArchived: countdown.isArchived, countsYears: countdown.countsYears,
                           style: countdown.styleRaw, isPinned: countdown.isPinned, isBirthday: countdown.isBirthday,
-                          showsLiveActivity: countdown.showsLiveActivity)
+                          showsLiveActivity: countdown.showsLiveActivity, calendarItemID: countdown.calendarItemID,
+                          calendarExternalID: countdown.calendarExternalID)
         }
         self.counters = counters.map { counter in
             CounterData(id: counter.id, title: counter.title, symbol: counter.symbol, color: counter.colorName,
@@ -162,6 +166,8 @@ struct Backup: Codable {
             countdown.isPinned = data.isPinned ?? false
             countdown.isBirthday = data.isBirthday ?? false
             countdown.showsLiveActivity = data.showsLiveActivity ?? false
+            countdown.calendarItemID = data.calendarItemID
+            countdown.calendarExternalID = data.calendarExternalID
             context.insert(countdown)
         }
     }

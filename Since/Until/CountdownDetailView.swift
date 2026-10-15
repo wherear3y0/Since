@@ -52,6 +52,10 @@ struct CountdownDetailView: View {
                         .blurIn(contentShown, delay: 0.14)
                 }
 
+                CountdownCalendarCard(countdown: countdown)
+                    .detailCard()
+                    .blurIn(contentShown, delay: 0.155)
+
                 Group {
                     sectionHeader("Summary")
                     summary

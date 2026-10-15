@@ -36,6 +36,12 @@ final class Countdown {
     /// A Live Activity on the Lock Screen and in the Dynamic Island on the day itself. Off by default:
     /// meant only for the days that really matter.
     var showsLiveActivity: Bool = false
+    /// The Calendar event a countdown was picked from, to show it and notice when it's moved or deleted there.
+    /// Nil for countdowns made by hand, and for ones imported before this was kept.
+    var calendarItemID: String? = nil
+    /// The same event's identifier on the calendar server, which survives a full resync that `calendarItemID`
+    /// doesn't.
+    var calendarExternalID: String? = nil
 
     init(title: String, symbol: String, color: CounterColor, date: Date, rule: RepeatRule = .never,
          note: String? = nil, sortOrder: Int = 0) {

@@ -189,10 +189,12 @@ struct CalendarImportView: View {
     }
 
     /// Already a countdown with the same name on the same day.
+    /// Already a countdown linked to this event, or one with the same name on the same day.
     private func alreadyAdded(_ event: CalendarEvent) -> Bool {
         countdowns.contains { countdown in
-            countdown.title.localizedCaseInsensitiveCompare(event.title) == .orderedSame
-                && Calendar.app.isDate(countdown.target(), inSameDayAs: event.date)
+            countdown.calendarItemID == event.id
+                || (countdown.title.localizedCaseInsensitiveCompare(event.title) == .orderedSame
+                    && Calendar.app.isDate(countdown.target(), inSameDayAs: event.date))
         }
     }
 
@@ -205,6 +207,9 @@ struct CalendarImportView: View {
             // Calendar gives the next time, not the first, so there's no telling how many years it's been.
             countdown.countsYears = false
             countdown.isBirthday = event.symbol == "birthday.cake.fill" && event.rule?.frequency == .yearly
+            // Kept so the countdown can show the event and notice when it's moved or deleted in Calendar.
+            countdown.calendarItemID = event.id
+            countdown.calendarExternalID = event.externalID
             context.insert(countdown)
         }
         saveChanges(context)
@@ -214,7 +219,10 @@ struct CalendarImportView: View {
 
 /// An event from Calendar, copied out of EventKit for the list.
 struct CalendarEvent: Identifiable {
+    /// The event's `calendarItemIdentifier`.
     let id: String
+    /// Its `calendarItemExternalIdentifier`, the server's identifier.
+    var externalID: String?
     let title: String
     /// The next time it happens.
     let date: Date
@@ -246,7 +254,8 @@ struct CalendarEvent: Identifiable {
             // A repeating event comes back once per time; only the next one is kept.
             guard !title.isEmpty, seen.insert(event.calendarItemIdentifier).inserted else { return nil }
             let calendarRule = event.recurrenceRules?.first
-            return CalendarEvent(id: event.calendarItemIdentifier, title: title, date: event.startDate,
+            return CalendarEvent(id: event.calendarItemIdentifier, externalID: event.calendarItemExternalIdentifier,
+                                 title: title, date: event.startDate,
                                  rule: calendarRule.flatMap {
                                      RepeatRule($0, start: event.startDate, lastTime: lastTime[event.calendarItemIdentifier])
                                  },
