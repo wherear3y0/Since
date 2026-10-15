@@ -45,6 +45,8 @@
 	</array>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Since reads your calendars so you can pick events to count down to. Nothing leaves your iPhone.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>me.wherar3y0.since.counter</string>

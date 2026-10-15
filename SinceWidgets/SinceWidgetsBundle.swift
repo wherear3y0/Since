@@ -10,5 +10,6 @@ struct SinceWidgetsBundle: WidgetBundle {
         CountdownWidget()
         CountdownGridWidget()
         CountdownListWidget()
+        CountdownLiveActivity()
     }
 }

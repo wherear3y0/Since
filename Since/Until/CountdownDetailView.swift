@@ -176,6 +176,9 @@ struct CountdownDetailView: View {
         if countdown.isPinned {
             rows.append(SummaryRow(symbol: "pin", title: "Pinned", value: "On top of Until"))
         }
+        if countdown.showsLiveActivity {
+            rows.append(SummaryRow(symbol: "iphone", title: "Live Activity", value: "On the day"))
+        }
 
         return VStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.offset) { index, row in

@@ -30,6 +30,9 @@ struct SettingsView: View {
                 if !countdowns.isEmpty {
                     countdownRemindersSection
                 }
+                if countdowns.contains(where: { !$0.isArchived }) {
+                    liveActivitiesSection
+                }
                 backupSection
                 aboutSection
             }
@@ -159,6 +162,36 @@ struct SettingsView: View {
         .sectionReveal(isRevealed, delay: 0.16)
     }
 
+    /// Off for every countdown until turned on here or in its editor.
+    private var liveActivitiesSection: some View {
+        Section {
+            if !LiveActivities.areEnabled {
+                Button {
+                    openURL(URL(string: UIApplication.openSettingsURLString)!)
+                } label: {
+                    Label("Turn On Live Activities in Settings", systemImage: "exclamationmark.circle")
+                }
+            }
+            ForEach(countdowns.filter { !$0.isArchived }) { countdown in
+                Toggle(isOn: liveActivityBinding(for: countdown)) {
+                    Label {
+                        Text(countdown.title)
+                    } icon: {
+                        Image(systemName: countdown.symbol)
+                            .foregroundStyle(countdown.color.color)
+                    }
+                }
+                .tint(countdown.color.color)
+            }
+        } header: {
+            Text("Live Activities")
+        } footer: {
+            Text("On the day itself, on the Lock Screen and in the Dynamic Island. It appears once you open Since "
+                 + "that day, and only once. Keep it for the days that matter most.")
+        }
+        .sectionReveal(isRevealed, delay: 0.18)
+    }
+
     private var backupSection: some View {
         Section {
             Button {
@@ -236,6 +269,18 @@ struct SettingsView: View {
                     refreshMirrors(context)
                 }
             }
+        }
+    }
+
+    private func liveActivityBinding(for countdown: Countdown) -> Binding<Bool> {
+        Binding {
+            countdown.showsLiveActivity
+        } set: { isOn in
+            if isOn {
+                LiveActivities.allowRestart(of: countdown.id)
+            }
+            countdown.showsLiveActivity = isOn
+            saveChanges(context)
         }
     }
 

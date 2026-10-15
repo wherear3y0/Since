@@ -45,6 +45,8 @@ targets:
           - INAlternativeAppName: Синс
         NSUserActivityTypes: [me.wherar3y0.since.counter, me.wherar3y0.since.countdown]
         NSCalendarsFullAccessUsageDescription: Since reads your calendars so you can pick events to count down to. Nothing leaves your iPhone.
+        # A countdown's day can be shown on the Lock Screen and in the Dynamic Island.
+        NSSupportsLiveActivities: true
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false

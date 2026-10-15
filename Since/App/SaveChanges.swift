@@ -10,12 +10,13 @@ func saveChanges(_ context: ModelContext) {
     refreshMirrors(context)
 }
 
-/// Reminders, Siri phrases and the Spotlight index, without saving. Also run when the app comes to the foreground,
+/// Reminders, Live Activities, Siri phrases and the Spotlight index, without saving. Also run when the app comes to the foreground,
 /// so a new day's milestones get scheduled.
 func refreshMirrors(_ context: ModelContext) {
     let counters = (try? context.fetch(FetchDescriptor<Counter>(sortBy: [SortDescriptor(\.sortOrder)]))) ?? []
     let countdowns = (try? context.fetch(FetchDescriptor<Countdown>(sortBy: [SortDescriptor(\.sortOrder)]))) ?? []
     Milestones.reschedule(counters, countdowns: countdowns)
+    LiveActivities.refresh(countdowns)
     SinceShortcuts.updateAppShortcutParameters()
 
     // Siri and Spotlight find counters and countdowns by meaning. Their day counts go stale overnight,

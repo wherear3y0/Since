@@ -20,6 +20,7 @@ struct CountdownEditor: View {
     @State private var notifyBefore: Bool
     @State private var note: String
     @State private var isBirthday: Bool
+    @State private var showsLiveActivity: Bool
     @State private var isPickingSymbol = false
     @State private var savedEdits = 0
     @State private var isConfirmingDelete = false
@@ -41,6 +42,7 @@ struct CountdownEditor: View {
         _notifyBefore = State(initialValue: countdown?.notifyBefore ?? false)
         _note = State(initialValue: countdown?.note ?? "")
         _isBirthday = State(initialValue: countdown?.isBirthday ?? false)
+        _showsLiveActivity = State(initialValue: countdown?.showsLiveActivity ?? false)
     }
 
     private var trimmedTitle: String {
@@ -150,8 +152,11 @@ struct CountdownEditor: View {
                 Section {
                     Toggle("Reminders", isOn: $notifyBefore)
                         .tint(color.color)
+                    Toggle("Live Activity on the Day", isOn: $showsLiveActivity)
+                        .tint(color.color)
                 } footer: {
-                    Text("A notification a week before, the day before and on the day.")
+                    Text("Reminders: a notification a week before, the day before and on the day. "
+                         + "Live Activity: the day on the Lock Screen and in the Dynamic Island, for the days that matter most.")
                         .blurIn(isPreviewShown, delay: 0.26)
                 }
                 .sectionReveal(isPreviewShown, delay: 0.26)
@@ -313,6 +318,10 @@ struct CountdownEditor: View {
             countdown.notifyBefore = notifyBefore
             countdown.note = finalNote
             countdown.isBirthday = isBirthday
+            if showsLiveActivity && !countdown.showsLiveActivity {
+                LiveActivities.allowRestart(of: countdown.id)
+            }
+            countdown.showsLiveActivity = showsLiveActivity
             // Moved to a day still ahead, or made to repeat: it's upcoming again.
             if !countdown.hasPassed() {
                 countdown.isArchived = false
@@ -327,6 +336,7 @@ struct CountdownEditor: View {
             newCountdown.style = style
             newCountdown.notifyBefore = notifyBefore
             newCountdown.isBirthday = isBirthday
+            newCountdown.showsLiveActivity = showsLiveActivity
             context.insert(newCountdown)
         }
         saveChanges(context)
