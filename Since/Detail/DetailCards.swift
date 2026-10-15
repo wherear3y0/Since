@@ -230,9 +230,17 @@ struct HealthCard: View {
     @AppStorage("healthCardExpanded") private var isExpanded = false
 
     var body: some View {
+        // The first steps are minutes and hours apart, so the card follows the clock while it's on screen.
+        TimelineView(.everyMinute) { context in
+            card(now: context.date)
+        }
+    }
+
+    @ViewBuilder
+    private func card(now: Date) -> some View {
         let tint = counter.color.color
         let start = counter.currentStreakStart
-        let progress = HealthMilestone.progress(since: start)
+        let progress = HealthMilestone.progress(since: start, now: now)
         let total = HealthMilestone.smoking.count
         let overall = (Double(progress.reached.count) + (progress.next == nil ? 0 : progress.fraction)) / Double(total)
 

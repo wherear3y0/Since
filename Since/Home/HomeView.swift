@@ -127,6 +127,9 @@ struct HomeView: View {
                         withAnimation {
                             if undoable.takesOne && undoable.reset.amount > 1 {
                                 undoable.reset.amount -= 1
+                                if let previous = undoable.previousDate {
+                                    undoable.reset.date = previous
+                                }
                             } else {
                                 undoable.counter.resets.removeAll { $0 === undoable.reset }
                                 context.delete(undoable.reset)
@@ -317,7 +320,8 @@ extension HomeView {
         let reset = Reset(date: date, note: note, isSlip: isSlip, amount: amount)
         withAnimation {
             counter.resets.append(reset)
-            undoable = UndoableReset(counter: counter, counterID: counter.id, reset: reset, takesOne: false)
+            undoable = UndoableReset(counter: counter, counterID: counter.id, reset: reset, takesOne: false,
+                                     previousDate: nil)
             toastTick += 1
         }
         saveChanges(context)
@@ -327,7 +331,7 @@ extension HomeView {
         withAnimation {
             let logged = counter.logSlip()
             undoable = UndoableReset(counter: counter, counterID: counter.id, reset: logged.slip,
-                                     takesOne: logged.addedToToday)
+                                     takesOne: logged.addedToToday, previousDate: logged.previousDate)
             toastTick += 1
         }
         saveChanges(context)
@@ -342,6 +346,8 @@ struct UndoableReset {
     let reset: Reset
     /// One was added to today's slip: Undo takes it off instead of removing the slip.
     let takesOne: Bool
+    /// The slip's time before one was added, which Undo puts back.
+    let previousDate: Date?
 
     var text: String {
         guard reset.isSlip else { return counter.kind.toast }

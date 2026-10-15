@@ -214,15 +214,18 @@ extension Counter {
     }
 
     /// Logs a slip now: one more on today's slip if there is one, otherwise a new slip of one.
-    /// Returns the slip and whether one was added to today's.
+    /// One more also moves today's slip to now, since the health steps count from the latest cigarette.
+    /// Returns the slip, whether one was added to today's, and the time it had before, for Undo.
     @discardableResult
-    func logSlip(calendar: Calendar = .app) -> (slip: Reset, addedToToday: Bool) {
+    func logSlip(calendar: Calendar = .app) -> (slip: Reset, addedToToday: Bool, previousDate: Date?) {
         if let today = slipToday(calendar: calendar) {
+            let previous = today.date
             today.amount = max(1, today.amount) + 1
-            return (today, true)
+            today.date = max(today.date, .now)
+            return (today, true, previous)
         }
         let slip = Reset(date: .now, isSlip: true)
         resets.append(slip)
-        return (slip, false)
+        return (slip, false, nil)
     }
 }

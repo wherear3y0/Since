@@ -10,7 +10,7 @@ struct CountdownCalendarCard: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
-    @State private var store = EKEventStore()
+    @Environment(\.scenePhase) private var scenePhase
     @State private var state: LinkState = .loading
     @State private var shownEvent: ShownEvent?
 
@@ -27,7 +27,11 @@ struct CountdownCalendarCard: View {
         case linked(EKEvent)
         /// Linked, but the event is gone from Calendar.
         case deleted
+        /// Linked to a repeating event that doesn't come round anymore (in the next two years).
+        case ended
     }
+
+    private var store: EKEventStore { .shared }
 
     private struct ShownEvent: Identifiable {
         let id = UUID()
@@ -54,6 +58,12 @@ struct CountdownCalendarCard: View {
         .task(id: "\(countdown.calendarItemID ?? "")|\(countdown.target().timeIntervalSince1970)") {
             load()
         }
+        // Coming back from Calendar (after Open in Calendar, say), the event may have been moved or deleted.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                load()
+            }
+        }
         .sheet(item: $shownEvent, onDismiss: load) { shown in
             CalendarEventView(event: shown.event) {
                 shownEvent = nil
@@ -78,6 +88,8 @@ struct CountdownCalendarCard: View {
             return "From your “\(event.calendar?.title ?? "")” calendar."
         case .deleted:
             return "The event this countdown came from is no longer in Calendar."
+        case .ended:
+            return "The event this countdown came from doesn’t come round in Calendar anymore."
         }
     }
 
@@ -102,7 +114,7 @@ struct CountdownCalendarCard: View {
         case .linked(let event):
             eventRow(event)
             HStack(spacing: 8) {
-                if isMoved(event) {
+                if isMoved(event) && canUseDate(of: event) {
                     Button {
                         useDate(of: event)
                     } label: {
@@ -122,7 +134,7 @@ struct CountdownCalendarCard: View {
                 .buttonStyle(.glass)
             }
             .lineLimit(1)
-        case .deleted:
+        case .deleted, .ended:
             Button("Unlink", systemImage: "link.badge.plus") {
                 unlink()
             }
@@ -167,7 +179,7 @@ struct CountdownCalendarCard: View {
         }
         if isLinked {
             if let event = linkedEvent() {
-                state = .linked(nextOccurrence(of: event))
+                state = occurrence(of: event).map(LinkState.linked) ?? .ended
             } else {
                 state = .deleted
             }
@@ -192,15 +204,23 @@ struct CountdownCalendarCard: View {
         return nil
     }
 
-    /// For a repeating event, its next time in the coming two years, today included; otherwise the event.
-    private func nextOccurrence(of event: EKEvent) -> EKEvent {
+    /// The time of the event that goes with the countdown: for a repeating event, the one on the countdown's
+    /// day if there is one (a countdown made from "next time only" stays on its day), otherwise the next one
+    /// from today. Nil when a repeating event has no time left in the coming two years.
+    private func occurrence(of event: EKEvent) -> EKEvent? {
         guard event.hasRecurrenceRules, let calendar = event.calendar else { return event }
-        let today = Calendar.app.startOfDay(for: .now)
-        guard let end = Calendar.app.date(byAdding: .year, value: 2, to: today) else { return event }
-        let predicate = store.predicateForEvents(withStart: today, end: end, calendars: [calendar])
-        let occurrences = store.events(matching: predicate)
+        let cal = Calendar.app
+        let day = cal.startOfDay(for: countdown.target())
+        let today = cal.startOfDay(for: .now)
+        guard let end = cal.date(byAdding: .year, value: 2, to: max(day, today)) else { return event }
+        let predicate = store.predicateForEvents(withStart: min(day, today), end: end, calendars: [calendar])
+        let times = store.events(matching: predicate)
             .filter { $0.calendarItemIdentifier == event.calendarItemIdentifier }
-        return occurrences.min { ($0.startDate ?? .distantFuture) < ($1.startDate ?? .distantFuture) } ?? event
+            .sorted { ($0.startDate ?? .distantFuture) < ($1.startDate ?? .distantFuture) }
+        if let onDay = times.first(where: { $0.startDate.map { cal.isDate($0, inSameDayAs: day) } ?? false }) {
+            return onDay
+        }
+        return times.first { ($0.startDate ?? .distantPast) >= today }
     }
 
     /// An event with the countdown's name on its day, for one picked from Calendar before links were kept.
@@ -209,9 +229,12 @@ struct CountdownCalendarCard: View {
         let day = Calendar.app.startOfDay(for: countdown.target())
         guard let end = Calendar.app.date(byAdding: .day, value: 1, to: day) else { return nil }
         let events = store.events(matching: store.predicateForEvents(withStart: day, end: end, calendars: nil))
+        // Only an event that repeats like the countdown: a one-off linked to a yearly countdown would look
+        // moved from the next year on.
         let same = events.filter {
-            ($0.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                .localizedCaseInsensitiveCompare(countdown.title) == .orderedSame
+            $0.hasRecurrenceRules == countdown.rule.repeats
+                && ($0.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                    .localizedCaseInsensitiveCompare(countdown.title) == .orderedSame
         }
         return same.count == 1 ? same[0] : nil
     }
@@ -275,11 +298,23 @@ struct CountdownCalendarCard: View {
         saveChanges(context)
     }
 
-    /// Moves the countdown to the day the event now falls on.
+    /// One time of a repeating event moved on its own can't be followed by a repeat rule: only the note shows.
+    private func canUseDate(of event: EKEvent) -> Bool {
+        !(countdown.rule.repeats && event.isDetached)
+    }
+
+    /// Moves the countdown to the day the event now falls on. For a repeating one the whole series moved,
+    /// so its first day shifts by as much and the years still count from it.
     private func useDate(of event: EKEvent) {
         guard let start = event.startDate else { return }
+        let cal = Calendar.app
         withAnimation(.smooth) {
-            countdown.date = Calendar.app.startOfDay(for: start)
+            if countdown.rule.repeats {
+                let shift = DayMath.daysUntil(start, from: countdown.target(), calendar: cal)
+                countdown.date = cal.date(byAdding: .day, value: shift, to: countdown.date) ?? countdown.date
+            } else {
+                countdown.date = cal.date(bySettingHour: 12, minute: 0, second: 0, of: start) ?? start
+            }
             if !countdown.hasPassed() {
                 countdown.isArchived = false
             }
@@ -319,4 +354,9 @@ struct CalendarEventView: UIViewControllerRepresentable {
             onDone()
         }
     }
+}
+
+extension EKEventStore {
+    /// One store for the whole app, as EventKit recommends: it's slow to make.
+    static let shared = EKEventStore()
 }

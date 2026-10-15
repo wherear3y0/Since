@@ -13,7 +13,7 @@ struct CalendarImportView: View {
 
     private enum Access { case unknown, granted, denied }
 
-    @State private var store = EKEventStore()
+    private let store = EKEventStore.shared
     @State private var access = Access.unknown
     @State private var events: [CalendarEvent] = []
     @State private var selected: Set<String> = []
@@ -305,6 +305,11 @@ extension RepeatRule {
         case .yearly: frequency = .yearly
         @unknown default: return nil
         }
+        // Calendar skips the months (or years) without the day, while Since would move it to the last day:
+        // the two would disagree, so such repeats are taken as the next time only.
+        let day = Calendar.app.dateComponents([.month, .day], from: start)
+        if frequency == .monthly && (day.day ?? 1) > 28 { return nil }
+        if frequency == .yearly && day.month == 2 && day.day == 29 { return nil }
         interval = max(1, rule.interval)
         weekdays = Set(onWeekdays.map(\.dayOfTheWeek.rawValue))
         if let endDate = rule.recurrenceEnd?.endDate {

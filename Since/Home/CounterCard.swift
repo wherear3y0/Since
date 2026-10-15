@@ -92,7 +92,8 @@ struct CounterCard: View {
                 } else {
                     stat("Average", value: "\(average)d")
                 }
-                stat(counter.kind.resetsTitle, value: "\(counter.resets.count)")
+                stat(counter.kind.resetsTitle,
+                     value: "\(counter.resets.count + (counter.kind == .quit ? counter.extraSlips : 0))")
             }
         }
     }

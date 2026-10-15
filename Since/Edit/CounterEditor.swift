@@ -255,8 +255,8 @@ struct CounterEditor: View {
             Text("Savings")
         } footer: {
             Text("For smoking: cigarettes a day, the price of a pack and how many are in it. "
-                 + "Since then shows the money, time and cigarettes saved over the clean days, "
-                 + "and how the body recovers.")
+                 + "Since then shows the money, time and cigarettes saved since the last full reset, "
+                 + "less the ones had in slips, and how the body recovers.")
         }
     }
 

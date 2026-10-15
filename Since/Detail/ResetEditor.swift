@@ -133,8 +133,8 @@ struct ResetEditor: View {
                         .frame(maxWidth: .infinity)
                         .confirmationDialog("\(deleteTitle)?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
                             Button(deleteTitle, role: .destructive) {
-                                onDelete()
                                 dismiss()
+                                onDelete()
                             }
                         }
                     }

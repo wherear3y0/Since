@@ -14,6 +14,8 @@ struct CounterDetailView: View {
     @State private var undoableReset: Reset?
     /// The toast's Undo takes one off today's slip instead of removing the entry.
     @State private var undoTakesOne = false
+    /// Today's slip's time before one was added, which Undo puts back.
+    @State private var undoPreviousDate: Date?
     /// Restarts the toast's timer on every new action, even one on the same slip.
     @State private var toastTick = 0
     /// The heatmap wave plays once per opening, not again when the card scrolls back into view.
@@ -159,6 +161,8 @@ struct CounterDetailView: View {
                 }
             }
         }
+        // One more on today's slip (or Undo taking it off) changes no date, so it gets its own tap.
+        .sensoryFeedback(.success, trigger: toastTick)
         .sensoryFeedback(trigger: counter.resetDates) { old, new in
             if new.count > old.count { return .success }
             if new.count < old.count { return .impact(weight: .light) }
@@ -361,6 +365,7 @@ struct CounterDetailView: View {
             counter.resets.append(reset)
             undoableReset = reset
             undoTakesOne = false
+            undoPreviousDate = nil
             toastTick += 1
         }
         saveChanges(context)
@@ -371,6 +376,7 @@ struct CounterDetailView: View {
             let logged = counter.logSlip()
             undoableReset = logged.slip
             undoTakesOne = logged.addedToToday
+            undoPreviousDate = logged.previousDate
             toastTick += 1
         }
         saveChanges(context)
@@ -381,6 +387,9 @@ struct CounterDetailView: View {
             withAnimation {
                 undoableReset = nil
                 reset.amount -= 1
+                if let undoPreviousDate {
+                    reset.date = undoPreviousDate
+                }
             }
             saveChanges(context)
         } else {
@@ -393,6 +402,7 @@ struct CounterDetailView: View {
         withAnimation {
             if undoableReset === reset {
                 undoableReset = nil
+                undoTakesOne = false
             }
             counter.resets.removeAll { $0 === reset }
             context.delete(reset)
