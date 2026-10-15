@@ -108,25 +108,28 @@ struct MediumCounterView: View {
     }
 }
 
+/// The title and the number share the top row, so the heatmap gets all the height in between.
 struct LargeCounterView: View {
     let counter: CounterSnapshot
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            WidgetTitle(counter: counter, font: .headline)
-            WidgetDayCount(days: counter.days, size: 52)
-                .padding(.top, 6)
-            Text("since \(counter.since.sinceFormat)")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 3) {
+                    WidgetTitle(counter: counter, font: .headline)
+                    Text("since \(counter.since.sinceFormat)")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 8)
+                WidgetDayCount(days: counter.days, size: 46)
+                    .fixedSize()
+            }
 
-            Spacer(minLength: 10)
-            WidgetHeatmap(counter: counter, weeks: 16, showsWeekdays: true)
-            Spacer(minLength: 10)
+            FillingWidgetHeatmap(counter: counter)
 
             if counter.kind == .quit || counter.average > 0 {
                 WidgetProgressBar(counter: counter)
-                    .padding(.bottom, 12)
             }
             HStack(alignment: .top) {
                 stat(counter.kind == .quit ? "Best" : "Longest", "\(counter.best)d")

@@ -273,20 +273,26 @@ struct MediumCountdownView: View {
     }
 }
 
+/// The title and the days share the top row, so the wait (in the countdown's style) gets the height in between.
 struct LargeCountdownView: View {
     let countdown: CountdownSnapshot
 
     var body: some View {
         let left = countdown.timeLeft
-        VStack(alignment: .leading, spacing: 0) {
-            WidgetTitle(title: countdown.title, symbol: countdown.symbol, tint: countdown.tint, font: .headline)
-            WidgetDaysLeft(days: countdown.daysLeft, size: 52)
-                .padding(.top, 6)
-            Text(countdown.dateLine)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 3) {
+                    WidgetTitle(title: countdown.title, symbol: countdown.symbol, tint: countdown.tint, font: .headline)
+                    Text(countdown.dateLine)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 8)
+                WidgetDaysLeft(days: countdown.daysLeft, size: 46)
+                    .fixedSize()
+            }
 
-            Spacer(minLength: 10)
             switch countdown.style {
             case .calendar:
                 HStack(spacing: 14) {
@@ -295,19 +301,35 @@ struct LargeCountdownView: View {
                                   showsTitle: true, spacing: 2)
                     }
                 }
-                .frame(height: 150)
-                Spacer(minLength: 10)
+                .frame(maxHeight: .infinity)
                 if countdown.daysLeft > 0 {
                     WidgetWaitBar(countdown: countdown)
-                        .padding(.bottom, 12)
                 }
             case .fill:
-                CountdownFillFooter(waited: countdown.waited, daysLeft: countdown.daysLeft, progress: countdown.progress)
-                    .padding(.bottom, 12)
+                // The color rising up the background shows the wait; the number says it.
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(Int((countdown.progress * 100).rounded()))%")
+                        .font(.system(size: 56, weight: .bold))
+                        .foregroundStyle(countdown.tint)
+                        .widgetAccentable()
+                    Text(countdown.daysLeft > 0 ? "of the wait is behind · day \(countdown.waited) of \(countdown.total)"
+                                                : "The wait is over")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             case .timeline:
-                CountdownTimeline(start: countdown.waitStart, target: countdown.target, waited: countdown.waited,
-                                  daysLeft: countdown.daysLeft, tint: countdown.tint, thickness: 5, now: countdown.date)
-                Spacer(minLength: 10)
+                VStack(alignment: .leading, spacing: 16) {
+                    CountdownTimeline(start: countdown.waitStart, target: countdown.target, waited: countdown.waited,
+                                      daysLeft: countdown.daysLeft, tint: countdown.tint, thickness: 6,
+                                      now: countdown.date)
+                    if countdown.daysLeft > 0 {
+                        WidgetWaitBar(countdown: countdown)
+                    }
+                }
+                .frame(maxHeight: .infinity)
             }
 
             if countdown.daysLeft > 0 {

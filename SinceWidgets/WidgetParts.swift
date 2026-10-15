@@ -91,15 +91,31 @@ struct WeekStrip: View {
     }
 }
 
-/// A grid of weeks, one column per week. Sizes itself to the space it's given.
+/// A grid of weeks, one column per week, with square days. Sizes itself to the space it's given.
 struct WidgetHeatmap: View {
     let grid: [[HeatmapDay]]
     let tint: Color
     var spacing: CGFloat = 3
     var showsWeekdays = false
 
+    /// Room for the weekday letters and the gap after them.
+    static let labelWidth: CGFloat = 14
+
     var body: some View {
-        HStack(alignment: .top, spacing: 6) {
+        HStack(spacing: spacing) {
+            ForEach(Array(grid.enumerated()), id: \.offset) { _, week in
+                VStack(spacing: spacing) {
+                    ForEach(week) { day in
+                        WidgetDayCell(day: day, tint: tint)
+                    }
+                }
+            }
+        }
+        .aspectRatio(CGFloat(grid.count) / 7, contentMode: .fit)
+        // The letters sit in an overlay, so they stretch to exactly the grid's height and each one lines up
+        // with its row. In the stack they used to stretch to all the free height instead.
+        .padding(.leading, showsWeekdays ? Self.labelWidth : 0)
+        .overlay(alignment: .leading) {
             if showsWeekdays {
                 VStack(alignment: .leading, spacing: spacing) {
                     ForEach(weekdayLetters, id: \.offset) { _, letter in
@@ -109,18 +125,8 @@ struct WidgetHeatmap: View {
                             .frame(maxHeight: .infinity)
                     }
                 }
-                .fixedSize(horizontal: true, vertical: false)
+                .frame(width: Self.labelWidth - 4, alignment: .leading)
             }
-            HStack(spacing: spacing) {
-                ForEach(Array(grid.enumerated()), id: \.offset) { _, week in
-                    VStack(spacing: spacing) {
-                        ForEach(week) { day in
-                            WidgetDayCell(day: day, tint: tint)
-                        }
-                    }
-                }
-            }
-            .aspectRatio(CGFloat(grid.count) / 7, contentMode: .fit)
         }
     }
 
@@ -134,6 +140,25 @@ struct WidgetHeatmap: View {
 extension WidgetHeatmap {
     init(counter: CounterSnapshot, weeks: Int, showsWeekdays: Bool = false) {
         self.init(grid: counter.heatmap(weeks: weeks), tint: counter.tint, showsWeekdays: showsWeekdays)
+    }
+}
+
+/// A heatmap that fills the space it's given: days as tall as the height allows (up to a limit),
+/// and as many weeks as then fit across, today's column at the trailing edge.
+struct FillingWidgetHeatmap: View {
+    let counter: CounterSnapshot
+    var spacing: CGFloat = 3
+    var maxCell: CGFloat = 24
+
+    var body: some View {
+        GeometryReader { proxy in
+            let labels = WidgetHeatmap.labelWidth
+            let cell = max(4, min(maxCell, (proxy.size.height - 6 * spacing) / 7))
+            let weeks = max(1, Int((proxy.size.width - labels + spacing) / (cell + spacing)))
+            WidgetHeatmap(counter: counter, weeks: weeks, showsWeekdays: true)
+                .frame(width: labels + CGFloat(weeks) * (cell + spacing) - spacing, height: 7 * cell + 6 * spacing)
+                .frame(width: proxy.size.width, height: proxy.size.height, alignment: .trailing)
+        }
     }
 }
 
