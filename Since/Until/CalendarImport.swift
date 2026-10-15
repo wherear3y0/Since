@@ -203,10 +203,11 @@ struct CalendarImportView: View {
         // New countdowns go on top, in the order of the list.
         for (event, order) in zip(picked, Countdown.topOrders(picked.count, above: countdowns)) {
             let countdown = Countdown(title: event.title, symbol: event.symbol, color: event.color,
-                                      date: event.date, rule: event.rule ?? .never, sortOrder: order)
+                                      date: Calendar.app.date(bySettingHour: 12, minute: 0, second: 0, of: event.date) ?? event.date,
+                                      rule: event.rule ?? .never, sortOrder: order)
             // Calendar gives the next time, not the first, so there's no telling how many years it's been.
             countdown.countsYears = false
-            countdown.isBirthday = event.symbol == "birthday.cake.fill" && event.rule?.frequency == .yearly
+            countdown.isBirthday = countdown.looksLikeBirthday
             // Kept so the countdown can show the event and notice when it's moved or deleted in Calendar.
             countdown.calendarItemID = event.id
             countdown.calendarExternalID = event.externalID
@@ -241,6 +242,9 @@ struct CalendarEvent: Identifiable {
         let start = calendar.startOfDay(for: now)
         let end = calendar.date(byAdding: .year, value: 1, to: start)!
         let found = store.events(matching: store.predicateForEvents(withStart: start, end: end, calendars: calendars))
+            // Events already under way (a vacation that began last week) overlap the range too; they'd import
+            // as gone by. A repeating one keeps its next real time instead.
+            .filter { ($0.startDate ?? .distantPast) >= start }
             .sorted { $0.startDate < $1.startDate }
         // The last time each series comes round within the year, for repeats that end after a number of times.
         var lastTime: [String: Date] = [:]

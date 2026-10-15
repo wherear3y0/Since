@@ -99,8 +99,10 @@ extension Countdown {
         case .firstName: firstName
         case .birthdayOf: "\(firstName)’s Birthday"
         }
-        let year = birthday.year ?? calendar.component(.year, from: .now)
-        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { return nil }
+        // Without the year, a leap year stands in, so February 29 isn't rolled over to March 1 (the age isn't
+        // shown then anyway). Midday, so the day stays the same after moving a few time zones west.
+        let year = birthday.year ?? 2000
+        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12)) else { return nil }
         return BirthdayInfo(title: title, date: date, knowsYear: birthday.year != nil, firstName: firstName)
     }
 

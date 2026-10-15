@@ -181,7 +181,8 @@ struct CounterDetailView: View {
         }
         .task(id: toastTick) {
             guard undoableReset != nil else { return }
-            try? await Task.sleep(for: .seconds(5))
+            // Cancelled when a newer toast replaces this one: then it must not clear that one.
+            guard (try? await Task.sleep(for: .seconds(5))) != nil else { return }
             withAnimation { undoableReset = nil }
         }
         .sheet(isPresented: $isEditing) {
@@ -390,6 +391,9 @@ struct CounterDetailView: View {
 
     private func delete(_ reset: Reset) {
         withAnimation {
+            if undoableReset === reset {
+                undoableReset = nil
+            }
             counter.resets.removeAll { $0 === reset }
             context.delete(reset)
         }

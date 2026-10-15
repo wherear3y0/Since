@@ -113,7 +113,7 @@ final class Counter {
     /// toward the run that was going on then: the current one until the first full reset.
     var slipsSinceProgressStart: Int {
         let start = progressStart
-        let logged = resets.filter { $0.isSlip && $0.date > start }.count
+        let logged = resets.filter { $0.isSlip && $0.date >= start }.count
         return logged + (fullResetDates.isEmpty ? extraSlips : 0)
     }
 
@@ -130,7 +130,7 @@ final class Counter {
     /// How many were had in the slips since the last full reset.
     var slippedAmountSinceProgressStart: Int {
         let start = progressStart
-        return resets.filter { $0.isSlip && $0.date > start }.map { max(1, $0.amount) }.reduce(0, +)
+        return resets.filter { $0.isSlip && $0.date >= start }.map { max(1, $0.amount) }.reduce(0, +)
     }
 
     /// What wasn't had since the last full reset: every whole day's worth, less what the slips took.
@@ -143,13 +143,13 @@ final class Counter {
         DayMath.days(from: progressStart, to: now, calendar: calendar)
     }
 
-    /// Whole days without a slip since the progress start, today not included: the first day counts,
-    /// slip days don't. Without slips it's the same as `trackedDays`.
-    func cleanDays(now: Date = .now, calendar: Calendar = .app) -> Int {
+    /// Days without a slip since the progress start: the first day counts, slip days don't. Whole days only
+    /// (without slips the same as `trackedDays`), or with today too, like the summary's "Clean days".
+    func cleanDays(now: Date = .now, includingToday: Bool = false, calendar: Calendar = .app) -> Int {
         let start = progressStart
-        let slips = slipDates.filter { $0 > start }
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: now))!
-        return DayMath.cleanRuns(start: start, resets: slips, now: yesterday, calendar: calendar)
+        let slips = slipDates.filter { $0 >= start }
+        let lastDay = includingToday ? now : calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: now))!
+        return DayMath.cleanRuns(start: start, resets: slips, now: lastDay, calendar: calendar)
             .map { DayMath.days(from: $0.lowerBound, to: $0.upperBound, calendar: calendar) + 1 }
             .reduce(0, +)
     }

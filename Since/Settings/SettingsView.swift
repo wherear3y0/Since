@@ -27,7 +27,7 @@ struct SettingsView: View {
             Form {
                 displaySection
                 remindersSection
-                if !countdowns.isEmpty {
+                if countdowns.contains(where: { !$0.isArchived }) {
                     countdownRemindersSection
                 }
                 if countdowns.contains(where: { !$0.isArchived }) {
@@ -59,7 +59,7 @@ struct SettingsView: View {
             }
             .fileExporter(isPresented: Binding(get: { exportDocument != nil }, set: { if !$0 { exportDocument = nil } }),
                           document: exportDocument, contentType: .json,
-                          defaultFilename: "Since \(Date.now.formatted(.iso8601.year().month().day()))") { result in
+                          defaultFilename: "Since \(Date.now.formatted(Date.ISO8601FormatStyle(timeZone: .current).year().month().day()))") { result in
                 if case .success = result { message = "Backup saved." }
             }
             .fileImporter(isPresented: $isImporting, allowedContentTypes: [.json]) { result in
@@ -143,7 +143,8 @@ struct SettingsView: View {
 
     private var countdownRemindersSection: some View {
         Section {
-            ForEach(countdowns) { countdown in
+            // Kept ones get no reminders, so they aren't listed.
+            ForEach(countdowns.filter { !$0.isArchived }) { countdown in
                 Toggle(isOn: reminderBinding(for: countdown)) {
                     Label {
                         Text(countdown.title)
@@ -303,6 +304,14 @@ struct SettingsView: View {
             try backup.restore(into: context)
             saveChanges(context)
             message = "Restored \(backup.counters.count) counters and \(backup.countdowns?.count ?? 0) countdowns."
+            // On a new iPhone nothing has asked for notifications yet, so restored reminders would never show.
+            if backup.counters.contains(where: \.notifyMilestones) || (backup.countdowns ?? []).contains(where: \.notifyBefore) {
+                Task {
+                    let allowed = await Milestones.requestPermission()
+                    notificationsDenied = !allowed
+                    refreshMirrors(context)
+                }
+            }
         } catch {
             message = "The backup couldn’t be restored."
         }

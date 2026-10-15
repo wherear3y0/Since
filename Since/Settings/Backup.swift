@@ -164,7 +164,8 @@ struct Backup: Codable {
             countdown.countsYears = data.countsYears ?? true
             countdown.styleRaw = data.style ?? CountdownStyle.calendar.rawValue
             countdown.isPinned = data.isPinned ?? false
-            countdown.isBirthday = data.isBirthday ?? false
+            // Older backups don't say; the same rule as for the birthdays already on the phone.
+            countdown.isBirthday = data.isBirthday ?? countdown.looksLikeBirthday
             countdown.showsLiveActivity = data.showsLiveActivity ?? false
             countdown.calendarItemID = data.calendarItemID
             countdown.calendarExternalID = data.calendarExternalID

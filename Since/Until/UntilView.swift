@@ -12,6 +12,8 @@ struct UntilView: View {
     @Binding var opened: UUID?
     /// Each time the tab comes on screen, the cards blur in as a wave.
     let arrival: TabArrival
+    /// Goes up with every link the app opens: the tab's sheets close then.
+    var linkTick = 0
     /// Called once a countdown has become a counter, to show it on the Since tab.
     let onCountedSince: () -> Void
 
@@ -25,8 +27,9 @@ struct UntilView: View {
     @State private var editing: Countdown?
     @State private var deleting: Countdown?
     @State private var converting: Countdown?
-    /// Just moved to Past; the toast can still take it back.
-    @State private var archivedRecently: Countdown?
+    /// Just moved to Past; the toast can still take it back. Kept by id, so a countdown deleted meanwhile
+    /// just drops out of the query instead of being touched after it's gone.
+    @State private var archivedRecentlyID: UUID?
     @State private var reorderTick = 0
     /// Ties each card to its detail screen for the zoom transition.
     @Namespace private var zoom
@@ -57,7 +60,7 @@ struct UntilView: View {
         let birthdays = upcoming.filter { !$0.isPinned && $0.isBirthday }
             .sorted { $0.daysLeft() < $1.daysLeft() }
         // Kept after their day, latest first.
-        let past = countdowns.filter(\.isArchived).sorted { $0.date > $1.date }
+        let past = countdowns.filter(\.isArchived).sorted { $0.target() > $1.target() }
         let needsHeadings = !pinned.isEmpty || !birthdays.isEmpty
         return [
             CardSection(id: "pinned", title: "Pinned", items: pinned, reorders: true),
@@ -117,10 +120,12 @@ struct UntilView: View {
             }
             .onChange(of: opened, initial: true) {
                 guard let id = opened else { return }
-                isAdding = false
-                isShowingSettings = false
+                closeSheets()
                 path = [id]
                 opened = nil
+            }
+            .onChange(of: linkTick) {
+                closeSheets()
             }
             .sensoryFeedback(.selection, trigger: reorderTick)
             .sensoryFeedback(.selection, trigger: countdowns.map(\.sizeRaw))
@@ -199,17 +204,18 @@ struct UntilView: View {
             }
             .countSinceAlert($converting, onDone: onCountedSince)
             .overlay(alignment: .bottom) {
-                if let countdown = archivedRecently {
+                if let id = archivedRecentlyID, let countdown = countdowns.first(where: { $0.id == id }) {
                     UndoToast(text: "Moved to Past", tint: countdown.color.color) {
                         setArchived(false, countdown)
                     }
                     .transition(.blurRise)
                 }
             }
-            .task(id: archivedRecently?.id) {
-                guard archivedRecently != nil else { return }
-                try? await Task.sleep(for: .seconds(5))
-                withAnimation { archivedRecently = nil }
+            .task(id: archivedRecentlyID) {
+                guard archivedRecentlyID != nil else { return }
+                // Cancelled when a newer toast replaces this one: then it must not clear that one.
+                guard (try? await Task.sleep(for: .seconds(5))) != nil else { return }
+                withAnimation { archivedRecentlyID = nil }
             }
         }
     }
@@ -385,6 +391,17 @@ extension UntilView {
         }
     }
 
+    private func closeSheets() {
+        isAdding = false
+        isShowingSettings = false
+        isImportingCalendar = false
+        isPickingContacts = false
+        pickedContacts = []
+        editing = nil
+        deleting = nil
+        converting = nil
+    }
+
     private func setPinned(_ isPinned: Bool, _ countdown: Countdown) {
         let id = countdown.id
         // The menu closes first, then the card moves to its section.
@@ -413,7 +430,7 @@ extension UntilView {
     private func setArchived(_ isArchived: Bool, _ countdown: Countdown) {
         withAnimation(.smooth(duration: 0.45)) {
             countdown.isArchived = isArchived
-            archivedRecently = isArchived ? countdown : nil
+            archivedRecentlyID = isArchived ? countdown.id : nil
         }
         saveChanges(context)
     }

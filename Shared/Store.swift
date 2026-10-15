@@ -31,7 +31,7 @@ enum Store {
         // Birthdays added before the Birthdays section existed: yearly countdowns with the cake icon.
         let context = container.mainContext
         let countdowns = (try? context.fetch(FetchDescriptor<Countdown>())) ?? []
-        for countdown in countdowns where countdown.symbol == "birthday.cake.fill" && countdown.rule.frequency == .yearly {
+        for countdown in countdowns where countdown.looksLikeBirthday {
             countdown.isBirthday = true
         }
         do {

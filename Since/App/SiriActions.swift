@@ -176,6 +176,7 @@ struct CreateCountdownIntent: AppIntent {
                                   color: colors[existing.count % colors.count], date: date,
                                   rule: repeatsYearly ? RepeatRule(frequency: .yearly) : .never,
                                   sortOrder: Countdown.topOrders(1, above: existing)[0])
+        countdown.isBirthday = countdown.looksLikeBirthday
         context.insert(countdown)
         saveChanges(context)
 

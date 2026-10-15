@@ -104,10 +104,11 @@ struct ProgressCard: View {
 
     var body: some View {
         let tint = counter.color.color
-        let tracked = counter.trackedDays()
-        let clean = counter.cleanDays()
+        // Today included, like the Summary's "Days tracked" and "Clean days" below.
+        let tracked = counter.trackedDays() + 1
+        let clean = counter.cleanDays(includingToday: true)
         let slips = counter.slipsSinceProgressStart
-        let percent = tracked > 0 ? Int((Double(clean) / Double(tracked) * 100).rounded()) : 100
+        let percent = Int((Double(clean) / Double(max(tracked, 1)) * 100).rounded())
 
         VStack(alignment: .leading, spacing: 16) {
             CardHeader(title: "Progress", symbol: "chart.line.uptrend.xyaxis", tint: tint,
@@ -117,16 +118,14 @@ struct ProgressCard: View {
                 stat("Slips", value: slips, tint: tint)
                 stat("Overall", value: percent, unit: "%", tint: tint)
             }
-            if tracked > 0 {
-                RecordTrack(current: clean, target: tracked, tint: tint)
-            }
+            RecordTrack(current: clean, target: tracked, tint: tint)
         }
         .padding(.vertical, 8)
     }
 
     private func insight(tracked: Int, clean: Int, slips: Int) -> String {
         let since = counter.progressStart.formatted(date: .abbreviated, time: .omitted)
-        if tracked == 0 {
+        if tracked <= 1 {
             return "Day one. Every clean day from here counts."
         }
         if slips == 0 {
@@ -572,8 +571,7 @@ struct StreakTimelineCard: View {
 
     var body: some View {
         let tint = counter.color.color
-        let (months, segments, hasSeparateCurrent) = layout()
-        let longest = counter.streaks().map(\.days).max() ?? 0
+        let (months, segments, hasSeparateCurrent, longest) = layout()
         // Rows are numbered from the bottom, so the oldest month (index 0) gets the highest row.
         let row = { (index: Int) in Double(months.count - 1 - index) }
 
@@ -643,8 +641,9 @@ struct StreakTimelineCard: View {
         }
     }
 
-    /// Month labels (oldest first), bar segments, and whether the current run is drawn separately.
-    private func layout() -> ([String], [Segment], Bool) {
+    /// Month labels (oldest first), bar segments, whether the current run is drawn separately,
+    /// and the length of the highlighted run, so the legend names the bar it highlights.
+    private func layout() -> ([String], [Segment], Bool, Int) {
         let calendar = Calendar.app
         let now = Date.now
         let today = calendar.startOfDay(for: now)
@@ -687,7 +686,7 @@ struct StreakTimelineCard: View {
         }
 
         let currentIsSeparate = runs.last?.upperBound == today && longestIndex != runs.count - 1
-        return (months, segments, currentIsSeparate)
+        return (months, segments, currentIsSeparate, longestIndex.map { lengths[$0] } ?? 0)
     }
 }
 

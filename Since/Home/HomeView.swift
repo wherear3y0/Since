@@ -10,6 +10,8 @@ struct HomeView: View {
     @Binding var opened: UUID?
     /// Each time the tab comes on screen, the cards blur in as a wave.
     let arrival: TabArrival
+    /// Goes up with every link the app opens: the tab's sheets close then.
+    var linkTick = 0
 
     @State private var path: [UUID] = []
     @State private var dragged: Counter?
@@ -53,10 +55,12 @@ struct HomeView: View {
             }
             .onChange(of: opened, initial: true) {
                 guard let id = opened else { return }
-                isAddingCounter = false
-                isShowingSettings = false
+                closeSheets()
                 path = [id]
                 opened = nil
+            }
+            .onChange(of: linkTick) {
+                closeSheets()
             }
             .sensoryFeedback(.selection, trigger: reorderTick)
             .sensoryFeedback(.selection, trigger: counters.map(\.sizeRaw))
@@ -104,7 +108,12 @@ struct HomeView: View {
                    isPresented: Binding(get: { deletingCounter != nil }, set: { if !$0 { deletingCounter = nil } })) {
                 Button("Delete", role: .destructive) {
                     if let counter = deletingCounter {
-                        withAnimation { context.delete(counter) }
+                        withAnimation {
+                            if undoable?.counter === counter {
+                                undoable = nil
+                            }
+                            context.delete(counter)
+                        }
                         saveChanges(context)
                     }
                 }
@@ -131,7 +140,8 @@ struct HomeView: View {
             }
             .task(id: toastTick) {
                 guard undoable != nil else { return }
-                try? await Task.sleep(for: .seconds(5))
+                // Cancelled when a newer toast replaces this one: then it must not clear that one.
+                guard (try? await Task.sleep(for: .seconds(5))) != nil else { return }
                 withAnimation { undoable = nil }
             }
         }
@@ -153,6 +163,10 @@ struct HomeView: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .onChange(of: counters.map(\.id)) { old, new in
             revealAdded(Set(new).subtracting(old), order: new, scroller: scroller)
+            // A counter deleted from its editor takes its toast with it.
+            if let undoable, !new.contains(undoable.counterID) {
+                self.undoable = nil
+            }
         }
     }
 
@@ -276,6 +290,14 @@ extension HomeView {
     /// The menu closes first. Then the card's content fades out, the card takes its new shape while the grid
     /// reflows around it, and the content, already laid out for the new size, fades back in. Saving waits
     /// until it's all done: it refreshes widgets, reminders and Spotlight, which would stutter the animation.
+    private func closeSheets() {
+        isAddingCounter = false
+        isShowingSettings = false
+        editingCounter = nil
+        pastResetCounter = nil
+        deletingCounter = nil
+    }
+
     private func setSize(_ size: CardSize, of counter: Counter) {
         let id = counter.id
         Task {
@@ -295,7 +317,7 @@ extension HomeView {
         let reset = Reset(date: date, note: note, isSlip: isSlip, amount: amount)
         withAnimation {
             counter.resets.append(reset)
-            undoable = UndoableReset(counter: counter, reset: reset, takesOne: false)
+            undoable = UndoableReset(counter: counter, counterID: counter.id, reset: reset, takesOne: false)
             toastTick += 1
         }
         saveChanges(context)
@@ -304,7 +326,8 @@ extension HomeView {
     private func logSlip(on counter: Counter) {
         withAnimation {
             let logged = counter.logSlip()
-            undoable = UndoableReset(counter: counter, reset: logged.slip, takesOne: logged.addedToToday)
+            undoable = UndoableReset(counter: counter, counterID: counter.id, reset: logged.slip,
+                                     takesOne: logged.addedToToday)
             toastTick += 1
         }
         saveChanges(context)
@@ -314,6 +337,8 @@ extension HomeView {
 /// A reset or slip made from the home screen that the toast can still take back.
 struct UndoableReset {
     let counter: Counter
+    /// Kept apart, so it can be checked without touching a counter that may have been deleted.
+    let counterID: UUID
     let reset: Reset
     /// One was added to today's slip: Undo takes it off instead of removing the slip.
     let takesOne: Bool

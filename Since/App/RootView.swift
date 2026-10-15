@@ -12,14 +12,17 @@ struct RootView: View {
     /// Set by a link from a widget or a notification; each tab opens its item and clears it.
     @State private var openedCounter: UUID?
     @State private var openedCountdown: UUID?
+    /// Goes up with every link, so both tabs close their sheets: one left open on the other tab
+    /// would otherwise cover the item the link opens.
+    @State private var linkTick = 0
 
     var body: some View {
         TabView(selection: Binding { page } set: { show($0) }) {
             Tab("Since", systemImage: "clock.arrow.circlepath", value: .since) {
-                HomeView(opened: $openedCounter, arrival: arrival)
+                HomeView(opened: $openedCounter, arrival: arrival, linkTick: linkTick)
             }
             Tab("Until", systemImage: "hourglass", value: .until) {
-                UntilView(opened: $openedCountdown, arrival: arrival) {
+                UntilView(opened: $openedCountdown, arrival: arrival, linkTick: linkTick) {
                     // The new counter blurs in on the Since tab.
                     show(.since)
                 }
@@ -51,6 +54,7 @@ struct RootView: View {
     /// since://counter/<id> or since://countdown/<id>: shows that tab and opens the item.
     private func open(_ url: URL) {
         guard url.scheme == "since", let id = UUID(uuidString: url.lastPathComponent) else { return }
+        linkTick += 1
         switch url.host {
         case "counter":
             show(.since)

@@ -97,7 +97,8 @@ final class Countdown {
         if index > 0 {
             return rule.occurrence(index - 1, from: date, calendar: calendar)
         }
-        return rule.timeBefore(date, calendar: calendar).flatMap { $0 <= calendar.startOfDay(for: now) ? $0 : nil }
+        let first = rule.occurrence(0, from: date, calendar: calendar)
+        return rule.timeBefore(first, calendar: calendar).flatMap { $0 <= calendar.startOfDay(for: now) ? $0 : nil }
     }
 
     /// Days to go: 0 on the day, negative once a one-off (or ended) date has passed.
@@ -107,6 +108,12 @@ final class Countdown {
 
     func hasPassed(now: Date = .now, calendar: Calendar = .app) -> Bool {
         daysLeft(now: now, calendar: calendar) < 0
+    }
+
+    /// A yearly countdown with the cake icon: how a birthday is recognized where it wasn't marked as one
+    /// (made before the Birthdays section, restored from an older backup, or added by Siri).
+    var looksLikeBirthday: Bool {
+        symbol == "birthday.cake.fill" && rule.frequency == .yearly
     }
 
     /// Today is the day and its Live Activity is turned on.

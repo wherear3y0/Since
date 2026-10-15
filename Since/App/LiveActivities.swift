@@ -21,14 +21,20 @@ enum LiveActivities {
                 day: countdown.target(now: now, calendar: calendar), turns: countdown.turns(now: now, calendar: calendar),
                 isBirthday: countdown.isBirthday)
         }
-        let started = startedDays()
-        let mayStart = Set(wanted.keys.filter { started[$0.uuidString] != today.timeIntervalSince1970 })
-
-        Task {
+        // One sync at a time: two saves a moment apart would otherwise both see no activity yet and start two.
+        // Each one waits for the one before and reads what it started.
+        let previous = syncTask
+        syncTask = Task {
+            await previous?.value
+            let started = startedDays()
+            let mayStart = Set(wanted.keys.filter { started[$0.uuidString] != today.timeIntervalSince1970 })
             let newlyStarted = await LiveActivityRunner.sync(wanted: wanted, mayStart: mayStart, until: endOfDay)
             remember(newlyStarted, on: today)
         }
     }
+
+    /// The latest sync, which the next one waits for.
+    private static var syncTask: Task<Void, Never>?
 
     /// Lets a countdown's activity start again today, when its switch is turned back on.
     static func allowRestart(of id: UUID) {
