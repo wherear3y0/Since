@@ -39,6 +39,9 @@ struct UntilView: View {
     @State private var unrevealed: Set<UUID> = []
     /// Cards changing size, their content faded out meanwhile.
     @State private var reshaping: Set<UUID> = []
+    /// Sections folded under their heading, remembered between launches. A @State, since stored changes
+    /// don't animate; it's written back on every change.
+    @State private var collapsed = Set(UserDefaults.standard.stringArray(forKey: "collapsedUntilSections") ?? [])
     /// Contacts just picked, waiting for the choice of how their birthdays are shown.
     @State private var pickedContacts: [CNContact] = []
 
@@ -80,20 +83,21 @@ struct UntilView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         ForEach(Array(shown.enumerated()), id: \.element.id) { index, section in
                             if let title = section.title {
-                                Text(title)
-                                    .font(.title3.bold())
-                                    .padding(.leading, 4)
+                                sectionHeading(title, id: section.id, count: section.items.count)
                                     .padding(.top, index == 0 ? 0 : 16)
                                     .waveIn(cardsShown,
                                             delay: arrival.delay(for: CardSlot(row: firstRows[index] - 1, column: 0)),
                                             from: arrival.edge)
                             }
-                            CardGridLayout {
-                                ForEach(section.items) { countdown in
-                                    card(for: countdown, in: section.items, firstRow: firstRows[index],
-                                         reorders: section.reorders)
-                                        .cardSize(countdown.size)
+                            if section.title == nil || !collapsed.contains(section.id) {
+                                CardGridLayout {
+                                    ForEach(section.items) { countdown in
+                                        card(for: countdown, in: section.items, firstRow: firstRows[index],
+                                             reorders: section.reorders)
+                                            .cardSize(countdown.size)
+                                    }
                                 }
+                                .transition(.blurReplace)
                             }
                         }
                     }
@@ -222,6 +226,42 @@ struct UntilView: View {
 
     private var cardsShown: Bool {
         revealed == arrival.id
+    }
+
+    /// A section's heading; tapping it folds the section away (showing how many it holds) and back.
+    private func sectionHeading(_ title: String, id: String, count: Int) -> some View {
+        let isCollapsed = collapsed.contains(id)
+        return Button {
+            withAnimation(.smooth(duration: 0.4)) {
+                if isCollapsed {
+                    collapsed.remove(id)
+                } else {
+                    collapsed.insert(id)
+                }
+            }
+            UserDefaults.standard.set(Array(collapsed), forKey: "collapsedUntilSections")
+        } label: {
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(.title3.bold())
+                Image(systemName: "chevron.down")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+                    .rotationEffect(.degrees(isCollapsed ? -90 : 0))
+                Spacer(minLength: 0)
+                if isCollapsed {
+                    Text("\(count)")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .transition(.blurReplace)
+                }
+            }
+            .padding(.leading, 4)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: isCollapsed)
+        .accessibilityHint(isCollapsed ? "Shows the \(title.lowercased())" : "Hides the \(title.lowercased())")
     }
 
     /// The row each section's first card lands on, counting the cards and headings above it, for the wave.
