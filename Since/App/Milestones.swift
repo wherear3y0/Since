@@ -84,7 +84,8 @@ enum Milestones {
     static func reminders(for countdown: Countdown, now: Date = .now, calendar: Calendar = .app) -> [Milestone] {
         let rule = countdown.rule
         let today = calendar.startOfDay(for: now)
-        let first = rule.targetIndex(from: countdown.date, now: now, calendar: calendar)
+        // A day marked done gets no more reminders: they start from its next time.
+        let first = countdown.currentIndex(now: now, calendar: calendar)
         var reminders: [Milestone] = []
         for index in first..<(first + (rule.repeats ? 3 : 1)) {
             let target = rule.occurrence(index, from: countdown.date, calendar: calendar)

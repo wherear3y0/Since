@@ -175,6 +175,24 @@ struct UntilTests {
         #expect(!countdown.hasPassed(now: date(2026, 10, 28), calendar: calendar))
     }
 
+    @Test func doneMovesOnToTheNextTime() {
+        let now = date(2026, 10, 16)
+        let weekly = Countdown(title: "Class", symbol: "book.fill", color: .blue, date: date(2026, 10, 9),
+                               rule: RepeatRule(frequency: .weekly))
+        #expect(weekly.daysLeft(now: now, calendar: calendar) == 0)
+        weekly.markDone(now: now, calendar: calendar)
+        #expect(weekly.daysLeft(now: now, calendar: calendar) == 7)
+        #expect(!weekly.isArchived)
+        // The next day the mark doesn't matter anymore.
+        #expect(weekly.daysLeft(now: date(2026, 10, 17), calendar: calendar) == 6)
+
+        let trip = Countdown(title: "Trip", symbol: "airplane", color: .cyan, date: now)
+        trip.markDone(now: now, calendar: calendar)
+        #expect(trip.isArchived)
+        trip.undoDone(now: now, calendar: calendar)
+        #expect(!trip.isArchived)
+    }
+
     @Test func repeatingDayWaitsFromTheTimeBefore() {
         // A holiday picked from Calendar at its next date: the wait runs from a year before, not from today.
         let countdown = Countdown(title: "Halloween", symbol: "star.fill", color: .orange, date: date(2026, 10, 31),

@@ -73,6 +73,8 @@ struct Backup: Codable {
         var durationStyle: Int?
         /// The contact a birthday came from, if known.
         var contactID: String?
+        /// The day it was marked done, if any.
+        var doneDay: Date?
     }
 
     var version = 1
@@ -91,7 +93,7 @@ struct Backup: Codable {
                           style: countdown.styleRaw, isPinned: countdown.isPinned, isBirthday: countdown.isBirthday,
                           showsLiveActivity: countdown.showsLiveActivity, calendarItemID: countdown.calendarItemID,
                           calendarExternalID: countdown.calendarExternalID, durationStyle: countdown.durationStyleRaw,
-                          contactID: countdown.contactID)
+                          contactID: countdown.contactID, doneDay: countdown.doneDay)
         }
         self.counters = counters.map { counter in
             CounterData(id: counter.id, title: counter.title, symbol: counter.symbol, color: counter.colorName,
@@ -180,6 +182,7 @@ struct Backup: Codable {
             countdown.calendarExternalID = data.calendarExternalID
             countdown.durationStyleRaw = data.durationStyle ?? DurationStyle.days.rawValue
             countdown.contactID = data.contactID
+            countdown.doneDay = data.doneDay
             context.insert(countdown)
         }
     }

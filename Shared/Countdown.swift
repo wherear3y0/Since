@@ -44,6 +44,8 @@ final class Countdown {
     var calendarExternalID: String? = nil
     /// The contact a birthday was picked from, to find the person's day in Calendar's Birthdays calendar.
     var contactID: String? = nil
+    /// The day it was marked done. On that day a repeating countdown already counts to its next time.
+    var doneDay: Date? = nil
     /// How the days are written: 42 days, 6w or 1m 12d (a `DurationStyle`).
     var durationStyleRaw: Int = DurationStyle.days.rawValue
 
@@ -103,15 +105,47 @@ final class Countdown {
     /// The day being counted down to: the date itself, or a repeating day's next time round
     /// (its last one once the repeat has ended).
     func target(now: Date = .now, calendar: Calendar = .app) -> Date {
+        rule.occurrence(currentIndex(now: now, calendar: calendar), from: date, calendar: calendar)
+    }
+
+    /// Which time round it counts toward: the rule's, or the one after when today's was marked done.
+    func currentIndex(now: Date = .now, calendar: Calendar = .app) -> Int {
         let rule = rule
-        return rule.occurrence(rule.targetIndex(from: date, now: now, calendar: calendar), from: date, calendar: calendar)
+        let index = rule.targetIndex(from: date, now: now, calendar: calendar)
+        guard rule.repeats, isDone(now: now, calendar: calendar),
+              calendar.isDate(rule.occurrence(index, from: date, calendar: calendar), inSameDayAs: now) else { return index }
+        let next = rule.occurrence(index + 1, from: date, calendar: calendar)
+        if let end = rule.end, next > calendar.startOfDay(for: end) {
+            return index
+        }
+        return index + 1
+    }
+
+    /// Marked done today.
+    func isDone(now: Date = .now, calendar: Calendar = .app) -> Bool {
+        doneDay.map { calendar.isDate($0, inSameDayAs: now) } ?? false
+    }
+
+    /// On the day: a repeating countdown moves on to its next time, a one-off one goes to Past.
+    func markDone(now: Date = .now, calendar: Calendar = .app) {
+        doneDay = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: now) ?? now
+        if !rule.repeats {
+            isArchived = true
+        }
+    }
+
+    func undoDone(now: Date = .now, calendar: Calendar = .app) {
+        doneDay = nil
+        if !rule.repeats && !hasPassed(now: now, calendar: calendar) {
+            isArchived = false
+        }
     }
 
     /// The time round before the one being counted down to. Before the first one of a repeating day
     /// (like a holiday picked from Calendar at its next date) that's where it would have come round before.
     func previousTime(now: Date = .now, calendar: Calendar = .app) -> Date? {
         let rule = rule
-        let index = rule.targetIndex(from: date, now: now, calendar: calendar)
+        let index = currentIndex(now: now, calendar: calendar)
         if index > 0 {
             return rule.occurrence(index - 1, from: date, calendar: calendar)
         }
@@ -136,7 +170,8 @@ final class Countdown {
 
     /// Today is the day and its Live Activity is turned on.
     func wantsLiveActivity(now: Date = .now, calendar: Calendar = .app) -> Bool {
-        showsLiveActivity && !isArchived && daysLeft(now: now, calendar: calendar) == 0
+        showsLiveActivity && !isArchived && !isDone(now: now, calendar: calendar)
+            && daysLeft(now: now, calendar: calendar) == 0
     }
 
     /// Where the wait starts: the last time a repeating day came round, or when the countdown was added.

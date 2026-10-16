@@ -30,6 +30,8 @@ struct UntilView: View {
     /// Just moved to Past; the toast can still take it back. Kept by id, so a countdown deleted meanwhile
     /// just drops out of the query instead of being touched after it's gone.
     @State private var archivedRecentlyID: UUID?
+    /// The toast is for a countdown just marked done rather than moved to Past.
+    @State private var toastIsDone = false
     @State private var reorderTick = 0
     /// Ties each card to its detail screen for the zoom transition.
     @Namespace private var zoom
@@ -136,6 +138,9 @@ struct UntilView: View {
             .sensoryFeedback(.selection, trigger: countdowns.map(\.styleRaw))
             .sensoryFeedback(.impact(weight: .light), trigger: countdowns.map(\.isArchived))
             .sensoryFeedback(.selection, trigger: countdowns.map(\.isPinned))
+            .sensoryFeedback(.success, trigger: countdowns.map(\.doneDay)) { old, new in
+                new.compactMap { $0 }.count > old.compactMap { $0 }.count
+            }
             .sensoryFeedback(trigger: countdowns.count) { old, new in
                 new > old ? .success : .impact(weight: .medium)
             }
@@ -209,8 +214,12 @@ struct UntilView: View {
             .countSinceAlert($converting, onDone: onCountedSince)
             .overlay(alignment: .bottom) {
                 if let id = archivedRecentlyID, let countdown = countdowns.first(where: { $0.id == id }) {
-                    UndoToast(text: "Moved to Past", tint: countdown.color.color) {
-                        setArchived(false, countdown)
+                    UndoToast(text: toastIsDone ? "Done" : "Moved to Past", tint: countdown.color.color) {
+                        if toastIsDone {
+                            undoDone(countdown)
+                        } else {
+                            setArchived(false, countdown)
+                        }
                     }
                     .transition(.blurRise)
                 }
@@ -290,6 +299,8 @@ struct UntilView: View {
             converting = countdown
         } onArchive: {
             setArchived(true, countdown)
+        } onDone: {
+            markDone(countdown)
         }
         .waveIn(cardsShown && !unrevealed.contains(countdown.id),
                 delay: isNew ? 0 : arrival.delay(for: slot), from: isNew ? nil : arrival.edge)
@@ -386,6 +397,15 @@ extension UntilView {
             Button("Open", systemImage: "arrow.up.forward") {
                 path.append(countdown.id)
             }
+            if countdown.isDone() {
+                Button("Not Done", systemImage: "arrow.uturn.backward") {
+                    undoDone(countdown)
+                }
+            } else if countdown.daysLeft() == 0 && !countdown.isArchived {
+                Button("Mark as Done", systemImage: "checkmark.circle") {
+                    markDone(countdown)
+                }
+            }
             if !countdown.isArchived {
                 Button(countdown.isPinned ? "Unpin" : "Pin to Top", systemImage: countdown.isPinned ? "pin.slash" : "pin") {
                     setPinned(!countdown.isPinned, countdown)
@@ -471,6 +491,25 @@ extension UntilView {
         withAnimation(.smooth(duration: 0.45)) {
             countdown.isArchived = isArchived
             archivedRecentlyID = isArchived ? countdown.id : nil
+            toastIsDone = false
+        }
+        saveChanges(context)
+    }
+
+    /// On the day: a repeating countdown moves on to its next time, a one-off one goes to Past.
+    private func markDone(_ countdown: Countdown) {
+        withAnimation(.smooth(duration: 0.45)) {
+            countdown.markDone()
+            archivedRecentlyID = countdown.id
+            toastIsDone = true
+        }
+        saveChanges(context)
+    }
+
+    private func undoDone(_ countdown: Countdown) {
+        withAnimation(.smooth(duration: 0.45)) {
+            countdown.undoDone()
+            archivedRecentlyID = nil
         }
         saveChanges(context)
     }

@@ -36,6 +36,12 @@ struct CountdownDetailView: View {
                         }
                     }
 
+                if countdown.daysLeft() == 0 && !countdown.isArchived {
+                    doneCard(tint: tint)
+                        .detailCard()
+                        .blurIn(contentShown, delay: 0.05)
+                }
+
                 Group {
                     if countdown.hasPassed() {
                         passedCard(tint: tint)
@@ -118,6 +124,30 @@ struct CountdownDetailView: View {
             CountdownEditor(countdown: countdown, onDelete: onDelete)
         }
         .countSinceAlert($converting, onDone: onCountedSince)
+    }
+
+    /// On the day: mark it done. A repeating one moves on to its next time, a one-off one goes to Past.
+    private func doneCard(tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            CardHeader(title: "It’s Today", symbol: "party.popper.fill", tint: tint,
+                       text: countdown.rule.repeats
+                           ? "Once it’s done, mark it, and it counts down to the next time."
+                           : "Once it’s done, mark it, and it moves to Past.")
+            Button {
+                withAnimation(.smooth) { countdown.markDone() }
+                saveChanges(context)
+            } label: {
+                Label("Done", systemImage: "checkmark")
+                    .frame(maxWidth: .infinity)
+                    .foregroundStyle(.black.opacity(0.8))
+            }
+            .buttonStyle(.glassProminent)
+            .tint(tint)
+            .controlSize(.large)
+            .font(.subheadline.weight(.semibold))
+        }
+        .padding(.vertical, 8)
+        .sensoryFeedback(.success, trigger: countdown.doneDay)
     }
 
     /// A one-off day gone by: count days since it, or keep it in Past.

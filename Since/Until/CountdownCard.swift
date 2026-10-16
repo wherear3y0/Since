@@ -11,6 +11,8 @@ struct CountdownCard: View {
     let onOpen: () -> Void
     var onCountSince: () -> Void = {}
     var onArchive: () -> Void = {}
+    /// On the day: marks it done.
+    var onDone: () -> Void = {}
 
     var body: some View {
         let tint = countdown.color.color.onCard(tinted: countdown.tinted)
@@ -38,6 +40,23 @@ struct CountdownCard: View {
         countdown.hasPassed() && !countdown.isArchived
     }
 
+    /// Today's the day: the card offers to mark it done.
+    private var isTheDay: Bool {
+        countdown.daysLeft() == 0 && !countdown.isArchived
+    }
+
+    private func doneButton(tint: Color) -> some View {
+        Button(action: onDone) {
+            Label("Done", systemImage: "checkmark")
+                .frame(maxWidth: .infinity)
+                .foregroundStyle(.black.opacity(0.8))
+        }
+        .buttonStyle(.glassProminent)
+        .tint(tint)
+        .font(.subheadline.weight(.semibold))
+        .lineLimit(1)
+    }
+
     // MARK: - Sizes
 
     /// M: title, days to go, the date, and the wait in the countdown's style.
@@ -51,6 +70,9 @@ struct CountdownCard: View {
             if needsDecision {
                 Spacer(minLength: 0)
                 decision(tint: tint, vertical: true)
+            } else if isTheDay {
+                Spacer(minLength: 0)
+                doneButton(tint: tint)
             } else {
                 switch countdown.style {
                 case .calendar:
@@ -86,6 +108,8 @@ struct CountdownCard: View {
             }
             if needsDecision {
                 decision(tint: tint, vertical: false)
+            } else if isTheDay {
+                doneButton(tint: tint)
             } else {
                 switch countdown.style {
                 case .calendar:
@@ -118,6 +142,8 @@ struct CountdownCard: View {
             }
             if needsDecision {
                 decision(tint: tint, vertical: false)
+            } else if isTheDay {
+                doneButton(tint: tint)
             } else {
                 switch countdown.style {
                 case .calendar:
