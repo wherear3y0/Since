@@ -64,7 +64,7 @@ struct SmallCounterView: View {
         VStack(alignment: .leading, spacing: 0) {
             WidgetTitle(counter: counter)
             Spacer(minLength: 4)
-            WidgetDayCount(days: counter.days)
+            WidgetDayCount(days: counter.days, parts: counter.displayParts)
             Text("since \(counter.since.sinceFormat)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -87,7 +87,7 @@ struct MediumCounterView: View {
             VStack(alignment: .leading, spacing: 0) {
                 WidgetTitle(counter: counter)
                 Spacer(minLength: 4)
-                WidgetDayCount(days: counter.days)
+                WidgetDayCount(days: counter.days, parts: counter.displayParts)
                 Text("since \(counter.since.sinceFormat)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -122,7 +122,7 @@ struct LargeCounterView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 8)
-                WidgetDayCount(days: counter.days, size: 46)
+                WidgetDayCount(days: counter.days, size: 46, parts: counter.displayParts)
                     .fixedSize()
             }
 

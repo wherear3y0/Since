@@ -90,7 +90,7 @@ struct SettingsView: View {
                 Text("18w 1d").tag(DurationStyle.weeks.rawValue)
                 Text("4m 5d").tag(DurationStyle.months.rawValue)
             } label: {
-                Label("Number Format", systemImage: "number")
+                Label("Default Number Format", systemImage: "number")
             }
             Picker(selection: $firstWeekday) {
                 Text("System").tag(0)
@@ -105,7 +105,7 @@ struct SettingsView: View {
         } header: {
             Text("Display")
         } footer: {
-            Text("You can also tap the number on a counter’s screen to switch the format.")
+            Text("For new counters and countdowns. Each one can have its own: pick it in its editor, or tap the number on its screen.")
         }
         .sectionReveal(isRevealed, delay: 0.05)
     }

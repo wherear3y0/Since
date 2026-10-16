@@ -207,6 +207,8 @@ struct CountdownDetailView: View {
 
 /// The calendar up to the day, with the days to go and how much of the wait is behind underneath.
 struct CountdownHeroCard: View {
+    @Environment(\.modelContext) private var context
+
     let countdown: Countdown
     var animated = true
 
@@ -268,10 +270,10 @@ struct CountdownHeroCard: View {
                         Text("Today")
                             .font(.system(size: 34, weight: .bold))
                     } else if days > 0 {
-                        DurationButton(from: .now, to: target)
+                        DurationButton(from: .now, to: target, style: countdown.numberStyle, onChange: setNumberStyle)
                     } else {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            DurationButton(from: target, to: .now)
+                            DurationButton(from: target, to: .now, style: countdown.numberStyle, onChange: setNumberStyle)
                             Text("ago")
                                 .font(.headline)
                                 .foregroundStyle(.secondary)
@@ -289,7 +291,13 @@ struct CountdownHeroCard: View {
         }
         .padding(.vertical, 10)
     }
+
+    private func setNumberStyle(_ style: DurationStyle) {
+        countdown.numberStyle = style
+        saveChanges(context)
+    }
 }
+
 
 /// The next few times a repeating day comes round, like a counter's history the other way.
 struct ComingUpCard: View {

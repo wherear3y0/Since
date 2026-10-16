@@ -28,6 +28,7 @@ struct CounterEditor: View {
     @State private var showsHealth: Bool
     /// Slips not in the history, edited as part of the total.
     @State private var extraSlips: Int
+    @State private var numberStyle: DurationStyle
     @State private var isPickingSymbol = false
     @State private var savedEdits = 0
     @State private var isConfirmingDelete = false
@@ -45,6 +46,9 @@ struct CounterEditor: View {
         _symbol = State(initialValue: counter?.symbol ?? "star.fill")
         _color = State(initialValue: counter?.color ?? .blue)
         _tinted = State(initialValue: counter?.tinted ?? true)
+        // A new one starts from the default number format in Settings.
+        _numberStyle = State(initialValue: counter?.numberStyle
+                             ?? DurationStyle(rawValue: UserDefaults.standard.integer(forKey: "durationStyle")) ?? .days)
         _notifyMilestones = State(initialValue: counter?.notifyMilestones ?? false)
         _kind = State(initialValue: counter?.kind ?? .quit)
         _note = State(initialValue: counter?.note ?? "")
@@ -95,6 +99,18 @@ struct CounterEditor: View {
                         }
                     }
                     .tint(color.color)
+                    Picker(selection: $numberStyle) {
+                        Text("127 days").tag(DurationStyle.days)
+                        Text("18w 1d").tag(DurationStyle.weeks)
+                        Text("4m 5d").tag(DurationStyle.months)
+                    } label: {
+                        Label {
+                            Text("Number Format")
+                        } icon: {
+                            Image(systemName: "number")
+                                .foregroundStyle(color.color)
+                        }
+                    }
                 }
                 .sectionReveal(isPreviewShown, delay: 0.14)
 
@@ -175,6 +191,7 @@ struct CounterEditor: View {
             .sensoryFeedback(.selection, trigger: symbol)
             .sensoryFeedback(.selection, trigger: kind)
             .sensoryFeedback(.selection, trigger: tinted)
+            .sensoryFeedback(.selection, trigger: numberStyle)
             .sensoryFeedback(.success, trigger: savedEdits)
             .sheet(isPresented: $isPickingSymbol) {
                 SymbolPicker(selection: $symbol, tint: color.color)
@@ -330,6 +347,7 @@ struct CounterEditor: View {
             counter.notifyMilestones = notifyMilestones
             counter.kind = kind
             counter.note = finalNote
+            counter.numberStyle = numberStyle
             applySavings(to: counter)
             savedEdits += 1
         } else {
@@ -338,6 +356,7 @@ struct CounterEditor: View {
                                      startDate: startDate, note: finalNote, sortOrder: nextOrder)
             newCounter.tinted = tinted
             newCounter.notifyMilestones = notifyMilestones
+            newCounter.numberStyle = numberStyle
             applySavings(to: newCounter)
             context.insert(newCounter)
         }

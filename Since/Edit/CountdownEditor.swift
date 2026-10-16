@@ -21,6 +21,7 @@ struct CountdownEditor: View {
     @State private var note: String
     @State private var isBirthday: Bool
     @State private var showsLiveActivity: Bool
+    @State private var numberStyle: DurationStyle
     @State private var isPickingSymbol = false
     @State private var savedEdits = 0
     @State private var isConfirmingDelete = false
@@ -38,6 +39,9 @@ struct CountdownEditor: View {
         _symbol = State(initialValue: countdown?.symbol ?? "star.fill")
         _color = State(initialValue: countdown?.color ?? .cyan)
         _tinted = State(initialValue: countdown?.tinted ?? true)
+        // A new one starts from the default number format in Settings.
+        _numberStyle = State(initialValue: countdown?.numberStyle
+                             ?? DurationStyle(rawValue: UserDefaults.standard.integer(forKey: "durationStyle")) ?? .days)
         _style = State(initialValue: countdown?.style ?? .calendar)
         _notifyBefore = State(initialValue: countdown?.notifyBefore ?? false)
         _note = State(initialValue: countdown?.note ?? "")
@@ -83,6 +87,18 @@ struct CountdownEditor: View {
                         }
                     }
                     .tint(color.color)
+                    Picker(selection: $numberStyle) {
+                        Text("127 days").tag(DurationStyle.days)
+                        Text("18w 1d").tag(DurationStyle.weeks)
+                        Text("4m 5d").tag(DurationStyle.months)
+                    } label: {
+                        Label {
+                            Text("Number Format")
+                        } icon: {
+                            Image(systemName: "number")
+                                .foregroundStyle(color.color)
+                        }
+                    }
                 }
                 .sectionReveal(isPreviewShown, delay: 0.14)
 
@@ -204,6 +220,7 @@ struct CountdownEditor: View {
             .sensoryFeedback(.selection, trigger: color)
             .sensoryFeedback(.selection, trigger: symbol)
             .sensoryFeedback(.selection, trigger: tinted)
+            .sensoryFeedback(.selection, trigger: numberStyle)
             .sensoryFeedback(.selection, trigger: style)
             .sensoryFeedback(.selection, trigger: rule)
             .sensoryFeedback(.selection, trigger: date)
@@ -318,6 +335,7 @@ struct CountdownEditor: View {
             countdown.notifyBefore = notifyBefore
             countdown.note = finalNote
             countdown.isBirthday = isBirthday
+            countdown.numberStyle = numberStyle
             if showsLiveActivity && !countdown.showsLiveActivity {
                 LiveActivities.allowRestart(of: countdown.id)
             }
@@ -337,6 +355,7 @@ struct CountdownEditor: View {
             newCountdown.notifyBefore = notifyBefore
             newCountdown.isBirthday = isBirthday
             newCountdown.showsLiveActivity = showsLiveActivity
+            newCountdown.numberStyle = numberStyle
             context.insert(newCountdown)
         }
         saveChanges(context)

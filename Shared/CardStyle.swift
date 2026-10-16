@@ -87,3 +87,34 @@ extension View {
         modifier(CounterCardBackground(tint: tint, tinted: tinted, glowOpacity: glowOpacity, glowRadius: glowRadius))
     }
 }
+
+/// "18w 1d" or "4m 5d": the numbers big, the units small, on one line that shrinks to fit.
+/// Cards and widgets use it for counters and countdowns written in weeks or months.
+struct DurationPartsText: View {
+    let parts: [DurationPart]
+    var size: CGFloat = 40
+    /// Shown after the parts, like "ago".
+    var suffix: String?
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            ForEach(parts, id: \.unit) { part in
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    Text(part.value, format: .number)
+                        .font(.system(size: size, weight: .bold))
+                        .widgetAccentable()
+                    Text(part.unit)
+                        .font(size > 44 ? .headline : .subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            if let suffix {
+                Text(suffix)
+                    .font(size > 44 ? .headline : .subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.5)
+    }
+}

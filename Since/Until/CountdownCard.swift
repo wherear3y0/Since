@@ -45,7 +45,7 @@ struct CountdownCard: View {
         VStack(alignment: .leading, spacing: 12) {
             CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
             VStack(alignment: .leading, spacing: 2) {
-                DaysLeftText(days: countdown.daysLeft(), size: 40)
+                DaysLeftText(days: countdown.daysLeft(), size: 40, parts: countdown.durationParts())
                 dateLine
             }
             if needsDecision {
@@ -82,7 +82,7 @@ struct CountdownCard: View {
                     dateLine
                 }
                 Spacer(minLength: 8)
-                DaysLeftText(days: countdown.daysLeft(), size: 40)
+                DaysLeftText(days: countdown.daysLeft(), size: 40, parts: countdown.durationParts())
             }
             if needsDecision {
                 decision(tint: tint, vertical: false)
@@ -113,7 +113,7 @@ struct CountdownCard: View {
         return VStack(alignment: .leading, spacing: 14) {
             CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
             VStack(alignment: .leading, spacing: 2) {
-                DaysLeftText(days: daysLeft, size: 56)
+                DaysLeftText(days: daysLeft, size: 56, parts: countdown.durationParts())
                 dateLine
             }
             if needsDecision {
@@ -224,6 +224,8 @@ struct CountdownCard: View {
 struct DaysLeftText: View {
     let days: Int
     var size: CGFloat = 40
+    /// The same time in weeks or months ("6w 1d"), when the countdown is written that way.
+    var parts: [DurationPart]?
 
     var body: some View {
         let count = abs(days)
@@ -232,6 +234,8 @@ struct DaysLeftText: View {
                 Text("Today")
                     .font(.system(size: size, weight: .bold))
                     .minimumScaleFactor(0.6)
+            } else if let parts {
+                DurationPartsText(parts: parts, size: size, suffix: days < 0 ? "ago" : nil)
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(count, format: .number)

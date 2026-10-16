@@ -13,6 +13,7 @@ struct CountdownSnapshot {
     let target: Date
     let waitStart: Date
     let date: Date
+    var numberStyle: DurationStyle = .days
 
     var daysLeft: Int { DayMath.daysUntil(target, from: date) }
     var waited: Int { DayMath.days(from: waitStart, to: date) }
@@ -22,6 +23,13 @@ struct CountdownSnapshot {
 
     var tint: Color { color.color.onCard(tinted: tinted) }
     var url: URL { URL(string: "since://countdown/\(id.uuidString)")! }
+
+    /// The time in weeks or months ("6w 1d"), when the countdown is written that way.
+    var displayParts: [DurationPart]? {
+        guard numberStyle != .days, daysLeft != 0 else { return nil }
+        return daysLeft > 0 ? DayMath.parts(from: date, to: target, style: numberStyle)
+                            : DayMath.parts(from: target, to: date, style: numberStyle)
+    }
 
     /// "until Nov 26 · Thu", the date itself on the day, "on …" after it.
     var dateLine: String {
@@ -33,7 +41,7 @@ extension CountdownSnapshot {
     init(_ countdown: Countdown, at date: Date) {
         self.init(id: countdown.id, title: countdown.title, symbol: countdown.symbol, color: countdown.color,
                   tinted: countdown.tinted, style: countdown.style, target: countdown.target(now: date),
-                  waitStart: countdown.waitStart(now: date), date: date)
+                  waitStart: countdown.waitStart(now: date), date: date, numberStyle: countdown.numberStyle)
     }
 
     /// A stand-in for the widget gallery and placeholders.
@@ -145,11 +153,15 @@ struct CountdownWidgetView: View {
 struct WidgetDaysLeft: View {
     let days: Int
     var size: CGFloat = 40
+    /// The time in weeks or months instead, when the countdown is written that way.
+    var parts: [DurationPart]?
 
     var body: some View {
         let count = abs(days)
         Group {
-            if days == 0 {
+            if let parts, days != 0 {
+                DurationPartsText(parts: parts, size: size, suffix: days < 0 ? "ago" : nil)
+            } else if days == 0 {
                 Text("Today")
                     .font(.system(size: size, weight: .bold))
                     .widgetAccentable()
@@ -204,7 +216,7 @@ struct SmallCountdownView: View {
         VStack(alignment: .leading, spacing: 0) {
             WidgetTitle(title: countdown.title, symbol: countdown.symbol, tint: countdown.tint)
             Spacer(minLength: 4)
-            WidgetDaysLeft(days: countdown.daysLeft)
+            WidgetDaysLeft(days: countdown.daysLeft, parts: countdown.displayParts)
             Text(countdown.dateLine)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -264,7 +276,7 @@ struct MediumCountdownView: View {
         VStack(alignment: .leading, spacing: 0) {
             WidgetTitle(title: countdown.title, symbol: countdown.symbol, tint: countdown.tint)
             Spacer(minLength: 4)
-            WidgetDaysLeft(days: countdown.daysLeft)
+            WidgetDaysLeft(days: countdown.daysLeft, parts: countdown.displayParts)
             Text(countdown.dateLine)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -289,7 +301,7 @@ struct LargeCountdownView: View {
                         .lineLimit(1)
                 }
                 Spacer(minLength: 8)
-                WidgetDaysLeft(days: countdown.daysLeft, size: 46)
+                WidgetDaysLeft(days: countdown.daysLeft, size: 46, parts: countdown.displayParts)
                     .fixedSize()
             }
 

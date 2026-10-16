@@ -28,6 +28,8 @@ struct Backup: Codable {
         var showsHealth: Bool?
         /// Missing in backups made before slips could be added by hand.
         var extraSlips: Int?
+        /// Missing in backups made before each counter had its own number format.
+        var durationStyle: Int?
     }
 
     struct ResetData: Codable {
@@ -67,6 +69,8 @@ struct Backup: Codable {
         /// The Calendar event it was picked from, if any.
         var calendarItemID: String?
         var calendarExternalID: String?
+        /// Missing in backups made before each countdown had its own number format.
+        var durationStyle: Int?
     }
 
     var version = 1
@@ -84,7 +88,7 @@ struct Backup: Codable {
                           isArchived: countdown.isArchived, countsYears: countdown.countsYears,
                           style: countdown.styleRaw, isPinned: countdown.isPinned, isBirthday: countdown.isBirthday,
                           showsLiveActivity: countdown.showsLiveActivity, calendarItemID: countdown.calendarItemID,
-                          calendarExternalID: countdown.calendarExternalID)
+                          calendarExternalID: countdown.calendarExternalID, durationStyle: countdown.durationStyleRaw)
         }
         self.counters = counters.map { counter in
             CounterData(id: counter.id, title: counter.title, symbol: counter.symbol, color: counter.colorName,
@@ -96,7 +100,8 @@ struct Backup: Codable {
                         },
                         unitName: counter.unitName, unitsPerDay: counter.unitsPerDay, price: counter.price,
                         unitsPerPrice: counter.unitsPerPrice, minutesPerUnit: counter.minutesPerUnit,
-                        showsHealth: counter.showsHealth, extraSlips: counter.extraSlips)
+                        showsHealth: counter.showsHealth, extraSlips: counter.extraSlips,
+                        durationStyle: counter.durationStyleRaw)
         }
     }
 
@@ -137,6 +142,7 @@ struct Backup: Codable {
             counter.minutesPerUnit = data.minutesPerUnit ?? 0
             counter.showsHealth = data.showsHealth ?? false
             counter.extraSlips = data.extraSlips ?? 0
+            counter.durationStyleRaw = data.durationStyle ?? DurationStyle.days.rawValue
             context.insert(counter)
             for resetData in data.resets {
                 let reset = Reset(date: resetData.date, note: resetData.note, isSlip: resetData.isSlip ?? false,
@@ -169,6 +175,7 @@ struct Backup: Codable {
             countdown.showsLiveActivity = data.showsLiveActivity ?? false
             countdown.calendarItemID = data.calendarItemID
             countdown.calendarExternalID = data.calendarExternalID
+            countdown.durationStyleRaw = data.durationStyle ?? DurationStyle.days.rawValue
             context.insert(countdown)
         }
     }

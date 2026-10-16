@@ -15,6 +15,12 @@ struct CounterSnapshot: Identifiable {
     let date: Date
     /// The resets that were slips.
     var slipDates: [Date] = []
+    var numberStyle: DurationStyle = .days
+
+    /// The count in weeks or months ("18w 1d"), when the counter is written that way.
+    var displayParts: [DurationPart]? {
+        numberStyle == .days ? nil : DayMath.parts(from: since, to: date, style: numberStyle)
+    }
 
     var streaks: [Streak] { DayMath.streaks(start: start, resets: resetDates, now: date) }
     var days: Int { streaks.last?.days ?? 0 }
@@ -43,7 +49,8 @@ extension CounterSnapshot {
     init(_ counter: Counter, at date: Date) {
         self.init(id: counter.id, title: counter.title, symbol: counter.symbol, color: counter.color,
                   tinted: counter.tinted, kind: counter.kind, start: counter.startDate,
-                  resetDates: counter.resetDates, date: date, slipDates: counter.slipDates)
+                  resetDates: counter.resetDates, date: date, slipDates: counter.slipDates,
+                  numberStyle: counter.numberStyle)
     }
 
     /// Stand-ins for the widget gallery and placeholders.

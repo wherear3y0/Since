@@ -33,6 +33,8 @@ final class Counter {
     var showsHealth: Bool = false
     /// Slips that aren't in the history (from before tracking, or never logged), added to the total.
     var extraSlips: Int = 0
+    /// How the count is written: 127 days, 18w 1d or 4m 5d (a `DurationStyle`).
+    var durationStyleRaw: Int = DurationStyle.days.rawValue
 
     @Relationship(deleteRule: .cascade, inverse: \Reset.counter)
     var resets: [Reset] = []
@@ -56,6 +58,16 @@ final class Counter {
     var kind: CounterKind {
         get { CounterKind(rawValue: kindRaw) ?? .quit }
         set { kindRaw = newValue.rawValue }
+    }
+
+    var numberStyle: DurationStyle {
+        get { DurationStyle(rawValue: durationStyleRaw) ?? .days }
+        set { durationStyleRaw = newValue.rawValue }
+    }
+
+    /// The current streak written in the counter's number style, for cards and widgets.
+    func durationParts(now: Date = .now, calendar: Calendar = .app) -> [DurationPart] {
+        DayMath.parts(from: currentStreakStart, to: now, style: numberStyle, calendar: calendar)
     }
 
     var color: CounterColor {

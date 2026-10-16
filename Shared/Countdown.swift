@@ -42,6 +42,8 @@ final class Countdown {
     /// The same event's identifier on the calendar server, which survives a full resync that `calendarItemID`
     /// doesn't.
     var calendarExternalID: String? = nil
+    /// How the days are written: 42 days, 6w or 1m 12d (a `DurationStyle`).
+    var durationStyleRaw: Int = DurationStyle.days.rawValue
 
     init(title: String, symbol: String, color: CounterColor, date: Date, rule: RepeatRule = .never,
          note: String? = nil, sortOrder: Int = 0) {
@@ -75,6 +77,20 @@ final class Countdown {
     var style: CountdownStyle {
         get { CountdownStyle(rawValue: styleRaw) ?? .calendar }
         set { styleRaw = newValue.rawValue }
+    }
+
+    var numberStyle: DurationStyle {
+        get { DurationStyle(rawValue: durationStyleRaw) ?? .days }
+        set { durationStyleRaw = newValue.rawValue }
+    }
+
+    /// The time to go (or, once passed, since) in the countdown's number style; nil when it's written in days.
+    func durationParts(now: Date = .now, calendar: Calendar = .app) -> [DurationPart]? {
+        guard numberStyle != .days else { return nil }
+        let target = target(now: now, calendar: calendar)
+        return target >= calendar.startOfDay(for: now)
+            ? DayMath.parts(from: now, to: target, style: numberStyle, calendar: calendar)
+            : DayMath.parts(from: target, to: now, style: numberStyle, calendar: calendar)
     }
 
     var color: CounterColor {

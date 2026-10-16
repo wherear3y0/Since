@@ -30,8 +30,18 @@ extension WidgetTitle {
 struct WidgetDayCount: View {
     let days: Int
     var size: CGFloat = 40
+    /// The count in weeks or months instead, when the counter is written that way.
+    var parts: [DurationPart]?
 
     var body: some View {
+        if let parts {
+            DurationPartsText(parts: parts, size: size)
+        } else {
+            daysText
+        }
+    }
+
+    private var daysText: some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
             Text(days, format: .number)
                 .font(.system(size: size, weight: .bold))

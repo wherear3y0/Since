@@ -6,6 +6,8 @@ import Charts
 /// Big heatmap of the last weeks, with the day count and progress toward the best streak
 /// (or, for "last time" counters, toward the usual gap) underneath.
 struct HeatmapCard: View {
+    @Environment(\.modelContext) private var context
+
     let counter: Counter
     var animated = true
 
@@ -52,7 +54,10 @@ struct HeatmapCard: View {
                     }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 16) {
-                    DurationButton(from: counter.currentStreakStart, to: .now)
+                    DurationButton(from: counter.currentStreakStart, to: .now, style: counter.numberStyle) { style in
+                        counter.numberStyle = style
+                        saveChanges(context)
+                    }
                     Spacer(minLength: 0)
                     if target > 0 {
                         RecordTrack(current: counter.days(), target: target, tint: tint, animated: animated)
@@ -434,19 +439,19 @@ private struct HealthTimeline: View {
     }
 }
 
-/// "16 days" between two days, big. Tapping it cycles 127 days → 18w 1d → 4m 5d, everywhere at once.
+/// "16 days" between two days, big. Tapping it cycles 127 days → 18w 1d → 4m 5d for this counter or countdown,
+/// on its screen, its card and its widgets.
 struct DurationButton: View {
     let from: Date
     let to: Date
-
-    @AppStorage("durationStyle") private var styleRaw = DurationStyle.days.rawValue
+    let style: DurationStyle
+    let onChange: (DurationStyle) -> Void
 
     var body: some View {
-        let style = DurationStyle(rawValue: styleRaw) ?? .days
         let parts = DayMath.parts(from: from, to: to, style: style)
 
         Button {
-            withAnimation(.snappy) { styleRaw = style.next.rawValue }
+            withAnimation(.snappy) { onChange(style.next) }
         } label: {
             // Spelled out ("18 weeks 1 day") when it fits, short ("18w 1d") when it doesn't.
             ViewThatFits(in: .horizontal) {
@@ -456,7 +461,7 @@ struct DurationButton: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.selection, trigger: styleRaw)
+        .sensoryFeedback(.selection, trigger: style)
         .accessibilityHint("Changes the format")
         .layoutPriority(1)
     }

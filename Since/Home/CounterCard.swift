@@ -104,9 +104,18 @@ struct CounterCard: View {
         CardTitle(title: counter.title, symbol: counter.symbol, tint: tint)
     }
 
+    @ViewBuilder
     private func dayCount(size: CGFloat) -> some View {
         let days = counter.days()
-        return HStack(alignment: .firstTextBaseline, spacing: 4) {
+        if counter.numberStyle != .days {
+            DurationPartsText(parts: counter.durationParts(), size: size)
+        } else {
+            daysText(days, size: size)
+        }
+    }
+
+    private func daysText(_ days: Int, size: CGFloat) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
             Text(days, format: .number)
                 .font(.system(size: size, weight: .bold))
                 .contentTransition(.numericText(value: Double(days)))

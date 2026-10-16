@@ -25,6 +25,7 @@ enum Store {
     /// One-time fixes to data saved by earlier versions, run at launch.
     @MainActor
     static func upgradeData() {
+        copyNumberStyle()
         let defaults = Settings.defaults
         let birthdaysKey = "didMarkBirthdays"
         guard !defaults.bool(forKey: birthdaysKey) else { return }
@@ -39,6 +40,25 @@ enum Store {
             defaults.set(true, forKey: birthdaysKey)
         } catch {
             // Tried again at the next launch.
+        }
+    }
+
+    /// The number format used to be one setting for the whole app; each counter and countdown now has its own,
+    /// starting from that setting.
+    @MainActor
+    private static func copyNumberStyle() {
+        let key = "didCopyNumberStyle"
+        guard !Settings.defaults.bool(forKey: key) else { return }
+        let style = UserDefaults.standard.integer(forKey: "durationStyle")
+        let context = container.mainContext
+        for counter in (try? context.fetch(FetchDescriptor<Counter>())) ?? [] {
+            counter.durationStyleRaw = style
+        }
+        for countdown in (try? context.fetch(FetchDescriptor<Countdown>())) ?? [] {
+            countdown.durationStyleRaw = style
+        }
+        if (try? context.save()) != nil {
+            Settings.defaults.set(true, forKey: key)
         }
     }
 
