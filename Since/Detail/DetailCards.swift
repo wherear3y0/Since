@@ -227,7 +227,9 @@ struct SavingsCard: View {
 struct HealthCard: View {
     let counter: Counter
 
-    @AppStorage("healthCardExpanded") private var isExpanded = false
+    /// Remembered between openings; the animation runs on a @State copy, since stored changes don't animate.
+    @AppStorage("healthCardExpanded") private var storedExpanded = false
+    @State private var isExpanded = UserDefaults.standard.bool(forKey: "healthCardExpanded")
 
     var body: some View {
         // The first steps are minutes and hours apart, so the card follows the clock while it's on screen.
@@ -271,21 +273,18 @@ struct HealthCard: View {
                     .rotationEffect(.degrees(isExpanded ? 180 : 0))
             }
 
-            // Always laid out and revealed by animating its height, like the streak chart.
-            HealthTimeline(start: start, reached: Set(progress.reached.map(\.id)), nextID: progress.next?.id,
-                           fraction: progress.fraction, tint: tint)
-                .padding(.top, 20)
-                .blur(radius: isExpanded ? 0 : 10)
-                .opacity(isExpanded ? 1 : 0)
-                .frame(height: isExpanded ? nil : 0, alignment: .top)
-                .clipped()
-                .allowsHitTesting(isExpanded)
-                .accessibilityHidden(!isExpanded)
+            if isExpanded {
+                HealthTimeline(start: start, reached: Set(progress.reached.map(\.id)), nextID: progress.next?.id,
+                               fraction: progress.fraction, tint: tint)
+                    .padding(.top, 20)
+                    .transition(.blurReplace.combined(with: .opacity))
+            }
         }
         .padding(.vertical, 8)
         .contentShape(Rectangle())
         .onTapGesture {
-            withAnimation(.smooth(duration: 0.45)) { isExpanded.toggle() }
+            withAnimation(.smooth(duration: 0.4)) { isExpanded.toggle() }
+            storedExpanded = isExpanded
         }
         .sensoryFeedback(.selection, trigger: isExpanded)
         .accessibilityAddTraits(.isButton)

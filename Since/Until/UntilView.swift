@@ -286,11 +286,11 @@ struct UntilView: View {
         guard cardsShown, !added.isEmpty else { return }
         unrevealed = added
         Task {
-            try? await Task.sleep(for: .milliseconds(350))
+            try? await Task.sleep(for: .milliseconds(280))
             if let last = order.last(where: added.contains) {
                 withAnimation(.smooth) { scroller.scrollTo(last, anchor: .center) }
             }
-            try? await Task.sleep(for: .milliseconds(250))
+            try? await Task.sleep(for: .milliseconds(150))
             unrevealed = []
         }
     }

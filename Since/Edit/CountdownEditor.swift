@@ -289,7 +289,7 @@ struct CountdownEditor: View {
         .editorPreview(isShown: isPreviewShown)
         // Started once the sheet is on screen; changed earlier, the animation finishes before anyone sees it.
         .task {
-            try? await Task.sleep(for: .milliseconds(200))
+            try? await Task.sleep(for: .milliseconds(80))
             isPreviewShown = true
         }
     }

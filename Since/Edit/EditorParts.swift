@@ -96,10 +96,10 @@ extension View {
     /// The live preview at the top of an editor: comes in from a blur once the sheet is on screen.
     func editorPreview(isShown: Bool) -> some View {
         self
-            .blur(radius: isShown ? 0 : 18)
+            .blur(radius: isShown ? 0 : 12)
             .opacity(isShown ? 1 : 0.3)
             .scaleEffect(isShown ? 1 : 0.97)
-            .animation(.easeOut(duration: 0.8), value: isShown)
+            .animation(.easeOut(duration: 0.45), value: isShown)
             .accessibilityHidden(true)
     }
 }

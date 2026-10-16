@@ -8,7 +8,8 @@ extension View {
             .blur(radius: isShown ? 0 : 10)
             .opacity(isShown ? 1 : 0)
             .offset(y: isShown ? 0 : 14)
-            .animation(.smooth(duration: 0.6).delay(delay), value: isShown)
+            // Quick enough not to keep anyone waiting: the delays are compressed too.
+            .animation(.smooth(duration: 0.42).delay(delay * 0.6), value: isShown)
     }
 }
 
@@ -20,7 +21,7 @@ extension View {
             .listRowBackground(
                 background
                     .opacity(isShown ? 1 : 0)
-                    .animation(.smooth(duration: 0.6).delay(delay), value: isShown)
+                    .animation(.smooth(duration: 0.42).delay(delay * 0.6), value: isShown)
             )
     }
 }
