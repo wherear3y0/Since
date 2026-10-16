@@ -1,5 +1,6 @@
 import EventKit
 import EventKitUI
+import SwiftData
 import SwiftUI
 
 /// The countdown's day in Calendar: a button that opens the day there and, for a countdown picked from

@@ -1,6 +1,7 @@
 import SwiftUI
 import Contacts
 import ContactsUI
+import SwiftData
 
 /// The system's contact picker, limited to people with a birthday. It runs outside the app,
 /// so it needs no access to Contacts: only the chosen people come back.

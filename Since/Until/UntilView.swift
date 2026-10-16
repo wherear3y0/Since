@@ -76,48 +76,65 @@ struct UntilView: View {
         .filter { !$0.items.isEmpty }
     }
 
+    // The body is split into parts the compiler checks one at a time: as one long chain of modifiers
+    // it gave up on type-checking it.
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollViewReader { scroller in
-                ScrollView {
-                    let shown = sections
-                    let firstRows = Self.firstRows(of: shown)
-                    VStack(alignment: .leading, spacing: 12) {
-                        ForEach(Array(shown.enumerated()), id: \.element.id) { index, section in
-                            if let title = section.title {
-                                sectionHeading(title, id: section.id, count: section.items.count)
-                                    .padding(.top, index == 0 ? 0 : 16)
-                                    .waveIn(cardsShown,
-                                            delay: arrival.delay(for: CardSlot(row: firstRows[index] - 1, column: 0)),
-                                            from: arrival.edge)
-                            }
-                            if section.title == nil || !collapsed.contains(section.id) {
-                                CardGridLayout {
-                                    ForEach(section.items) { countdown in
-                                        card(for: countdown, in: section.items, firstRow: firstRows[index],
-                                             reorders: section.reorders)
-                                            .cardSize(countdown.size)
-                                    }
-                                }
-                                .transition(.blurReplace)
-                            }
-                        }
+            presentations(feedback(navigation(grid)))
+        }
+    }
+
+    /// The sections of cards, or the empty state.
+    private var grid: some View {
+        ScrollViewReader { scroller in
+            ScrollView {
+                let shown = sections
+                let firstRows = Self.firstRows(of: shown)
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(Array(shown.enumerated()), id: \.element.id) { index, section in
+                        sectionView(section, index: index, firstRow: firstRows[index])
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 24)
                 }
-                .background(Color.pageBackground)
-                .scrollEdgeEffectStyle(.soft, for: .top)
-                .onChange(of: countdowns.map(\.id)) { old, new in
-                    revealAdded(Set(new).subtracting(old), order: new, scroller: scroller)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
+            }
+            .background(Color.pageBackground)
+            .scrollEdgeEffectStyle(.soft, for: .top)
+            .onChange(of: countdowns.map(\.id)) { old, new in
+                revealAdded(Set(new).subtracting(old), order: new, scroller: scroller)
+            }
+        }
+        .overlay {
+            if countdowns.isEmpty {
+                ContentUnavailableView("No Countdowns", systemImage: "hourglass",
+                                       description: Text("Tap + to count down to a day, or to add birthdays and events."))
+            }
+        }
+    }
+
+    /// A section's heading, and its cards unless it's folded away.
+    @ViewBuilder
+    private func sectionView(_ section: CardSection, index: Int, firstRow: Int) -> some View {
+        if let title = section.title {
+            sectionHeading(title, id: section.id, count: section.items.count)
+                .padding(.top, index == 0 ? 0 : 16)
+                .waveIn(cardsShown, delay: arrival.delay(for: CardSlot(row: firstRow - 1, column: 0)),
+                        from: arrival.edge)
+        }
+        if section.title == nil || !collapsed.contains(section.id) {
+            CardGridLayout {
+                ForEach(section.items) { countdown in
+                    card(for: countdown, in: section.items, firstRow: firstRow, reorders: section.reorders)
+                        .cardSize(countdown.size)
                 }
             }
-            .overlay {
-                if countdowns.isEmpty {
-                    ContentUnavailableView("No Countdowns", systemImage: "hourglass",
-                                           description: Text("Tap + to count down to a day, or to add birthdays and events."))
-                }
-            }
+            .transition(.blurReplace)
+        }
+    }
+
+    /// The title, toolbar and detail screens, and opening a countdown from a link.
+    private func navigation(_ content: some View) -> some View {
+        content
             .navigationTitle("Until")
             .task(id: arrival.id) {
                 // On the next frame, once the hidden cards are on screen, so the wave plays from its start.
@@ -133,48 +150,71 @@ struct UntilView: View {
             .onChange(of: linkTick) {
                 closeSheets()
             }
+            .toolbar { toolbarItems }
+            .navigationDestination(for: UUID.self) { id in
+                detail(for: id)
+            }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarItems: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button("Settings", systemImage: "gearshape") {
+                isShowingSettings = true
+            }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            Menu("Add", systemImage: "plus") {
+                Button("New Countdown", systemImage: "hourglass") {
+                    isAdding = true
+                }
+                Button("Birthdays…", systemImage: "birthday.cake") {
+                    isPickingContacts = true
+                }
+                Button("Calendar Events…", systemImage: "calendar") {
+                    isImportingCalendar = true
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func detail(for id: UUID) -> some View {
+        if let countdown = countdowns.first(where: { $0.id == id }) {
+            CountdownDetailView(countdown: countdown) {
+                path.removeAll()
+            } onCountedSince: {
+                path.removeAll()
+                onCountedSince()
+            }
+            .navigationTransition(.zoom(sourceID: id, in: zoom))
+        }
+    }
+
+    /// Haptics for reordering, resizing, restyling, moving to Past, pinning, Done, adding and deleting.
+    private func feedback(_ content: some View) -> some View {
+        content
             .sensoryFeedback(.selection, trigger: reorderTick)
             .sensoryFeedback(.selection, trigger: countdowns.map(\.sizeRaw))
             .sensoryFeedback(.selection, trigger: countdowns.map(\.styleRaw))
             .sensoryFeedback(.impact(weight: .light), trigger: countdowns.map(\.isArchived))
             .sensoryFeedback(.selection, trigger: countdowns.map(\.isPinned))
-            .sensoryFeedback(.success, trigger: countdowns.map(\.doneDay)) { old, new in
-                new.compactMap { $0 }.count > old.compactMap { $0 }.count
+            .sensoryFeedback(.success, trigger: doneCount) { old, new in
+                new > old
             }
             .sensoryFeedback(trigger: countdowns.count) { old, new in
                 new > old ? .success : .impact(weight: .medium)
             }
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Settings", systemImage: "gearshape") {
-                        isShowingSettings = true
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu("Add", systemImage: "plus") {
-                        Button("New Countdown", systemImage: "hourglass") {
-                            isAdding = true
-                        }
-                        Button("Birthdays…", systemImage: "birthday.cake") {
-                            isPickingContacts = true
-                        }
-                        Button("Calendar Events…", systemImage: "calendar") {
-                            isImportingCalendar = true
-                        }
-                    }
-                }
-            }
-            .navigationDestination(for: UUID.self) { id in
-                if let countdown = countdowns.first(where: { $0.id == id }) {
-                    CountdownDetailView(countdown: countdown) {
-                        path.removeAll()
-                    } onCountedSince: {
-                        path.removeAll()
-                        onCountedSince()
-                    }
-                    .navigationTransition(.zoom(sourceID: id, in: zoom))
-                }
-            }
+    }
+
+    /// How many countdowns are marked done today, so marking one plays a haptic.
+    private var doneCount: Int {
+        countdowns.filter { $0.isDone() }.count
+    }
+
+    /// The sheets, the alerts and the undo toast.
+    private func presentations(_ content: some View) -> some View {
+        content
             .sheet(isPresented: $isAdding) {
                 CountdownEditor()
             }
@@ -190,7 +230,7 @@ struct UntilView: View {
                     }
                 }
             }
-            .sheet(isPresented: Binding(get: { !pickedContacts.isEmpty }, set: { if !$0 { pickedContacts = [] } })) {
+            .sheet(isPresented: isChoosingBirthdayFormat) {
                 BirthdayImportSheet(contacts: pickedContacts, existing: countdowns)
             }
             .sheet(isPresented: $isShowingSettings) {
@@ -199,8 +239,7 @@ struct UntilView: View {
             .sheet(item: $editing) { countdown in
                 CountdownEditor(countdown: countdown)
             }
-            .alert("Delete “\(deleting?.title ?? "")”?",
-                   isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
+            .alert(deleteTitle, isPresented: isDeleting) {
                 Button("Delete", role: .destructive) {
                     if let countdown = deleting {
                         withAnimation { context.delete(countdown) }
@@ -213,16 +252,7 @@ struct UntilView: View {
             }
             .countSinceAlert($converting, onDone: onCountedSince)
             .overlay(alignment: .bottom) {
-                if let id = archivedRecentlyID, let countdown = countdowns.first(where: { $0.id == id }) {
-                    UndoToast(text: toastIsDone ? "Done" : "Moved to Past", tint: countdown.color.color) {
-                        if toastIsDone {
-                            undoDone(countdown)
-                        } else {
-                            setArchived(false, countdown)
-                        }
-                    }
-                    .transition(.blurRise)
-                }
+                toast
             }
             .task(id: archivedRecentlyID) {
                 guard archivedRecentlyID != nil else { return }
@@ -230,6 +260,32 @@ struct UntilView: View {
                 guard (try? await Task.sleep(for: .seconds(5))) != nil else { return }
                 withAnimation { archivedRecentlyID = nil }
             }
+    }
+
+    private var isChoosingBirthdayFormat: Binding<Bool> {
+        Binding(get: { !pickedContacts.isEmpty }, set: { if !$0 { pickedContacts = [] } })
+    }
+
+    private var isDeleting: Binding<Bool> {
+        Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
+    }
+
+    private var deleteTitle: String {
+        "Delete “\(deleting?.title ?? "")”?"
+    }
+
+    /// Undo for a countdown just moved to Past or marked done.
+    @ViewBuilder
+    private var toast: some View {
+        if let id = archivedRecentlyID, let countdown = countdowns.first(where: { $0.id == id }) {
+            UndoToast(text: toastIsDone ? "Done" : "Moved to Past", tint: countdown.color.color) {
+                if toastIsDone {
+                    undoDone(countdown)
+                } else {
+                    setArchived(false, countdown)
+                }
+            }
+            .transition(.blurRise)
         }
     }
 
