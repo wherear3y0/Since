@@ -19,7 +19,7 @@ enum LiveActivities {
             wanted[countdown.id] = CountdownActivityAttributes.ContentState(
                 title: countdown.title, symbol: countdown.symbol, colorName: countdown.colorName,
                 day: countdown.target(now: now, calendar: calendar), turns: countdown.turns(now: now, calendar: calendar),
-                isBirthday: countdown.isBirthday)
+                isBirthday: countdown.isBirthday, waited: countdown.waited(now: now, calendar: calendar))
         }
         // One sync at a time: two saves a moment apart would otherwise both see no activity yet and start two.
         // Each one waits for the one before and reads what it started.
