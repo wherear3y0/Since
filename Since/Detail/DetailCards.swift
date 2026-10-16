@@ -277,7 +277,7 @@ struct HealthCard: View {
                 HealthTimeline(start: start, reached: Set(progress.reached.map(\.id)), nextID: progress.next?.id,
                                fraction: progress.fraction, tint: tint)
                     .padding(.top, 20)
-                    .transition(.blurReplace.combined(with: .opacity))
+                    .transition(.blurReplace)
             }
         }
         .padding(.vertical, 8)
