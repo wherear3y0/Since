@@ -115,6 +115,7 @@ extension Countdown {
                                   rule: RepeatRule(frequency: .yearly), sortOrder: sortOrder)
         countdown.countsYears = info.knowsYear
         countdown.isBirthday = true
+        countdown.contactID = contact.identifier
         return countdown
     }
 }

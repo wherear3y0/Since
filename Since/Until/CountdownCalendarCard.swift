@@ -29,6 +29,8 @@ struct CountdownCalendarCard: View {
         case deleted
         /// Linked to a repeating event that doesn't come round anymore (in the next two years).
         case ended
+        /// A birthday's day in Calendar's Birthdays calendar, which comes from Contacts.
+        case birthday(EKEvent)
     }
 
     private var store: EKEventStore { .shared }
@@ -90,6 +92,8 @@ struct CountdownCalendarCard: View {
             return "The event this countdown came from is no longer in Calendar."
         case .ended:
             return "The event this countdown came from doesn’t come round in Calendar anymore."
+        case .birthday:
+            return "From the Birthdays calendar, which Calendar fills in from Contacts."
         }
     }
 
@@ -134,6 +138,15 @@ struct CountdownCalendarCard: View {
                 .buttonStyle(.glass)
             }
             .lineLimit(1)
+        case .birthday(let event):
+            eventRow(event)
+            Button {
+                shownEvent = ShownEvent(event: event)
+            } label: {
+                Label("Show Event", systemImage: "info.circle")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.glass)
         case .deleted, .ended:
             Button("Unlink", systemImage: "link.badge.plus") {
                 unlink()
@@ -183,6 +196,8 @@ struct CountdownCalendarCard: View {
             } else {
                 state = .deleted
             }
+        } else if countdown.isBirthday, let event = birthdayEvent() {
+            state = .birthday(event)
         } else if let event = sameNameEvent() {
             state = .match(event)
         } else {
@@ -221,6 +236,31 @@ struct CountdownCalendarCard: View {
             return onDay
         }
         return times.first { ($0.startDate ?? .distantPast) >= today }
+    }
+
+    /// For a birthday: the person's day in the Birthdays calendar on the countdown's day. Found by the contact
+    /// it was picked from or, for one picked before that was kept, by a name in the title; failing both, the only
+    /// birthday that day.
+    private func birthdayEvent() -> EKEvent? {
+        let calendars = store.calendars(for: .event).filter { $0.type == .birthday }
+        guard !calendars.isEmpty else { return nil }
+        let day = Calendar.app.startOfDay(for: countdown.target())
+        guard let end = Calendar.app.date(byAdding: .day, value: 1, to: day) else { return nil }
+        let events = store.events(matching: store.predicateForEvents(withStart: day, end: end, calendars: calendars))
+        if let id = countdown.contactID, let event = events.first(where: { $0.birthdayContactIdentifier == id }) {
+            return event
+        }
+        // The start of each name is enough: "Anna" finds "Anna’s Birthday" and "День рождения Анны".
+        let skipped: Set<String> = ["birthday", "birthday’s", "день", "рождения"]
+        let names = countdown.title.split { !$0.isLetter }.map { $0.lowercased() }
+            .filter { $0.count >= 3 && !skipped.contains($0) }
+        let named = events.filter { event in
+            names.contains { (event.title ?? "").localizedStandardContains(String($0.prefix(3))) }
+        }
+        if named.count == 1 {
+            return named[0]
+        }
+        return events.count == 1 ? events[0] : nil
     }
 
     /// An event with the countdown's name on its day, for one picked from Calendar before links were kept.
@@ -265,8 +305,13 @@ struct CountdownCalendarCard: View {
     /// Calendar opens on the day given as seconds since 2001, through the calshow: link it has long handled.
     private func openDay() {
         var day = countdown.target()
-        if case .linked(let event) = state, let start = event.startDate {
-            day = start
+        switch state {
+        case .linked(let event), .birthday(let event):
+            if let start = event.startDate {
+                day = start
+            }
+        default:
+            break
         }
         if let url = URL(string: "calshow:\(Int(day.timeIntervalSinceReferenceDate))") {
             openURL(url)

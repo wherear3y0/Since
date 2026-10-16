@@ -42,6 +42,8 @@ final class Countdown {
     /// The same event's identifier on the calendar server, which survives a full resync that `calendarItemID`
     /// doesn't.
     var calendarExternalID: String? = nil
+    /// The contact a birthday was picked from, to find the person's day in Calendar's Birthdays calendar.
+    var contactID: String? = nil
     /// How the days are written: 42 days, 6w or 1m 12d (a `DurationStyle`).
     var durationStyleRaw: Int = DurationStyle.days.rawValue
 

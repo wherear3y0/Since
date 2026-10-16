@@ -71,6 +71,8 @@ struct Backup: Codable {
         var calendarExternalID: String?
         /// Missing in backups made before each countdown had its own number format.
         var durationStyle: Int?
+        /// The contact a birthday came from, if known.
+        var contactID: String?
     }
 
     var version = 1
@@ -88,7 +90,8 @@ struct Backup: Codable {
                           isArchived: countdown.isArchived, countsYears: countdown.countsYears,
                           style: countdown.styleRaw, isPinned: countdown.isPinned, isBirthday: countdown.isBirthday,
                           showsLiveActivity: countdown.showsLiveActivity, calendarItemID: countdown.calendarItemID,
-                          calendarExternalID: countdown.calendarExternalID, durationStyle: countdown.durationStyleRaw)
+                          calendarExternalID: countdown.calendarExternalID, durationStyle: countdown.durationStyleRaw,
+                          contactID: countdown.contactID)
         }
         self.counters = counters.map { counter in
             CounterData(id: counter.id, title: counter.title, symbol: counter.symbol, color: counter.colorName,
@@ -176,6 +179,7 @@ struct Backup: Codable {
             countdown.calendarItemID = data.calendarItemID
             countdown.calendarExternalID = data.calendarExternalID
             countdown.durationStyleRaw = data.durationStyle ?? DurationStyle.days.rawValue
+            countdown.contactID = data.contactID
             context.insert(countdown)
         }
     }
