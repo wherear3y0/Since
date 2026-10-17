@@ -14,14 +14,19 @@
 		0E40815EE39D72C43BA68F09 /* EditorParts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 719EE01F1CF9966F0BB4AFA2 /* EditorParts.swift */; };
 		10889B126693E1852AB545DB /* SiriIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 312230FC468CA8CA26BE6A55 /* SiriIntents.swift */; };
 		127D2C6E93E541B778BDC118 /* SiriActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CAA006A9EB97259264D3843 /* SiriActions.swift */; };
+		16B374C2CD48938C0364CE9C /* CountdownActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EA16268354109D9C33F5C87 /* CountdownActivity.swift */; };
 		18896F17745D899332ED42D0 /* CountdownEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C590D2E94156ECCE83D2E04 /* CountdownEntity.swift */; };
 		1B5B24DEA26EAD94F27C2880 /* CardSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18B8C889511EF84DF2C65C08 /* CardSize.swift */; };
 		1EE7F006EFA486339B30E0EC /* SymbolPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1998AEBEF753AB605A774D10 /* SymbolPicker.swift */; };
 		22A3DC7E436E1BF221D35CBF /* TabWave.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108797F464215F67DAA31DA5 /* TabWave.swift */; };
+		23E5DBA9412F0432AF447263 /* LiveActivities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B608E953A0589558D3CF8882 /* LiveActivities.swift */; };
+		26E8C15AE7E834891DE10A65 /* HabitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74743AFF433DB4CE578B19C2 /* HabitTests.swift */; };
 		27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487E6968B8B9CED3CF2C9F /* Palette.swift */; };
 		2FC7D75DCA7C6EE02A8A2A44 /* HeatmapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D2AD3EEDB36F1A2B314BC53 /* HeatmapView.swift */; };
 		3484D2B546CC1B8B0654086F /* CardSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18B8C889511EF84DF2C65C08 /* CardSize.swift */; };
 		38CC2A583B6B20D2CF308542 /* Countdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B62B5F2666897694E16D181 /* Countdown.swift */; };
+		39AD74E60F7A8200A9CC5A41 /* CountdownCalendarCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72A3EEC696BFE2D4E3CA69 /* CountdownCalendarCard.swift */; };
+		3CEB95FA89F3C9691AC73435 /* CountdownLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00BBB616E5F9E7CB37FDDFBC /* CountdownLiveActivity.swift */; };
 		41D80532235FE60CC9307852 /* CountdownVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCD800830BF60E85F25812C6 /* CountdownVisuals.swift */; };
 		45A6B0874C7247CFDE3BC843 /* CardGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801BCF82830FA7B3275D5DAF /* CardGrid.swift */; };
 		46B7671D72D0B9FC356D9C49 /* AppShortcuts.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 98B9CBA5A84DE5C424757FDC /* AppShortcuts.xcstrings */; };
@@ -38,6 +43,7 @@
 		6557E67FB102EA8630756499 /* CounterEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7EE177525F8A6376A3436D /* CounterEntity.swift */; };
 		67AB26EA0A38A5B1E8516CF1 /* RepeatPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B56F468EE7FBEC2E646268 /* RepeatPicker.swift */; };
 		6820636A50D606A4EDEDC8DD /* CounterDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 231EC4EFF6533FFB35FB3839 /* CounterDetailView.swift */; };
+		6C86446898F6AB7A371084CB /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F4826166E5D9C411E574AE /* Habit.swift */; };
 		6E43F7715CD0E42C52532651 /* CountdownEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E445EF58E5002FF7A2273A3 /* CountdownEditor.swift */; };
 		80E008887769E725375324D6 /* PressEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7715FFBD6E1378B16839A8ED /* PressEffect.swift */; };
 		8725BE5FA717E194F3A7B8ED /* StreakChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E3A5464C2BA6CD190ED2A51 /* StreakChart.swift */; };
@@ -45,7 +51,9 @@
 		8F172ECD4711EBC69ED4475A /* ImportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7284C1015E85D2703EE249F /* ImportTests.swift */; };
 		9056A031C7968ED587BA7606 /* CountdownVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCD800830BF60E85F25812C6 /* CountdownVisuals.swift */; };
 		9063138B0ACD9C3C4395E8C7 /* CounterCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B227F4C6280C3677387458E /* CounterCard.swift */; };
+		912D29B3020F9BD6D88981C2 /* SiriTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DE2BC76DE0105DE23534DA2 /* SiriTests.swift */; };
 		914EA344DE490505B7DF8DA5 /* MilestonesAndBackupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7621BD2DEA526CE7145BBE29 /* MilestonesAndBackupTests.swift */; };
+		951FE945FB44833CFD6A4609 /* Savings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD372845F590F1787E38C7A /* Savings.swift */; };
 		96B137A27560CFEC0490FDA2 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487E6968B8B9CED3CF2C9F /* Palette.swift */; };
 		9CC37FA2FE93FF996992F959 /* DayMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95F25134630F58C11830184E /* DayMathTests.swift */; };
 		9E186E80DF0438ECC2AE4C7D /* BlurIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EDA996518D5E001153B2F41 /* BlurIn.swift */; };
@@ -70,16 +78,19 @@
 		C60406916CE8EBFB23E3BD92 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = AFF43DBAF62B456CC0EB71E9 /* AppIcon.icon */; };
 		C67DE2A5029342F21CAE2153 /* CardStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19BF10FC363E186A6739CCD6 /* CardStyle.swift */; };
 		CA920222F069650E46D56C2B /* CountdownWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4074A2B9AD8F7787CA38768E /* CountdownWidget.swift */; };
+		D10782F36F33787849504A86 /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F4826166E5D9C411E574AE /* Habit.swift */; };
 		D47EFE6E3CE819D6F52C0FC1 /* Milestones.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BFEB5A2A0F2402D4FB5D7C1 /* Milestones.swift */; };
 		D51CAF2CC76123C2E305E532 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C164DCB4A53E54B334D5D41 /* Models.swift */; };
 		D7B665BF7FE44CFB784714AC /* CountdownGroupWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8F010D35925EAB327BC31B8 /* CountdownGroupWidgets.swift */; };
 		DA051087E77773CC4FBDFB10 /* SaveChanges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28154B5C530BED349C888F20 /* SaveChanges.swift */; };
+		DFAEA8974DD9150EE1952BFD /* Savings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD372845F590F1787E38C7A /* Savings.swift */; };
 		E11045DB82DDDC2F40BB5018 /* Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11C424BC505F2C411FAB3103 /* Backup.swift */; };
 		E310B6DBC8BEF7FA7E54F594 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 455735DD8A0D96C924B574F6 /* Settings.swift */; };
 		E636A09B9F752F0FD2A25401 /* CountdownEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C590D2E94156ECCE83D2E04 /* CountdownEntity.swift */; };
 		E86F634A8B8FC52E088F014B /* CounterSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933F83BB1890FE68C76CEA10 /* CounterSnapshot.swift */; };
 		EDF957CDEEB6296141D1FF27 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C8D7FC76FBE774E64C654F12 /* Assets.xcassets */; };
 		F1492ECEE2B658ED9196BB38 /* UntilMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F59E11FC4F1BD810B383204 /* UntilMath.swift */; };
+		F31D38086CF6AE925F98548B /* CountdownActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EA16268354109D9C33F5C87 /* CountdownActivity.swift */; };
 		F6C83F276E2979A60482C523 /* PaletteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB56ED1685F6BB404855D1B /* PaletteTests.swift */; };
 		FA133239286AAF1A83FE6C1E /* RepeatRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B55588456FF7AF0BF2F9A17 /* RepeatRule.swift */; };
 		FB8D75FCFCF829DBDBA8FF2A /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D873BD1E9FE11B4C85AA1DDF /* PreviewData.swift */; };
@@ -118,6 +129,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		00BBB616E5F9E7CB37FDDFBC /* CountdownLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownLiveActivity.swift; sourceTree = "<group>"; };
 		017679D7A023A295B4BC7A02 /* DayMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayMath.swift; sourceTree = "<group>"; };
 		02A6A7BC5E8492B366AA8F51 /* SinceWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SinceWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C164DCB4A53E54B334D5D41 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
@@ -146,11 +158,14 @@
 		4BFEB5A2A0F2402D4FB5D7C1 /* Milestones.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Milestones.swift; sourceTree = "<group>"; };
 		4F59E11FC4F1BD810B383204 /* UntilMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilMath.swift; sourceTree = "<group>"; };
 		5234E8AF202D3DFC0FB13848 /* CounterWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterWidget.swift; sourceTree = "<group>"; };
+		57F4826166E5D9C411E574AE /* Habit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Habit.swift; sourceTree = "<group>"; };
 		60485C8EA929119445831121 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		612005A3760F00AB39ED0AA1 /* DetailCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailCards.swift; sourceTree = "<group>"; };
 		65B56F468EE7FBEC2E646268 /* RepeatPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatPicker.swift; sourceTree = "<group>"; };
 		67E5389C7BA2F8F719230640 /* UntilTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilTests.swift; sourceTree = "<group>"; };
+		6DE2BC76DE0105DE23534DA2 /* SiriTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriTests.swift; sourceTree = "<group>"; };
 		719EE01F1CF9966F0BB4AFA2 /* EditorParts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorParts.swift; sourceTree = "<group>"; };
+		74743AFF433DB4CE578B19C2 /* HabitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTests.swift; sourceTree = "<group>"; };
 		7621BD2DEA526CE7145BBE29 /* MilestonesAndBackupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesAndBackupTests.swift; sourceTree = "<group>"; };
 		7715FFBD6E1378B16839A8ED /* PressEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PressEffect.swift; sourceTree = "<group>"; };
 		7A1EE7AF345BA666004F3E34 /* SinceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinceApp.swift; sourceTree = "<group>"; };
@@ -164,6 +179,8 @@
 		87438E01D89F98EBCA739C5A /* CalendarImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarImport.swift; sourceTree = "<group>"; };
 		8CAA006A9EB97259264D3843 /* SiriActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriActions.swift; sourceTree = "<group>"; };
 		8E445EF58E5002FF7A2273A3 /* CountdownEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownEditor.swift; sourceTree = "<group>"; };
+		8E72A3EEC696BFE2D4E3CA69 /* CountdownCalendarCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownCalendarCard.swift; sourceTree = "<group>"; };
+		8EA16268354109D9C33F5C87 /* CountdownActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownActivity.swift; sourceTree = "<group>"; };
 		933F83BB1890FE68C76CEA10 /* CounterSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterSnapshot.swift; sourceTree = "<group>"; };
 		95F25134630F58C11830184E /* DayMathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayMathTests.swift; sourceTree = "<group>"; };
 		989198991BFA00080193D971 /* SinceWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinceWidgetsBundle.swift; sourceTree = "<group>"; };
@@ -175,11 +192,13 @@
 		AFF43DBAF62B456CC0EB71E9 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		B0DA943B7AEDE64523FF393F /* CounterGroupWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterGroupWidgets.swift; sourceTree = "<group>"; };
 		B2E320EE5DD27FD9580E4F23 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B608E953A0589558D3CF8882 /* LiveActivities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivities.swift; sourceTree = "<group>"; };
 		B8487E6968B8B9CED3CF2C9F /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		BCD800830BF60E85F25812C6 /* CountdownVisuals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownVisuals.swift; sourceTree = "<group>"; };
 		C8D7FC76FBE774E64C654F12 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C8F575A322A38EC5C5E7F091 /* Providers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Providers.swift; sourceTree = "<group>"; };
 		D873BD1E9FE11B4C85AA1DDF /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
+		DBD372845F590F1787E38C7A /* Savings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Savings.swift; sourceTree = "<group>"; };
 		DD58300EF8A73F6B24D66FEF /* CountdownDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownDetailView.swift; sourceTree = "<group>"; };
 		E68D7D478B4571160C35F82A /* UntilView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilView.swift; sourceTree = "<group>"; };
 		E8F010D35925EAB327BC31B8 /* CountdownGroupWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownGroupWidgets.swift; sourceTree = "<group>"; };
@@ -217,9 +236,11 @@
 			isa = PBXGroup;
 			children = (
 				95F25134630F58C11830184E /* DayMathTests.swift */,
+				74743AFF433DB4CE578B19C2 /* HabitTests.swift */,
 				F7284C1015E85D2703EE249F /* ImportTests.swift */,
 				7621BD2DEA526CE7145BBE29 /* MilestonesAndBackupTests.swift */,
 				7AB56ED1685F6BB404855D1B /* PaletteTests.swift */,
+				6DE2BC76DE0105DE23534DA2 /* SiriTests.swift */,
 				67E5389C7BA2F8F719230640 /* UntilTests.swift */,
 			);
 			path = SinceTests;
@@ -231,6 +252,7 @@
 				AFF43DBAF62B456CC0EB71E9 /* AppIcon.icon */,
 				98B9CBA5A84DE5C424757FDC /* AppShortcuts.xcstrings */,
 				C8D7FC76FBE774E64C654F12 /* Assets.xcassets */,
+				B608E953A0589558D3CF8882 /* LiveActivities.swift */,
 				4BFEB5A2A0F2402D4FB5D7C1 /* Milestones.swift */,
 				60485C8EA929119445831121 /* RootView.swift */,
 				28154B5C530BED349C888F20 /* SaveChanges.swift */,
@@ -245,6 +267,7 @@
 			isa = PBXGroup;
 			children = (
 				E8F010D35925EAB327BC31B8 /* CountdownGroupWidgets.swift */,
+				00BBB616E5F9E7CB37FDDFBC /* CountdownLiveActivity.swift */,
 				4074A2B9AD8F7787CA38768E /* CountdownWidget.swift */,
 				B0DA943B7AEDE64523FF393F /* CounterGroupWidgets.swift */,
 				933F83BB1890FE68C76CEA10 /* CounterSnapshot.swift */,
@@ -287,15 +310,18 @@
 				18B8C889511EF84DF2C65C08 /* CardSize.swift */,
 				19BF10FC363E186A6739CCD6 /* CardStyle.swift */,
 				1B62B5F2666897694E16D181 /* Countdown.swift */,
+				8EA16268354109D9C33F5C87 /* CountdownActivity.swift */,
 				7C590D2E94156ECCE83D2E04 /* CountdownEntity.swift */,
 				BCD800830BF60E85F25812C6 /* CountdownVisuals.swift */,
 				7A7EE177525F8A6376A3436D /* CounterEntity.swift */,
 				FC1C1E5DB9F0A4985B444B83 /* CounterKind.swift */,
 				017679D7A023A295B4BC7A02 /* DayMath.swift */,
+				57F4826166E5D9C411E574AE /* Habit.swift */,
 				0C164DCB4A53E54B334D5D41 /* Models.swift */,
 				B8487E6968B8B9CED3CF2C9F /* Palette.swift */,
 				D873BD1E9FE11B4C85AA1DDF /* PreviewData.swift */,
 				2B55588456FF7AF0BF2F9A17 /* RepeatRule.swift */,
+				DBD372845F590F1787E38C7A /* Savings.swift */,
 				455735DD8A0D96C924B574F6 /* Settings.swift */,
 				11F835E8D977E82F6FEBE99F /* Store.swift */,
 				4F59E11FC4F1BD810B383204 /* UntilMath.swift */,
@@ -332,6 +358,7 @@
 			children = (
 				87438E01D89F98EBCA739C5A /* CalendarImport.swift */,
 				A9BA6312DB34532977870594 /* ContactBirthdays.swift */,
+				8E72A3EEC696BFE2D4E3CA69 /* CountdownCalendarCard.swift */,
 				385CD372B7F7D896D8724CB4 /* CountdownCard.swift */,
 				DD58300EF8A73F6B24D66FEF /* CountdownDetailView.swift */,
 				E68D7D478B4571160C35F82A /* UntilView.swift */,
@@ -480,6 +507,8 @@
 				C67DE2A5029342F21CAE2153 /* CardStyle.swift in Sources */,
 				06CB2FA6E295DF7AF5B81733 /* ContactBirthdays.swift in Sources */,
 				38CC2A583B6B20D2CF308542 /* Countdown.swift in Sources */,
+				16B374C2CD48938C0364CE9C /* CountdownActivity.swift in Sources */,
+				39AD74E60F7A8200A9CC5A41 /* CountdownCalendarCard.swift in Sources */,
 				651E06A76430AE449AF238D3 /* CountdownCard.swift in Sources */,
 				B68E46076A81EF11F47B963F /* CountdownDetailView.swift in Sources */,
 				6E43F7715CD0E42C52532651 /* CountdownEditor.swift in Sources */,
@@ -493,9 +522,11 @@
 				4F271DEA91897BB58A32E546 /* DayMath.swift in Sources */,
 				B57D525A5C1BA43D8F71E1F9 /* DetailCards.swift in Sources */,
 				0E40815EE39D72C43BA68F09 /* EditorParts.swift in Sources */,
+				D10782F36F33787849504A86 /* Habit.swift in Sources */,
 				2FC7D75DCA7C6EE02A8A2A44 /* HeatmapView.swift in Sources */,
 				9E4D3D696268C38C22285110 /* HoldToResetButton.swift in Sources */,
 				C29CA59CEB10E719E9692293 /* HomeView.swift in Sources */,
+				23E5DBA9412F0432AF447263 /* LiveActivities.swift in Sources */,
 				D47EFE6E3CE819D6F52C0FC1 /* Milestones.swift in Sources */,
 				D51CAF2CC76123C2E305E532 /* Models.swift in Sources */,
 				27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */,
@@ -506,6 +537,7 @@
 				520138C8DDB860BB01BC0D84 /* ResetEditor.swift in Sources */,
 				5A7CFC1E199FB522CC8AB684 /* RootView.swift in Sources */,
 				DA051087E77773CC4FBDFB10 /* SaveChanges.swift in Sources */,
+				951FE945FB44833CFD6A4609 /* Savings.swift in Sources */,
 				E310B6DBC8BEF7FA7E54F594 /* Settings.swift in Sources */,
 				C36B227D2B2973FA39827162 /* SettingsView.swift in Sources */,
 				6392FEEAE4C41C38CF2C6B76 /* SinceApp.swift in Sources */,
@@ -527,8 +559,10 @@
 				3484D2B546CC1B8B0654086F /* CardSize.swift in Sources */,
 				51D5BD7089368BFF79F33501 /* CardStyle.swift in Sources */,
 				AA8002E4621AAC288E2E50BB /* Countdown.swift in Sources */,
+				F31D38086CF6AE925F98548B /* CountdownActivity.swift in Sources */,
 				18896F17745D899332ED42D0 /* CountdownEntity.swift in Sources */,
 				D7B665BF7FE44CFB784714AC /* CountdownGroupWidgets.swift in Sources */,
+				3CEB95FA89F3C9691AC73435 /* CountdownLiveActivity.swift in Sources */,
 				9056A031C7968ED587BA7606 /* CountdownVisuals.swift in Sources */,
 				CA920222F069650E46D56C2B /* CountdownWidget.swift in Sources */,
 				6557E67FB102EA8630756499 /* CounterEntity.swift in Sources */,
@@ -537,11 +571,13 @@
 				E86F634A8B8FC52E088F014B /* CounterSnapshot.swift in Sources */,
 				6030F27902773D095186D408 /* CounterWidget.swift in Sources */,
 				BAC8ED597863CFB03E636455 /* DayMath.swift in Sources */,
+				6C86446898F6AB7A371084CB /* Habit.swift in Sources */,
 				5BE4FE26CE492BA16B94A7A7 /* Models.swift in Sources */,
 				96B137A27560CFEC0490FDA2 /* Palette.swift in Sources */,
 				AC79EE0E422B2B79E6C1FBD6 /* PreviewData.swift in Sources */,
 				AB6E79EDDF2535B734E7D891 /* Providers.swift in Sources */,
 				FA133239286AAF1A83FE6C1E /* RepeatRule.swift in Sources */,
+				DFAEA8974DD9150EE1952BFD /* Savings.swift in Sources */,
 				560782A934ADA43857987046 /* Settings.swift in Sources */,
 				B40CBAC1D485AE48614CC63D /* SinceWidgetsBundle.swift in Sources */,
 				4938D303BE75E5DA399C89A1 /* Store.swift in Sources */,
@@ -555,9 +591,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				9CC37FA2FE93FF996992F959 /* DayMathTests.swift in Sources */,
+				26E8C15AE7E834891DE10A65 /* HabitTests.swift in Sources */,
 				8F172ECD4711EBC69ED4475A /* ImportTests.swift in Sources */,
 				914EA344DE490505B7DF8DA5 /* MilestonesAndBackupTests.swift in Sources */,
 				F6C83F276E2979A60482C523 /* PaletteTests.swift in Sources */,
+				912D29B3020F9BD6D88981C2 /* SiriTests.swift in Sources */,
 				B54C5A91BC456705C1D4EF34 /* UntilTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -650,6 +688,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -659,6 +698,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
 			};
@@ -763,6 +803,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -771,6 +812,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
 			};
