@@ -290,9 +290,6 @@ extension HomeView {
         }
     }
 
-    /// The menu closes first. Then the card's content fades out, the card takes its new shape while the grid
-    /// reflows around it, and the content, already laid out for the new size, fades back in. Saving waits
-    /// until it's all done: it refreshes widgets, reminders and Spotlight, which would stutter the animation.
     private func closeSheets() {
         isAddingCounter = false
         isShowingSettings = false
@@ -301,15 +298,21 @@ extension HomeView {
         deletingCounter = nil
     }
 
+    /// The menu closes first. Then the card's content fades out, the card takes its new shape while the grid
+    /// reflows around it, and the content, already laid out for the new size, fades back in. Saving waits
+    /// until it's all done: it refreshes widgets, reminders and Spotlight, which would stutter the animation.
     private func setSize(_ size: CardSize, of counter: Counter) {
         let id = counter.id
         Task {
-            try? await Task.sleep(for: .milliseconds(300))
+            // The menu has to be gone first: while it closes, iOS shows a copy of the card in its place,
+            // and a change of shape under it only shows once the menu is gone, all at once.
+            try? await Task.sleep(for: .milliseconds(700))
             guard let target = counters.first(where: { $0.id == id }), target.size != size else { return }
             withAnimation(.easeOut(duration: 0.15)) { _ = reshaping.insert(id) }
             try? await Task.sleep(for: .milliseconds(150))
             withAnimation(.smooth(duration: 0.45)) { target.size = size }
-            try? await Task.sleep(for: .milliseconds(300))
+            // The content comes back once the card has its new shape, not while it's still changing.
+            try? await Task.sleep(for: .milliseconds(450))
             withAnimation(.easeOut(duration: 0.3)) { _ = reshaping.remove(id) }
             try? await Task.sleep(for: .milliseconds(300))
             saveChanges(context)

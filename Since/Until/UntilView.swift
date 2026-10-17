@@ -495,12 +495,14 @@ extension UntilView {
     private func setSize(_ size: CardSize, of countdown: Countdown) {
         let id = countdown.id
         Task {
-            try? await Task.sleep(for: .milliseconds(300))
+            // The menu has to be gone first, as on the Since tab.
+            try? await Task.sleep(for: .milliseconds(700))
             guard let target = countdowns.first(where: { $0.id == id }), target.size != size else { return }
             withAnimation(.easeOut(duration: 0.15)) { _ = reshaping.insert(id) }
             try? await Task.sleep(for: .milliseconds(150))
             withAnimation(.smooth(duration: 0.45)) { target.size = size }
-            try? await Task.sleep(for: .milliseconds(300))
+            // The content comes back once the card has its new shape, not while it's still changing.
+            try? await Task.sleep(for: .milliseconds(450))
             withAnimation(.easeOut(duration: 0.3)) { _ = reshaping.remove(id) }
             try? await Task.sleep(for: .milliseconds(300))
             saveChanges(context)

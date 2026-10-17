@@ -65,12 +65,19 @@ extension CardSize {
     /// Inner padding of a card.
     var padding: CGFloat { self == .xl ? 18 : 14 }
 
-    /// The cell size of an M card's heatmap, worked out from an XL card's content width:
-    /// an M card is half the row less the 12-point gap, with its padding and 7 columns 3 points apart.
-    static func mCellSize(xlContentWidth width: CGFloat) -> CGFloat {
-        let rowWidth = width + 2 * CardSize.xl.padding
+    /// The cell size of an M card's heatmap for a grid `rowWidth` wide: an M card is half the row less
+    /// the 12-point gap, with its padding and 7 columns 3 points apart. L and XL cards use the same size
+    /// and fit more weeks instead of bigger cells.
+    static func mCellSize(rowWidth: CGFloat) -> CGFloat {
         let mContentWidth = (rowWidth - 12) / 2 - 2 * CardSize.m.padding
         return (mContentWidth - 6 * 3) / 7
+    }
+
+    /// How many weeks of M-sized cells fit across this card, with the 30-point weekday labels.
+    func weeksAcross(rowWidth: CGFloat) -> Int {
+        let content = rowWidth - 2 * padding
+        let cell = CardSize.mCellSize(rowWidth: rowWidth)
+        return max(Int((content - 30 + 3) / (cell + 3)), 1)
     }
 }
 

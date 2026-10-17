@@ -29,7 +29,9 @@ struct HeatmapView: View {
     var body: some View {
         let todayIndex = days.flatMap { $0 }.firstIndex(where: \.isToday) ?? 0
         HStack(spacing: spacing) {
-            ForEach(Array(days.enumerated()), id: \.offset) { weekIndex, week in
+            // Weeks are known by their first day, so when more weeks are shown they're added at the front
+            // instead of every column changing its days.
+            ForEach(Array(days.enumerated()), id: \.element.first?.date) { weekIndex, week in
                 VStack(spacing: spacing) {
                     ForEach(Array(week.enumerated()), id: \.element.id) { dayIndex, day in
                         let index = weekIndex * 7 + dayIndex

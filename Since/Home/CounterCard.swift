@@ -13,7 +13,9 @@ struct CounterCard: View {
     var body: some View {
         let tint = counter.color.color.onCard(tinted: counter.tinted)
 
-        Group {
+        // A ZStack, not a Group: a Group would hand the frame below to each size's layout separately,
+        // so a new size would fade in a new card instead of reshaping this one.
+        ZStack(alignment: .topLeading) {
             switch counter.size {
             case .m: compact(tint: tint)
             case .l: wide(tint: tint)
@@ -24,9 +26,9 @@ struct CounterCard: View {
         .homeCard(size: counter.size, color: counter.color.color, tinted: counter.tinted, onOpen: onOpen)
     }
 
-    /// The width inside an XL card's padding; a typical iPhone's until the grid has been measured.
-    private var largeWidth: CGFloat {
-        gridWidth > 0 ? gridWidth - 2 * CardSize.xl.padding : 322
+    /// The width of the grid; a typical iPhone's until it has been measured.
+    private var rowWidth: CGFloat {
+        gridWidth > 0 ? gridWidth : 361
     }
 
     // MARK: - Sizes
@@ -43,7 +45,8 @@ struct CounterCard: View {
         }
     }
 
-    /// L: title and date on the left, number on the right, about three months of days underneath.
+    /// L: title and date on the left, number on the right, about three months of days underneath,
+    /// in cells as big as an M card's, with weekday labels like XL.
     private func wide(tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
@@ -54,7 +57,8 @@ struct CounterCard: View {
                 Spacer(minLength: 8)
                 dayCount(size: 40)
             }
-            heatmap(weeks: 14, tint: tint)
+            HeatmapView(days: counter.heatmap(weeks: CardSize.l.weeksAcross(rowWidth: rowWidth)), tint: tint,
+                        showsWeekdays: true, cellSize: CardSize.mCellSize(rowWidth: rowWidth), animated: false)
         }
     }
 
@@ -72,10 +76,8 @@ struct CounterCard: View {
                 since
             }
             // Cells exactly as big as on an M card; the extra width holds more weeks instead.
-            let cell = CardSize.mCellSize(xlContentWidth: largeWidth)
-            let weeks = max(Int((largeWidth - 30 + 3) / (cell + 3)), 1)
-            HeatmapView(days: counter.heatmap(weeks: weeks), tint: tint, showsWeekdays: true, cellSize: cell,
-                        animated: false)
+            HeatmapView(days: counter.heatmap(weeks: CardSize.xl.weeksAcross(rowWidth: rowWidth)), tint: tint,
+                        showsWeekdays: true, cellSize: CardSize.mCellSize(rowWidth: rowWidth), animated: false)
             if target > 0 {
                 VStack(spacing: 8) {
                     RecordPills(current: counter.days(), target: target,
