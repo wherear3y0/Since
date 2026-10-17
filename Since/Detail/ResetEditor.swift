@@ -40,7 +40,7 @@ struct ResetEditor: View {
 
     /// "3 cigarettes", or just "3".
     private var amountText: String {
-        counter.unitName.isEmpty ? "\(amount)" : "\(amount) \(counter.unitName)"
+        counter.amountText(amount)
     }
 
     private var deleteTitle: String {

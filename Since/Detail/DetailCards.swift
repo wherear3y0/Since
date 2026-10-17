@@ -171,7 +171,8 @@ struct SavingsCard: View {
         let tint = counter.color.color
         let savings = counter.savings
         let units = counter.savedUnits()
-        let unit = counter.unitName.isEmpty ? "Not had" : counter.unitName.capitalized
+        let word = counter.unitWord(units.rounded())
+        let unit = word.isEmpty ? "Not had" : word.capitalized
 
         VStack(alignment: .leading, spacing: 16) {
             CardHeader(title: "Saved", symbol: "banknote.fill", tint: tint,
@@ -202,8 +203,7 @@ struct SavingsCard: View {
         default: "Over \(days) days since \(since)."
         }
         guard slipped > 0 else { return over }
-        let what = counter.unitName.isEmpty ? "" : " \(counter.unitName)"
-        return "\(over) Less \(slipped)\(what) had in slips."
+        return "\(over) Less \(counter.amountText(slipped)) had in slips."
     }
 
     private func money(_ amount: Double) -> String {

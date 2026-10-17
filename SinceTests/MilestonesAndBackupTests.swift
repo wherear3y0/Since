@@ -102,6 +102,7 @@ struct MilestonesAndBackupTests {
         counter.unitsPerDay = 12
         counter.price = 9.5
         counter.unitsPerPrice = 20
+        counter.habit = .smoking
         counter.minutesPerUnit = 5
         counter.showsHealth = true
         context.insert(counter)
@@ -130,6 +131,7 @@ struct MilestonesAndBackupTests {
         #expect(restored[0].resetDates.count == 2)
         #expect(restored[0].resets.first { !$0.isSlip }?.note == "Long call")
         #expect(restored[0].slipDates.count == 1)
+        #expect(restored[0].habit == .smoking)
         #expect(restored[0].slippedAmount == 3)
         #expect(restored[0].totalSlips == 5)
         #expect(restored[0].savings == Savings(unitsPerDay: 12, price: 9.5, unitsPerPrice: 20, minutesPerUnit: 5))

@@ -30,6 +30,8 @@ struct Backup: Codable {
         var extraSlips: Int?
         /// Missing in backups made before each counter had its own number format.
         var durationStyle: Int?
+        /// Missing in backups made before habits.
+        var habit: String?
     }
 
     struct ResetData: Codable {
@@ -106,7 +108,7 @@ struct Backup: Codable {
                         unitName: counter.unitName, unitsPerDay: counter.unitsPerDay, price: counter.price,
                         unitsPerPrice: counter.unitsPerPrice, minutesPerUnit: counter.minutesPerUnit,
                         showsHealth: counter.showsHealth, extraSlips: counter.extraSlips,
-                        durationStyle: counter.durationStyleRaw)
+                        durationStyle: counter.durationStyleRaw, habit: counter.habitRaw)
         }
     }
 
@@ -148,6 +150,7 @@ struct Backup: Codable {
             counter.showsHealth = data.showsHealth ?? false
             counter.extraSlips = data.extraSlips ?? 0
             counter.durationStyleRaw = data.durationStyle ?? DurationStyle.days.rawValue
+            counter.habitRaw = data.habit ?? ""
             context.insert(counter)
             for resetData in data.resets {
                 let reset = Reset(date: resetData.date, note: resetData.note, isSlip: resetData.isSlip ?? false,

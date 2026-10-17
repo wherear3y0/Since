@@ -313,9 +313,8 @@ struct CounterDetailView: View {
             rows.append(SummaryRow(symbol: "arrow.uturn.backward", title: "Slips",
                                    subtitle: counter.extraSlips > 0 ? "\(counter.extraSlips) added by hand" : nil,
                                    value: "\(counter.totalSlips)"))
-            if !counter.slipDates.isEmpty && (counter.slippedAmount != counter.slipDates.count || !counter.unitName.isEmpty) {
-                let what = counter.unitName.isEmpty ? "" : " \(counter.unitName)"
-                rows.append(SummaryRow(symbol: "smoke", title: "Had in slips", value: "\(counter.slippedAmount)\(what)"))
+            if !counter.slipDates.isEmpty && (counter.slippedAmount != counter.slipDates.count || !counter.unitWord(2).isEmpty) {
+                rows.append(SummaryRow(symbol: "smoke", title: "Had in slips", value: counter.amountText(counter.slippedAmount)))
             }
             rows.append(SummaryRow(symbol: "arrow.counterclockwise", title: "Full resets",
                                    value: "\(counter.fullResetDates.count)"))

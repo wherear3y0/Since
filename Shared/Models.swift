@@ -35,6 +35,8 @@ final class Counter {
     var extraSlips: Int = 0
     /// How the count is written: 127 days, 18w 1d or 4m 5d (a `DurationStyle`).
     var durationStyleRaw: Int = DurationStyle.days.rawValue
+    /// What a "quit" counter is about (a `Habit`); "" is Other.
+    var habitRaw: String = ""
 
     @Relationship(deleteRule: .cascade, inverse: \Reset.counter)
     var resets: [Reset] = []
@@ -58,6 +60,25 @@ final class Counter {
     var kind: CounterKind {
         get { CounterKind(rawValue: kindRaw) ?? .quit }
         set { kindRaw = newValue.rawValue }
+    }
+
+    var habit: Habit {
+        get { Habit(rawValue: habitRaw) ?? .other }
+        set { habitRaw = newValue.rawValue }
+    }
+
+    /// "cigarette" or "cigarettes" for a smoking counter; the name typed in for Other, "" when none was.
+    func unitWord(_ count: Double) -> String {
+        if let unit = habit.unit {
+            return count == 1 ? unit.one : unit.many
+        }
+        return unitName
+    }
+
+    /// "3 cigarettes", or just "3" when there's no unit.
+    func amountText(_ count: Int) -> String {
+        let word = unitWord(Double(count))
+        return word.isEmpty ? "\(count)" : "\(count) \(word)"
     }
 
     var numberStyle: DurationStyle {

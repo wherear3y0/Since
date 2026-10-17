@@ -20,6 +20,7 @@ struct CounterEditor: View {
     @State private var note: String
     // Savings, for "quit" counters. The numbers are kept as typed and read on Save: a number field only
     // takes its value when editing ends, and a number pad has no key to end it before Save is tapped.
+    @State private var habit: Habit
     @State private var unitName: String
     @State private var unitsPerDayText: String
     @State private var priceText: String
@@ -52,6 +53,7 @@ struct CounterEditor: View {
         _notifyMilestones = State(initialValue: counter?.notifyMilestones ?? false)
         _kind = State(initialValue: counter?.kind ?? .quit)
         _note = State(initialValue: counter?.note ?? "")
+        _habit = State(initialValue: counter?.habit ?? .other)
         _unitName = State(initialValue: counter?.unitName ?? "")
         _unitsPerDayText = State(initialValue: Self.text(for: counter?.unitsPerDay ?? 0))
         _priceText = State(initialValue: Self.text(for: counter?.price ?? 0))
@@ -192,6 +194,7 @@ struct CounterEditor: View {
             .sensoryFeedback(.selection, trigger: kind)
             .sensoryFeedback(.selection, trigger: tinted)
             .sensoryFeedback(.selection, trigger: numberStyle)
+            .sensoryFeedback(.selection, trigger: habit)
             .sensoryFeedback(.success, trigger: savedEdits)
             .sheet(isPresented: $isPickingSymbol) {
                 SymbolPicker(selection: $symbol, tint: color.color)
@@ -226,54 +229,105 @@ struct CounterEditor: View {
     }
 
     /// What the habit cost, so the counter can show what's been saved. Shown for "quit" counters.
+    /// The habit sets the questions: a pack price and how many are in a pack for smoking, a price per cup for coffee.
     private var savingsSection: some View {
-        let unit = unitName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let units = unit.isEmpty ? "units" : unit
+        let typed = unitName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let one = habit.unit?.one ?? (typed.isEmpty ? "unit" : typed)
+        let many = habit.unit?.many ?? (typed.isEmpty ? "units" : typed)
         return Section {
-            LabeledContent("What") {
-                TextField("cigarettes", text: $unitName)
-                    .multilineTextAlignment(.trailing)
-                    .autocorrectionDisabled()
-            }
-            LabeledContent("A day") {
-                numberField("0", text: $unitsPerDayText)
-            }
-            LabeledContent("Price") {
-                HStack(spacing: 4) {
-                    numberField("0", text: $priceText)
-                    Text(Locale.current.currencySymbol ?? Savings.currencyCode)
-                        .foregroundStyle(.secondary)
+            Picker(selection: $habit.animation(.smooth)) {
+                ForEach(Habit.allCases) { option in
+                    Label(option.title, systemImage: option.symbol).tag(option)
+                }
+            } label: {
+                Label {
+                    Text("Habit")
+                } icon: {
+                    Image(systemName: habit.symbol)
+                        .foregroundStyle(color.color)
                 }
             }
-            LabeledContent("Price is for") {
-                HStack(spacing: 4) {
-                    numberField("1", text: $unitsPerPriceText, keyboard: .numberPad)
-                    Text(units)
-                        .foregroundStyle(.secondary)
+            .onChange(of: habit) { _, newHabit in
+                applyDefaults(of: newHabit)
+            }
+            if habit == .other {
+                LabeledContent("What") {
+                    TextField("units", text: $unitName)
+                        .multilineTextAlignment(.trailing)
+                        .autocorrectionDisabled()
+                }
+            }
+            LabeledContent("\(many.capitalized) a day") {
+                numberField("0", text: $unitsPerDayText)
+            }
+            if let pack = habit.pack {
+                LabeledContent("\(pack.name.capitalized) price") {
+                    priceField
+                }
+                LabeledContent("\(many.capitalized) in a \(pack.name)") {
+                    numberField("\(pack.size)", text: $unitsPerPriceText, keyboard: .numberPad)
+                }
+            } else if habit == .other {
+                LabeledContent("Price") {
+                    priceField
+                }
+                LabeledContent("Price is for") {
+                    HStack(spacing: 4) {
+                        numberField("1", text: $unitsPerPriceText, keyboard: .numberPad)
+                        Text(many)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } else {
+                LabeledContent("Price per \(one)") {
+                    priceField
                 }
             }
             LabeledContent("Minutes each") {
                 numberField("0", text: $minutesPerUnitText)
             }
-            Toggle("Health Recovery", isOn: $showsHealth)
-                .tint(color.color)
-            Button("Fill In for Smoking", systemImage: "lungs") {
-                withAnimation {
-                    unitName = "cigarettes"
-                    unitsPerPriceText = "20"
-                    if Self.number(from: minutesPerUnitText) == 0 {
-                        minutesPerUnitText = "5"
-                    }
-                    showsHealth = true
-                }
+            if habit.hasHealthSteps {
+                Toggle("Health Recovery", isOn: $showsHealth)
+                    .tint(color.color)
             }
-            .tint(color.color)
         } header: {
             Text("Savings")
         } footer: {
-            Text("For smoking: cigarettes a day, the price of a pack and how many are in it. "
-                 + "Since then shows the money, time and cigarettes saved since the last full reset, "
-                 + "less the ones had in slips, and how the body recovers.")
+            Text(habit.pack != nil
+                 ? "\(many.capitalized) a day, the price of a \(habit.pack!.name) and how many are in it. "
+                     + "Since shows the money, time and \(many) saved since the last full reset, less the ones had in slips"
+                     + (habit.hasHealthSteps ? ", and how the body recovers." : ".")
+                 : "What it cost a day. Since shows the money, time and \(many) saved since the last full reset, "
+                     + "less what was had in slips.")
+                .contentTransition(.opacity)
+        }
+    }
+
+    private var priceField: some View {
+        HStack(spacing: 4) {
+            numberField("0", text: $priceText)
+            Text(Locale.current.currencySymbol ?? Savings.currencyCode)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// A habit picked in the editor fills in what fits it: the pack size, a starting time per unit, the health
+    /// steps, and its icon when the counter still has the default one.
+    private func applyDefaults(of newHabit: Habit) {
+        if let pack = newHabit.pack {
+            if Self.number(from: unitsPerPriceText) <= 1 {
+                unitsPerPriceText = "\(pack.size)"
+            }
+        } else if newHabit != .other {
+            // Priced per cup or drink.
+            unitsPerPriceText = ""
+        }
+        if Self.number(from: minutesPerUnitText) == 0, newHabit.defaultMinutes > 0 {
+            minutesPerUnitText = Self.text(for: newHabit.defaultMinutes)
+        }
+        showsHealth = newHabit.hasHealthSteps
+        if symbol == "star.fill" && newHabit != .other {
+            symbol = newHabit.symbol
         }
     }
 
@@ -373,12 +427,22 @@ struct CounterEditor: View {
     /// Savings only mean something for "quit" counters; a "last time" counter keeps whatever it had.
     private func applySavings(to counter: Counter) {
         guard kind == .quit else { return }
-        counter.unitName = unitName.trimmingCharacters(in: .whitespacesAndNewlines)
+        counter.habit = habit
+        counter.unitName = habit == .other ? unitName.trimmingCharacters(in: .whitespacesAndNewlines) : ""
         counter.unitsPerDay = max(0, Self.number(from: unitsPerDayText))
         counter.price = max(0, Self.number(from: priceText))
-        counter.unitsPerPrice = Int(min(10_000, max(1, Self.number(from: unitsPerPriceText))).rounded())
+        // A pack left empty is the habit's usual pack; a habit priced per unit is always one.
+        let typedPerPrice = Self.number(from: unitsPerPriceText)
+        let perPrice: Double = if let pack = habit.pack {
+            typedPerPrice > 0 ? typedPerPrice : Double(pack.size)
+        } else if habit == .other {
+            typedPerPrice
+        } else {
+            1
+        }
+        counter.unitsPerPrice = Int(min(10_000, max(1, perPrice)).rounded())
         counter.minutesPerUnit = max(0, Self.number(from: minutesPerUnitText))
-        counter.showsHealth = showsHealth
+        counter.showsHealth = showsHealth && habit.hasHealthSteps
         counter.extraSlips = max(0, extraSlips)
     }
 

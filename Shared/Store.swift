@@ -26,6 +26,7 @@ enum Store {
     @MainActor
     static func upgradeData() {
         copyNumberStyle()
+        guessHabits()
         let defaults = Settings.defaults
         let birthdaysKey = "didMarkBirthdays"
         guard !defaults.bool(forKey: birthdaysKey) else { return }
@@ -40,6 +41,27 @@ enum Store {
             defaults.set(true, forKey: birthdaysKey)
         } catch {
             // Tried again at the next launch.
+        }
+    }
+
+    /// Counters made before habits existed: the ones clearly about smoking become Smoking. Their price was
+    /// meant for a pack, so one counted as the price of a single cigarette becomes a pack of 20.
+    @MainActor
+    private static func guessHabits() {
+        let key = "didGuessHabits"
+        guard !Settings.defaults.bool(forKey: key) else { return }
+        let context = container.mainContext
+        for counter in (try? context.fetch(FetchDescriptor<Counter>())) ?? [] where counter.kind == .quit && counter.habitRaw.isEmpty {
+            let habit = Habit.guess(unitName: counter.unitName, title: counter.title, symbol: counter.symbol,
+                                    showsHealth: counter.showsHealth)
+            guard habit != .other else { continue }
+            counter.habit = habit
+            if let pack = habit.pack, counter.unitsPerPrice <= 1 {
+                counter.unitsPerPrice = pack.size
+            }
+        }
+        if (try? context.save()) != nil {
+            Settings.defaults.set(true, forKey: key)
         }
     }
 
