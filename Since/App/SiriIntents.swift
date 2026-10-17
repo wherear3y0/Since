@@ -123,9 +123,95 @@ struct CountdownSnippet: View {
     }
 }
 
+/// "What's in Since?" — every counter and the countdowns coming up, read out and shown as a list,
+/// for when you don't name one.
+struct OverviewIntent: AppIntent {
+    static let title: LocalizedStringResource = "Overview"
+    static let description = IntentDescription("Tells how long each counter has been going and what's coming up.")
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
+        let counters = Store.counters().map {
+            OverviewRow(id: $0.id, title: $0.title, symbol: $0.symbol, tint: $0.color.color, days: $0.days(),
+                        isCountdown: false)
+        }
+        let countdowns = Store.countdowns()
+            .filter { !$0.isArchived && !$0.hasPassed() }
+            .sorted { $0.daysLeft() < $1.daysLeft() }
+            .map {
+                OverviewRow(id: $0.id, title: $0.title, symbol: $0.symbol, tint: $0.color.color, days: $0.daysLeft(),
+                            isCountdown: true)
+            }
+        guard !counters.isEmpty || !countdowns.isEmpty else {
+            return .result(dialog: "There’s nothing in Since yet.") { EmptyView() }
+        }
+        // A few of each, so a long list of counters doesn't crowd out what's coming up; the card shows more.
+        let spoken = (counters.prefix(3) + countdowns.prefix(3)).map(\.spoken).joined(separator: " ")
+        return .result(dialog: "\(spoken)") {
+            OverviewSnippet(rows: Array(counters.prefix(6) + countdowns.prefix(4)))
+        }
+    }
+}
+
+/// One counter or countdown in the overview.
+struct OverviewRow: Identifiable {
+    let id: UUID
+    let title: String
+    let symbol: String
+    let tint: Color
+    /// Days since, for a counter; days to go, for a countdown.
+    let days: Int
+    let isCountdown: Bool
+
+    private var dayWord: String { days == 1 ? "day" : "days" }
+
+    var value: String {
+        if !isCountdown { return "\(days) \(dayWord)" }
+        return days == 0 ? "Today" : "in \(days) \(dayWord)"
+    }
+
+    var spoken: String {
+        if !isCountdown { return "\(title): \(days) \(dayWord)." }
+        return days == 0 ? "\(title) is today." : "\(title) in \(days) \(dayWord)."
+    }
+}
+
+/// The list Siri shows under the overview.
+struct OverviewSnippet: View {
+    let rows: [OverviewRow]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(rows) { row in
+                HStack {
+                    Label(row.title, systemImage: row.symbol)
+                        .foregroundStyle(row.tint)
+                        .lineLimit(1)
+                    Spacer()
+                    Text(row.value)
+                        .monospacedDigit()
+                }
+                .font(.body.weight(.semibold))
+            }
+        }
+        .padding()
+        .snippetCard(tint: .gray)
+    }
+}
+
 /// Phrases that work without any setup. Siri fills in names from the app's counters and countdowns.
 struct SinceShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
+        AppShortcut(
+            intent: OverviewIntent(),
+            phrases: [
+                "What's in \(.applicationName)",
+                "Show everything in \(.applicationName)",
+                "\(.applicationName) overview",
+            ],
+            shortTitle: "Overview",
+            systemImageName: "list.bullet"
+        )
         AppShortcut(
             intent: CounterDaysIntent(),
             phrases: [

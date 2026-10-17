@@ -1,252 +1,233 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "${applicationName} ${counter}" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "${applicationName} ${counter}"
-          }
-        }
-      }
-    },
     "Add a countdown in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Add a countdown in ${applicationName}",
+              "New countdown in ${applicationName}",
+              "Count down in ${applicationName}"
+            ]
+          }
+        },
         "ru" : {
-          "stringUnit" : {
+          "stringSet" : {
             "state" : "translated",
-            "value" : "Добавь отсчёт в ${applicationName}"
+            "values" : [
+              "Добавь отсчёт в ${applicationName}",
+              "Новый отсчёт в ${applicationName}",
+              "Начни отсчёт в ${applicationName}"
+            ]
           }
         }
       }
     },
     "Add a reset to ${counter} in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Добавь сброс в ${counter} в ${applicationName}"
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Add a reset to ${counter} in ${applicationName}",
+              "Log a past day for ${counter} in ${applicationName}"
+            ]
           }
-        }
-      }
-    },
-    "Check ${counter} in ${applicationName}" : {
-      "localizations" : {
+        },
         "ru" : {
-          "stringUnit" : {
+          "stringSet" : {
             "state" : "translated",
-            "value" : "Проверь ${counter} в ${applicationName}"
-          }
-        }
-      }
-    },
-    "Check a countdown in ${applicationName}" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Проверь отсчёт в ${applicationName}"
-          }
-        }
-      }
-    },
-    "Check a counter in ${applicationName}" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Проверь счётчик в ${applicationName}"
-          }
-        }
-      }
-    },
-    "Count down in ${applicationName}" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Начни отсчёт в ${applicationName}"
+            "values" : [
+              "Добавь сброс ${counter} в ${applicationName}",
+              "Отметь прошлый день ${counter} в ${applicationName}"
+            ]
           }
         }
       }
     },
     "How long since ${counter} in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сколько прошло с ${counter} в ${applicationName}"
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "How long since ${counter} in ${applicationName}",
+              "How many days since ${counter} in ${applicationName}",
+              "Check ${counter} in ${applicationName}",
+              "${applicationName} ${counter}",
+              "Check a counter in ${applicationName}"
+            ]
           }
-        }
-      }
-    },
-    "How long until ${countdown} in ${applicationName}" : {
-      "localizations" : {
+        },
         "ru" : {
-          "stringUnit" : {
+          "stringSet" : {
             "state" : "translated",
-            "value" : "Сколько осталось до ${countdown} в ${applicationName}"
-          }
-        }
-      }
-    },
-    "How many days since ${counter} in ${applicationName}" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сколько дней ${counter} в ${applicationName}"
+            "values" : [
+              "Сколько дней ${counter} в ${applicationName}",
+              "Сколько дней без ${counter} в ${applicationName}",
+              "Сколько прошло с ${counter} в ${applicationName}",
+              "Проверь ${counter} в ${applicationName}",
+              "${applicationName} ${counter}",
+              "Проверь счётчик в ${applicationName}",
+              "Сколько дней в ${applicationName}"
+            ]
           }
         }
       }
     },
     "How many days until ${countdown} in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сколько дней до ${countdown} в ${applicationName}"
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "How many days until ${countdown} in ${applicationName}",
+              "How long until ${countdown} in ${applicationName}",
+              "When is ${countdown} in ${applicationName}",
+              "Check a countdown in ${applicationName}"
+            ]
           }
-        }
-      }
-    },
-    "I slipped on ${counter} in ${applicationName}" : {
-      "localizations" : {
+        },
         "ru" : {
-          "stringUnit" : {
+          "stringSet" : {
             "state" : "translated",
-            "value" : "Срыв ${counter} в ${applicationName}"
-          }
-        }
-      }
-    },
-    "Log ${counter} in ${applicationName}" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отметь ${counter} в ${applicationName}"
-          }
-        }
-      }
-    },
-    "Log a past day for ${counter} in ${applicationName}" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отметь прошлый день ${counter} в ${applicationName}"
+            "values" : [
+              "Сколько дней до ${countdown} в ${applicationName}",
+              "Сколько осталось до ${countdown} в ${applicationName}",
+              "Когда ${countdown} в ${applicationName}",
+              "Проверь отсчёт в ${applicationName}"
+            ]
           }
         }
       }
     },
     "Log a slip for ${counter} in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отметь срыв ${counter} в ${applicationName}"
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Log a slip for ${counter} in ${applicationName}",
+              "I slipped on ${counter} in ${applicationName}",
+              "Log a slip in ${applicationName}"
+            ]
           }
-        }
-      }
-    },
-    "Log a slip in ${applicationName}" : {
-      "localizations" : {
+        },
         "ru" : {
-          "stringUnit" : {
+          "stringSet" : {
             "state" : "translated",
-            "value" : "Отметь срыв в ${applicationName}"
-          }
-        }
-      }
-    },
-    "Log today for ${counter} in ${applicationName}" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отметь сегодня ${counter} в ${applicationName}"
-          }
-        }
-      }
-    },
-    "New countdown in ${applicationName}" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Новый отсчёт в ${applicationName}"
+            "values" : [
+              "Отметь срыв ${counter} в ${applicationName}",
+              "Срыв ${counter} в ${applicationName}",
+              "Отметь срыв в ${applicationName}"
+            ]
           }
         }
       }
     },
     "Open ${target} countdown in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Open ${target} countdown in ${applicationName}",
+              "Show ${target} countdown in ${applicationName}"
+            ]
+          }
+        },
         "ru" : {
-          "stringUnit" : {
+          "stringSet" : {
             "state" : "translated",
-            "value" : "Открой отсчёт ${target} в ${applicationName}"
+            "values" : [
+              "Открой отсчёт ${target} в ${applicationName}",
+              "Покажи отсчёт ${target} в ${applicationName}"
+            ]
           }
         }
       }
     },
     "Open ${target} in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Open ${target} in ${applicationName}",
+              "Show ${target} in ${applicationName}"
+            ]
+          }
+        },
         "ru" : {
-          "stringUnit" : {
+          "stringSet" : {
             "state" : "translated",
-            "value" : "Открой ${target} в ${applicationName}"
+            "values" : [
+              "Открой ${target} в ${applicationName}",
+              "Покажи ${target} в ${applicationName}"
+            ]
           }
         }
       }
     },
     "Reset ${counter} in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Reset ${counter} in ${applicationName}",
+              "Log ${counter} in ${applicationName}",
+              "Log today for ${counter} in ${applicationName}",
+              "Reset a counter in ${applicationName}"
+            ]
+          }
+        },
         "ru" : {
-          "stringUnit" : {
+          "stringSet" : {
             "state" : "translated",
-            "value" : "Сбрось ${counter} в ${applicationName}"
+            "values" : [
+              "Сбрось ${counter} в ${applicationName}",
+              "Отметь ${counter} в ${applicationName}",
+              "Отметь сегодня ${counter} в ${applicationName}",
+              "Сбрось счётчик в ${applicationName}"
+            ]
           }
         }
       }
     },
-    "Reset a counter in ${applicationName}" : {
+    "What's in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сбрось счётчик в ${applicationName}"
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "What's in ${applicationName}",
+              "Show everything in ${applicationName}",
+              "${applicationName} overview"
+            ]
           }
-        }
-      }
-    },
-    "Show ${target} countdown in ${applicationName}" : {
-      "localizations" : {
+        },
         "ru" : {
-          "stringUnit" : {
+          "stringSet" : {
             "state" : "translated",
-            "value" : "Покажи отсчёт ${target} в ${applicationName}"
-          }
-        }
-      }
-    },
-    "Show ${target} in ${applicationName}" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Покажи ${target} в ${applicationName}"
-          }
-        }
-      }
-    },
-    "When is ${countdown} in ${applicationName}" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Когда ${countdown} в ${applicationName}"
+            "values" : [
+              "Что в ${applicationName}",
+              "Что нового в ${applicationName}",
+              "Покажи всё в ${applicationName}",
+              "Обзор ${applicationName}",
+              "Покажи ${applicationName}"
+            ]
           }
         }
       }
