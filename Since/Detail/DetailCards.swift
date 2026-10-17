@@ -110,11 +110,12 @@ struct ProgressCard: View {
 
     var body: some View {
         let tint = counter.color.color
-        // Today included, like the Summary's "Days tracked" and "Clean days" below.
-        let tracked = counter.trackedDays() + 1
-        let clean = counter.cleanDays(includingToday: true)
+        // Whole days, like the day count and the savings: the day of the last full reset is day 0,
+        // so 45 days since a reset are 45 clean days, not 46.
+        let tracked = counter.trackedDays()
+        let clean = counter.cleanDays()
         let slips = counter.slipsSinceProgressStart
-        let percent = Int((Double(clean) / Double(max(tracked, 1)) * 100).rounded())
+        let percent = tracked == 0 ? 100 : Int((Double(clean) / Double(tracked) * 100).rounded())
 
         VStack(alignment: .leading, spacing: 16) {
             CardHeader(title: "Progress", symbol: "chart.line.uptrend.xyaxis", tint: tint,
@@ -131,7 +132,7 @@ struct ProgressCard: View {
 
     private func insight(tracked: Int, clean: Int, slips: Int) -> String {
         let since = counter.progressStart.formatted(date: .abbreviated, time: .omitted)
-        if tracked <= 1 {
+        if tracked == 0 {
             return "Day one. Every clean day from here counts."
         }
         if slips == 0 {
@@ -661,9 +662,12 @@ struct StreakTimelineCard: View {
         let now = Date.now
         let today = calendar.startOfDay(for: now)
         let runs = DayMath.cleanRuns(start: counter.startDate, resets: counter.resetDates, now: now)
-        let lengths = runs.map { DayMath.days(from: $0.lowerBound, to: $0.upperBound) + 1 }
-        // `<=` makes ties resolve to the latest run.
-        let longestIndex = lengths.indices.max { lengths[$0] <= lengths[$1] }
+        // The best streak as the summary counts it (to the day of the reset that ended it, ties going to
+        // the latest), and its bar is the run of clean days inside it, so the legend and the summary agree.
+        let best = counter.streaks(now: now).max { $0.days <= $1.days }
+        let longestIndex = best.flatMap { best in
+            runs.firstIndex { calendar.startOfDay(for: best.start)...calendar.startOfDay(for: best.end) ~= $0.lowerBound }
+        }
 
         let thisMonth = calendar.dateInterval(of: .month, for: now)!.start
         let yearAgo = calendar.date(byAdding: .month, value: -11, to: thisMonth)!
@@ -699,7 +703,7 @@ struct StreakTimelineCard: View {
         }
 
         let currentIsSeparate = runs.last?.upperBound == today && longestIndex != runs.count - 1
-        return (months, segments, currentIsSeparate, longestIndex.map { lengths[$0] } ?? 0)
+        return (months, segments, currentIsSeparate, best?.days ?? 0)
     }
 }
 
