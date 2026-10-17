@@ -445,6 +445,9 @@ struct UndoToast: View {
             HStack(spacing: 14) {
                 Label(text, systemImage: "arrow.counterclockwise")
                     .foregroundStyle(.primary)
+                    // Always the whole text: a toast that appears as a glass button disappears (the
+                    // countdown's Done) was laid out too narrow and cut "Done" down to "…".
+                    .fixedSize()
                 Text("Undo")
                     .bold()
                     .foregroundStyle(tint)
