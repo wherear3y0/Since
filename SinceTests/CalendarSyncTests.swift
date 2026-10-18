@@ -1,4 +1,5 @@
 import Foundation
+import CoreLocation
 import Testing
 @testable import Since
 
@@ -81,4 +82,33 @@ struct CalendarSyncTests {
         #expect(!reminder.isArchived)
         #expect(reminder.postponedFrom.isEmpty)
     }
+    @Test func locationFollowsAddressAndCoordinatesEvenWhenNameIsUnchanged() {
+        var event = item("place", on: date(10, 20))
+        event.location = "Office\nFirst Street"
+        event.coordinate = CLLocationCoordinate2D(latitude: 55.75, longitude: 37.61)
+        let countdown = CalendarSync.apply([event], synced: ["work"], to: [], skipped: [],
+                                           missing: { _ in .deleted }, now: date(10, 18), calendar: calendar).inserts[0]
+        countdown.travelMinutes = 20
+        event.location = "Office\nSecond Street"
+        event.coordinate = CLLocationCoordinate2D(latitude: 55.76, longitude: 37.62)
+        _ = CalendarSync.apply([event], synced: ["work"], to: [countdown], skipped: [],
+                               missing: { _ in .deleted }, now: date(10, 18), calendar: calendar)
+        #expect(countdown.placeName == "Office")
+        #expect(countdown.placeAddress == "Second Street")
+        #expect(countdown.placeLatitude == 55.76)
+        #expect(countdown.travelMinutes == nil)
+        countdown.travelMinutes = 30
+        _ = CalendarSync.apply([event], synced: ["work"], to: [countdown], skipped: [],
+                               missing: { _ in .deleted }, now: date(10, 18), calendar: calendar)
+        #expect(countdown.travelMinutes == 30)
+        countdown.remindsToLeave = true
+        event.location = nil
+        event.coordinate = nil
+        _ = CalendarSync.apply([event], synced: ["work"], to: [countdown], skipped: [],
+                               missing: { _ in .deleted }, now: date(10, 18), calendar: calendar)
+        #expect(!countdown.hasPlace)
+        #expect(countdown.placeAddress == nil && countdown.travelMinutes == nil)
+        #expect(!countdown.remindsToLeave)
+    }
+
 }

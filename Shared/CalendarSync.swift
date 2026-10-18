@@ -158,16 +158,21 @@ nonisolated enum CalendarSync {
     @MainActor
     private static func fill(_ countdown: Countdown, from item: SyncedItem, calendar: Calendar) {
         countdown.hasTime = !item.isAllDay
-        if let location = item.location, !location.isEmpty {
-            let lines = location.components(separatedBy: "\n")
-            if countdown.placeName != lines[0] {
-                countdown.placeName = lines[0]
-                countdown.placeAddress = lines.count > 1 ? lines.dropFirst().joined(separator: ", ") : nil
-                countdown.coordinate = item.coordinate
-                countdown.travelMinutes = nil
-            }
-        } else if countdown.placeName != nil && item.location != nil {
+        let location = item.location?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let lines = location.components(separatedBy: "\n")
+        let name = location.isEmpty ? nil : lines[0]
+        let address = lines.count > 1 ? lines.dropFirst().joined(separator: ", ") : nil
+        let changed = countdown.placeName != name || countdown.placeAddress != address
+            || countdown.placeLatitude != item.coordinate?.latitude
+            || countdown.placeLongitude != item.coordinate?.longitude
+        guard changed else { return }
+        if name == nil && item.coordinate == nil {
             countdown.removePlace()
+        } else {
+            countdown.placeName = name
+            countdown.placeAddress = address
+            countdown.coordinate = item.coordinate
+            countdown.travelMinutes = nil
         }
     }
 }
