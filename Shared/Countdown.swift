@@ -48,6 +48,18 @@ final class Countdown {
     var doneDay: Date? = nil
     /// How the days are written: 42 days, 6w or 1m 12d (a `DurationStyle`).
     var durationStyleRaw: Int = DurationStyle.days.rawValue
+    /// The day has a time too: the hour and minute of `date`, on each time round.
+    var hasTime: Bool = false
+    /// The last day of a window it should come in, like a delivery "Oct 4–15". Only for a day that doesn't repeat.
+    var windowEnd: Date? = nil
+    /// The days it was set for before it was postponed, earliest first.
+    var postponedFrom: [Date] = []
+    /// A quick timer: `date` is the moment it ends, and it goes away once it has.
+    var isTimer: Bool = false
+    /// How many days before the day its Live Activity starts showing: 0 on the day itself.
+    var liveActivityLead: Int = 0
+    /// Its Live Activity shows now, whatever the day, until it's turned off or the day has passed.
+    var liveActivityForced: Bool = false
 
     init(title: String, symbol: String, color: CounterColor, date: Date, rule: RepeatRule = .never,
          note: String? = nil, sortOrder: Int = 0) {
@@ -103,9 +115,65 @@ final class Countdown {
     }
 
     /// The day being counted down to: the date itself, or a repeating day's next time round
-    /// (its last one once the repeat has ended).
+    /// (its last one once the repeat has ended). Ahead of a window it's the window's middle, inside it the last day.
     func target(now: Date = .now, calendar: Calendar = .app) -> Date {
-        rule.occurrence(currentIndex(now: now, calendar: calendar), from: date, calendar: calendar)
+        if let window = window(calendar: calendar), let middle = windowMiddle(calendar: calendar) {
+            return calendar.startOfDay(for: now) < window.lowerBound ? middle : window.upperBound
+        }
+        return rule.occurrence(currentIndex(now: now, calendar: calendar), from: date, calendar: calendar)
+    }
+
+    /// The moment it comes: its day at its time, or when a timer ends. Nil without a time.
+    func moment(now: Date = .now, calendar: Calendar = .app) -> Date? {
+        if isTimer {
+            return date
+        }
+        guard hasTime, window(calendar: calendar) == nil else { return nil }
+        let time = calendar.dateComponents([.hour, .minute], from: date)
+        return calendar.date(bySettingHour: time.hour ?? 0, minute: time.minute ?? 0, second: 0,
+                             of: target(now: now, calendar: calendar))
+    }
+
+    // MARK: - Window
+
+    /// The first and last day of the window it should come in, when it has one.
+    func window(calendar: Calendar = .app) -> ClosedRange<Date>? {
+        guard let windowEnd, !rule.repeats else { return nil }
+        let start = calendar.startOfDay(for: date)
+        return start...max(start, calendar.startOfDay(for: windowEnd))
+    }
+
+    /// Halfway through the window: the day it's most likely to come.
+    func windowMiddle(calendar: Calendar = .app) -> Date? {
+        guard let window = window(calendar: calendar) else { return nil }
+        let days = DayMath.days(from: window.lowerBound, to: window.upperBound, calendar: calendar)
+        return calendar.date(byAdding: .day, value: days / 2, to: window.lowerBound)
+    }
+
+    func isInWindow(now: Date = .now, calendar: Calendar = .app) -> Bool {
+        window(calendar: calendar)?.contains(calendar.startOfDay(for: now)) ?? false
+    }
+
+    /// Ahead of its window the days are only roughly right: "~14 days", counted to the window's middle.
+    func isApproximate(now: Date = .now, calendar: Calendar = .app) -> Bool {
+        window(calendar: calendar).map { calendar.startOfDay(for: now) < $0.lowerBound } ?? false
+    }
+
+    /// The day itself, or any day of its window: when it can be marked done.
+    func isTheDay(now: Date = .now, calendar: Calendar = .app) -> Bool {
+        window(calendar: calendar) == nil ? daysLeft(now: now, calendar: calendar) == 0
+                                          : isInWindow(now: now, calendar: calendar)
+    }
+
+    /// Moves it to a later day or window, keeping the day it was set for in its history.
+    func postpone(to newDate: Date, windowEnd newWindowEnd: Date?, now: Date = .now, calendar: Calendar = .app) {
+        postponedFrom.append(date)
+        date = newDate
+        windowEnd = newWindowEnd
+        doneDay = nil
+        if !hasPassed(now: now, calendar: calendar) {
+            isArchived = false
+        }
     }
 
     /// Which time round it counts toward: the rule's, or the one after when today's was marked done.
@@ -168,10 +236,19 @@ final class Countdown {
         symbol == "birthday.cake.fill" && rule.frequency == .yearly
     }
 
-    /// Today is the day and its Live Activity is turned on.
+    /// Its Live Activity is turned on and due: on the day (or in the window), up to `liveActivityLead` days
+    /// before it, or right away when it was asked for now. A timer's runs until it ends.
     func wantsLiveActivity(now: Date = .now, calendar: Calendar = .app) -> Bool {
-        showsLiveActivity && !isArchived && !isDone(now: now, calendar: calendar)
-            && daysLeft(now: now, calendar: calendar) == 0
+        if isTimer {
+            return showsLiveActivity && date > now
+        }
+        guard showsLiveActivity, !isArchived, !isDone(now: now, calendar: calendar),
+              !hasPassed(now: now, calendar: calendar) else { return false }
+        if liveActivityForced || isTheDay(now: now, calendar: calendar) {
+            return true
+        }
+        let start = window(calendar: calendar)?.lowerBound ?? target(now: now, calendar: calendar)
+        return DayMath.daysUntil(start, from: now, calendar: calendar) <= max(0, liveActivityLead)
     }
 
     /// Where the wait starts: the last time a repeating day came round, or when the countdown was added.
@@ -187,10 +264,11 @@ final class Countdown {
         DayMath.days(from: waitStart(now: now, calendar: calendar), to: now, calendar: calendar)
     }
 
-    /// How much of the wait is behind, from 0 to 1.
+    /// How much of the wait is behind, from 0 to 1. A window's wait is up to its middle.
     func progress(now: Date = .now, calendar: Calendar = .app) -> Double {
         let start = waitStart(now: now, calendar: calendar)
-        let total = DayMath.days(from: start, to: target(now: now, calendar: calendar), calendar: calendar)
+        let end = windowMiddle(calendar: calendar) ?? target(now: now, calendar: calendar)
+        let total = DayMath.days(from: start, to: end, calendar: calendar)
         guard total > 0 else { return 1 }
         return min(1, Double(DayMath.days(from: start, to: now, calendar: calendar)) / Double(total))
     }

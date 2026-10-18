@@ -117,9 +117,18 @@ struct MilestonesAndBackupTests {
         countdown.isPinned = true
         countdown.isBirthday = true
         countdown.showsLiveActivity = true
+        countdown.hasTime = true
+        countdown.windowEnd = date(1968, 10, 30)
+        countdown.postponedFrom = [date(1968, 10, 20)]
+        countdown.liveActivityLead = 3
+        countdown.liveActivityForced = true
         context.insert(countdown)
+        // A timer isn't kept.
+        let timer = Countdown(title: "Tea", symbol: "timer", color: .orange, date: date(2026, 10, 1))
+        timer.isTimer = true
+        context.insert(timer)
 
-        let data = try Backup(counters: [counter], countdowns: [countdown]).encoded()
+        let data = try Backup(counters: [counter], countdowns: [countdown, timer]).encoded()
         try Backup.decode(data).restore(into: context)
 
         let restored = try context.fetch(FetchDescriptor<Counter>())
@@ -146,6 +155,11 @@ struct MilestonesAndBackupTests {
         #expect(restoredCountdowns[0].isPinned)
         #expect(restoredCountdowns[0].isBirthday)
         #expect(restoredCountdowns[0].showsLiveActivity)
+        #expect(restoredCountdowns[0].hasTime)
+        #expect(restoredCountdowns[0].windowEnd == date(1968, 10, 30))
+        #expect(restoredCountdowns[0].postponedFrom == [date(1968, 10, 20)])
+        #expect(restoredCountdowns[0].liveActivityLead == 3)
+        #expect(restoredCountdowns[0].liveActivityForced)
     }
 
     @Test func backupsFromBeforeSlipsStillRestore() throws {

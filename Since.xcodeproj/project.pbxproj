@@ -24,6 +24,7 @@
 		27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487E6968B8B9CED3CF2C9F /* Palette.swift */; };
 		2FC7D75DCA7C6EE02A8A2A44 /* HeatmapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D2AD3EEDB36F1A2B314BC53 /* HeatmapView.swift */; };
 		3484D2B546CC1B8B0654086F /* CardSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18B8C889511EF84DF2C65C08 /* CardSize.swift */; };
+		384212ABF00E00FFA5C3C064 /* UntilTimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3FA6A1A786A25370602156 /* UntilTimeTests.swift */; };
 		38CC2A583B6B20D2CF308542 /* Countdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B62B5F2666897694E16D181 /* Countdown.swift */; };
 		39AD74E60F7A8200A9CC5A41 /* CountdownCalendarCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72A3EEC696BFE2D4E3CA69 /* CountdownCalendarCard.swift */; };
 		3CEB95FA89F3C9691AC73435 /* CountdownLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00BBB616E5F9E7CB37FDDFBC /* CountdownLiveActivity.swift */; };
@@ -146,6 +147,7 @@
 		28154B5C530BED349C888F20 /* SaveChanges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveChanges.swift; sourceTree = "<group>"; };
 		2B227F4C6280C3677387458E /* CounterCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterCard.swift; sourceTree = "<group>"; };
 		2B55588456FF7AF0BF2F9A17 /* RepeatRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatRule.swift; sourceTree = "<group>"; };
+		2D3FA6A1A786A25370602156 /* UntilTimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilTimeTests.swift; sourceTree = "<group>"; };
 		312230FC468CA8CA26BE6A55 /* SiriIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriIntents.swift; sourceTree = "<group>"; };
 		333EC300B5F3E037313E1699 /* HoldToResetButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldToResetButton.swift; sourceTree = "<group>"; };
 		385CD372B7F7D896D8724CB4 /* CountdownCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownCard.swift; sourceTree = "<group>"; };
@@ -242,6 +244,7 @@
 				7AB56ED1685F6BB404855D1B /* PaletteTests.swift */,
 				6DE2BC76DE0105DE23534DA2 /* SiriTests.swift */,
 				67E5389C7BA2F8F719230640 /* UntilTests.swift */,
+				2D3FA6A1A786A25370602156 /* UntilTimeTests.swift */,
 			);
 			path = SinceTests;
 			sourceTree = "<group>";
@@ -597,6 +600,7 @@
 				F6C83F276E2979A60482C523 /* PaletteTests.swift in Sources */,
 				912D29B3020F9BD6D88981C2 /* SiriTests.swift in Sources */,
 				B54C5A91BC456705C1D4EF34 /* UntilTests.swift in Sources */,
+				384212ABF00E00FFA5C3C064 /* UntilTimeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

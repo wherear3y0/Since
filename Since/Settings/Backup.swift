@@ -77,6 +77,12 @@ struct Backup: Codable {
         var contactID: String?
         /// The day it was marked done, if any.
         var doneDay: Date?
+        /// Missing in backups made before times, windows, postponing and Live Activities ahead of the day.
+        var hasTime: Bool?
+        var windowEnd: Date?
+        var postponedFrom: [Date]?
+        var liveActivityLead: Int?
+        var liveActivityForced: Bool?
     }
 
     var version = 1
@@ -86,7 +92,8 @@ struct Backup: Codable {
     var countdowns: [CountdownData]?
 
     init(counters: [Counter], countdowns: [Countdown] = []) {
-        self.countdowns = countdowns.map { countdown in
+        // Timers only last a few hours; they aren't worth keeping.
+        self.countdowns = countdowns.filter { !$0.isTimer }.map { countdown in
             CountdownData(id: countdown.id, title: countdown.title, symbol: countdown.symbol, color: countdown.colorName,
                           tinted: countdown.tinted, size: countdown.sizeRaw, date: countdown.date,
                           repeatRule: countdown.rule, note: countdown.note, sortOrder: countdown.sortOrder,
@@ -95,7 +102,10 @@ struct Backup: Codable {
                           style: countdown.styleRaw, isPinned: countdown.isPinned, isBirthday: countdown.isBirthday,
                           showsLiveActivity: countdown.showsLiveActivity, calendarItemID: countdown.calendarItemID,
                           calendarExternalID: countdown.calendarExternalID, durationStyle: countdown.durationStyleRaw,
-                          contactID: countdown.contactID, doneDay: countdown.doneDay)
+                          contactID: countdown.contactID, doneDay: countdown.doneDay,
+                          hasTime: countdown.hasTime, windowEnd: countdown.windowEnd,
+                          postponedFrom: countdown.postponedFrom, liveActivityLead: countdown.liveActivityLead,
+                          liveActivityForced: countdown.liveActivityForced)
         }
         self.counters = counters.map { counter in
             CounterData(id: counter.id, title: counter.title, symbol: counter.symbol, color: counter.colorName,
@@ -186,6 +196,11 @@ struct Backup: Codable {
             countdown.durationStyleRaw = data.durationStyle ?? DurationStyle.days.rawValue
             countdown.contactID = data.contactID
             countdown.doneDay = data.doneDay
+            countdown.hasTime = data.hasTime ?? false
+            countdown.windowEnd = data.windowEnd
+            countdown.postponedFrom = data.postponedFrom ?? []
+            countdown.liveActivityLead = data.liveActivityLead ?? 0
+            countdown.liveActivityForced = data.liveActivityForced ?? false
             context.insert(countdown)
         }
     }
