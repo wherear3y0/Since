@@ -85,6 +85,10 @@ final class Countdown {
     var orderURL: String? = nil
     /// A picture of what's coming, kept small.
     @Attribute(.externalStorage) var photoData: Data? = nil
+    /// The code a pickup point asks for.
+    var pickupCode: String? = nil
+    /// The last day a pickup point keeps it.
+    var storageUntil: Date? = nil
 
     init(title: String, symbol: String, color: CounterColor, date: Date, rule: RepeatRule = .never,
          note: String? = nil, sortOrder: Int = 0) {

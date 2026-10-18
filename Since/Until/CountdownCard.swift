@@ -235,6 +235,22 @@ struct CountdownCard: View {
         ParcelPicture(photo: countdown.photoData, symbol: countdown.symbol, tint: tint)
     }
 
+    private var hasStorage: Bool {
+        countdown.storageUntil != nil && !countdown.isArchived
+    }
+
+    /// "Pick up by Oct 25", orange once it's the last day or the one before.
+    @ViewBuilder
+    private var storageLine: some View {
+        if hasStorage, let until = countdown.storageUntil, let left = countdown.storageDaysLeft() {
+            Label("Pick up by \(until.formatted(.dateTime.month(.abbreviated).day()))", systemImage: "clock")
+                .labelStyle(PlaceLabelStyle())
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(left <= 1 ? AnyShapeStyle(Color.orange) : AnyShapeStyle(.secondary))
+                .lineLimit(1)
+        }
+    }
+
     private func parcelTitle(tint: Color, lines: Int) -> some View {
         Text(countdown.title)
             .font(.headline)
@@ -252,7 +268,11 @@ struct CountdownCard: View {
             VStack(alignment: .leading, spacing: 1) {
                 parcelTitle(tint: tint, lines: 1)
                 DaysLeftText(countdown, size: 30)
-                dateLine
+                if hasStorage {
+                    storageLine
+                } else {
+                    dateLine
+                }
                 if !parcelIsDue, let shop = countdown.shopName {
                     Text(shop)
                         .font(.footnote)
@@ -280,6 +300,7 @@ struct CountdownCard: View {
                     DaysLeftText(countdown, size: 40)
                     dateLine
                     placeLine
+                    storageLine
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(height: side)
@@ -301,6 +322,7 @@ struct CountdownCard: View {
                     parcelTitle(tint: tint, lines: 2)
                     dateLine
                     placeLine
+                    storageLine
                 }
                 Spacer(minLength: 8)
                 DaysLeftText(countdown, size: 56)

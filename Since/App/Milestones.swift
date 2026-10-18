@@ -42,6 +42,8 @@ enum Milestones {
             if let leave = leaveReminder(for: countdown) {
                 due.append(leave)
             }
+            // A pickup point's last day is always worth a reminder: the parcel goes back after it.
+            due += storageReminders(for: countdown)
             for reminder in due {
                 schedule(title: countdown.title, body: reminder.name, on: reminder.date, exactly: reminder.isExact,
                          id: countdown.id, url: "since://countdown/\(countdown.id.uuidString)")
@@ -96,6 +98,17 @@ enum Milestones {
             milestones.append(Milestone(name: name, date: calendar.date(byAdding: .year, value: year, to: start)!))
         }
         return milestones.filter { $0.date >= today }
+    }
+
+    /// The day before a pickup point stops keeping a parcel, and its last day, with the code to show there.
+    static func storageReminders(for countdown: Countdown, now: Date = .now, calendar: Calendar = .app) -> [Milestone] {
+        guard countdown.isParcel, !countdown.isArchived, let until = countdown.storageUntil else { return [] }
+        let last = calendar.startOfDay(for: until)
+        let code = countdown.pickupCode.map { " Code \($0)." } ?? ""
+        return [
+            Milestone(name: "Pick it up by tomorrow.\(code)", date: calendar.date(byAdding: .day, value: -1, to: last)!),
+            Milestone(name: "Last day to pick it up.\(code)", date: last),
+        ].filter { $0.date >= calendar.startOfDay(for: now) }
     }
 
     /// A week before, the day before and on the day, for the next times a countdown's day comes round

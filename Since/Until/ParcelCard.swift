@@ -7,6 +7,7 @@ struct ParcelCard: View {
 
     @Environment(\.openURL) private var openURL
     @State private var copied = false
+    @State private var codeCopied = false
 
     var body: some View {
         let tint = countdown.color.color
@@ -20,6 +21,10 @@ struct ParcelCard: View {
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
             CardHeader(title: "Parcel", symbol: "shippingbox.fill", tint: tint, text: countdown.shopName)
+
+            if !countdown.isArchived {
+                pickup(tint: tint)
+            }
 
             if let number = countdown.trackingNumber {
                 Button {
@@ -85,6 +90,43 @@ struct ParcelCard: View {
         }
         .padding(.vertical, 8)
         .sensoryFeedback(.success, trigger: copied) { _, new in new }
+    }
+
+    /// The code to show at the pickup point, big, copied with a tap; and how long it's kept there.
+    @ViewBuilder
+    private func pickup(tint: Color) -> some View {
+        if let code = countdown.spacedPickupCode {
+            Button {
+                UIPasteboard.general.string = countdown.pickupCode
+                withAnimation(.smooth) { codeCopied = true }
+                Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    withAnimation(.smooth) { codeCopied = false }
+                }
+            } label: {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(codeCopied ? "Copied" : "Pickup Code")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.secondary)
+                        .contentTransition(.opacity)
+                    Text(code)
+                        .font(.system(size: 44, weight: .bold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(tint)
+                }
+            }
+            .buttonStyle(.plain)
+            .sensoryFeedback(.success, trigger: codeCopied) { _, new in new }
+        }
+        if let left = countdown.storageDaysLeft(), let until = countdown.storageUntil {
+            let day = until.formatted(.dateTime.month(.abbreviated).day())
+            Label(left < 0 ? "It was kept until \(day): it may be on its way back."
+                  : left == 0 ? "Today is the last day to pick it up."
+                  : left == 1 ? "Kept until tomorrow, \(day)."
+                  : "Kept until \(day), \(left) days left.",
+                  systemImage: "clock.badge.exclamationmark")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(left <= 1 ? AnyShapeStyle(Color.orange) : AnyShapeStyle(.secondary))
+        }
     }
 
     /// The carrier's tracking page with the number; for an unknown carrier, the number is copied and

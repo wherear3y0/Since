@@ -39,6 +39,10 @@ struct CountdownEditor: View {
     @State private var carrierRaw: String
     @State private var shopName: String
     @State private var orderURL: String
+    @State private var pickupCode: String
+    /// The pickup point keeps it only until a day.
+    @State private var hasStorage: Bool
+    @State private var storageUntil: Date
     @State private var photoData: Data?
     @State private var screenshotItem: PhotosPickerItem?
     @State private var isScanning = false
@@ -88,6 +92,10 @@ struct CountdownEditor: View {
         _carrierRaw = State(initialValue: countdown?.carrierRaw ?? "")
         _shopName = State(initialValue: countdown?.shopName ?? "")
         _orderURL = State(initialValue: countdown?.orderURL ?? "")
+        _pickupCode = State(initialValue: countdown?.pickupCode ?? "")
+        _hasStorage = State(initialValue: countdown?.storageUntil != nil)
+        _storageUntil = State(initialValue: countdown?.storageUntil
+                              ?? Calendar.app.date(byAdding: .day, value: 5, to: .now)!)
         _photoData = State(initialValue: countdown?.photoData)
     }
 
@@ -443,8 +451,20 @@ struct CountdownEditor: View {
                 .keyboardType(.URL)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+            TextField("Pickup Code", text: $pickupCode)
+                .keyboardType(.numberPad)
+                .monospaced()
+            Toggle("Pickup Deadline", isOn: $hasStorage.animation(.smooth))
+                .tint(color.color)
+            if hasStorage {
+                DatePicker("Kept Until", selection: $storageUntil, in: Calendar.app.startOfDay(for: .now)...,
+                           displayedComponents: .date)
+                    .transition(.blurReplace)
+            }
         } header: {
             Text("Parcel")
+        } footer: {
+            Text("With a pickup deadline, a reminder comes the day before it, with the code.")
         }
         .onChange(of: screenshotItem) { _, item in
             guard let item else { return }
@@ -486,11 +506,22 @@ struct CountdownEditor: View {
             if photoData == nil, let photo = result.photo {
                 photoData = photo
             }
+            if let code = draft.pickupCode {
+                pickupCode = code
+            }
+            if let until = draft.storageUntil {
+                storageUntil = until
+                hasStorage = true
+            }
             scanNote = result.found.isEmpty
                 ? "Nothing could be read off that picture."
                 : "Filled in from the screenshot: \(result.found.joined(separator: ", "))."
         }
         savedEdits += result.found.isEmpty ? 0 : 1
+        // The pickup point becomes the place, found on the map, unless one is set already.
+        if place == nil, let point = draft.pickupPoint, let found = await PickedPlace.search(point) {
+            withAnimation(.smooth) { place = found }
+        }
     }
 
     /// The parcel's fields onto the countdown being saved.
@@ -508,6 +539,10 @@ struct CountdownEditor: View {
         }
         countdown.orderURL = link.isEmpty ? nil : link
         countdown.photoData = photoData
+        let code = pickupCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        countdown.pickupCode = code.isEmpty ? nil : code
+        countdown.storageUntil = hasStorage
+            ? Calendar.app.date(bySettingHour: 12, minute: 0, second: 0, of: storageUntil) : nil
     }
 
     // MARK: - Extras
@@ -764,7 +799,7 @@ struct CountdownEditor: View {
             context.insert(newCountdown)
         }
         saveChanges(context)
-        if notifyBefore {
+        if notifyBefore || (isParcel && hasStorage) {
             Task {
                 _ = await Milestones.requestPermission()
                 refreshMirrors(context)

@@ -102,6 +102,9 @@ struct Backup: Codable {
         var shopName: String?
         var orderURL: String?
         var photo: Data?
+        /// Missing in backups made before pickup codes.
+        var pickupCode: String?
+        var storageUntil: Date?
     }
 
     var version = 1
@@ -130,7 +133,8 @@ struct Backup: Codable {
                           travelMinutes: countdown.travelMinutes, travelMode: countdown.travelModeRaw,
                           remindsToLeave: countdown.remindsToLeave, isParcel: countdown.isParcel,
                           trackingNumber: countdown.trackingNumber, carrier: countdown.carrierRaw,
-                          shopName: countdown.shopName, orderURL: countdown.orderURL, photo: countdown.photoData)
+                          shopName: countdown.shopName, orderURL: countdown.orderURL, photo: countdown.photoData,
+                          pickupCode: countdown.pickupCode, storageUntil: countdown.storageUntil)
         }
         self.counters = counters.map { counter in
             CounterData(id: counter.id, title: counter.title, symbol: counter.symbol, color: counter.colorName,
@@ -243,6 +247,8 @@ struct Backup: Codable {
             countdown.shopName = data.shopName
             countdown.orderURL = data.orderURL
             countdown.photoData = data.photo
+            countdown.pickupCode = data.pickupCode
+            countdown.storageUntil = data.storageUntil
             context.insert(countdown)
         }
     }

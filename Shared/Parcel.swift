@@ -70,6 +70,11 @@ nonisolated struct ParcelDraft: Equatable {
     var to: Date?
     /// The day it came or was bought, when that's already behind: for a thing that's had now.
     var got: Date?
+    /// The code a pickup point asks for, and the last day it keeps the parcel.
+    var pickupCode: String?
+    var storageUntil: Date?
+    /// Where it's picked up, as written: "Ozon, ул. Тверская, 7".
+    var pickupPoint: String?
 }
 
 /// Reads an order's details out of the lines of text recognized on a screenshot: the delivery dates
@@ -87,13 +92,20 @@ nonisolated enum ParcelParser {
         }
         let lines = joined
         var draft = ParcelDraft()
+        draft.pickupCode = pickupCode(in: lines)
+        draft.storageUntil = storageUntil(in: lines, now: now, calendar: calendar)
+        draft.pickupPoint = pickupPoint(in: lines)
         draft.shop = shop(in: lines)
         (draft.trackingNumber, draft.carrier) = tracking(in: lines)
         // Bought on Avito with no other carrier named or told by the number: Avito's own delivery.
         if draft.carrier == nil && draft.shop == "Avito" {
             draft.carrier = .avito
         }
-        (draft.from, draft.to) = dates(in: lines, now: now, calendar: calendar)
+        // The last day it's kept isn't when it comes; one waiting to be picked up is here already.
+        (draft.from, draft.to) = dates(in: lines.filter { !isAboutStorage($0) }, now: now, calendar: calendar)
+        if draft.from == nil && draft.storageUntil != nil {
+            draft.from = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: now)
+        }
         draft.got = got(in: lines, delivery: draft.to ?? draft.from, now: now, calendar: calendar)
         draft.title = title(in: lines, shop: draft.shop)
         return draft
@@ -289,6 +301,84 @@ nonisolated enum ParcelParser {
         return date
     }
 
+    // MARK: - Picking it up
+
+    private static let codeWords = ["код получ", "код для получ", "код выдач", "код для выдач", "код подтвержд",
+                                    "pickup code", "pick-up code", "pin code", "пин-код", "пин код"]
+    private static let storageWords = ["хранит", "срок хранения", "заберите до", "забрать до", "забрать можно до",
+                                       "ждет вас до", "ждет до", "pick up by", "pick it up by", "available until",
+                                       "held until", "hold until"]
+    private static let pointWords = ["пункт выдачи", "пвз", "постамат", "pickup point", "pick-up point",
+                                     "адрес получения", "адрес пункта"]
+
+    private static func isAboutStorage(_ line: String) -> Bool {
+        let text = line.lowercased().replacing("ё", with: "е")
+        return storageWords.contains { text.contains($0) }
+    }
+
+    /// The digits after "Код получения" on its line, or on the line under it when they're shown big there.
+    private static func pickupCode(in lines: [String]) -> String? {
+        let digits = { (text: Substring) -> String? in
+            let code = text.filter(\.isNumber)
+            return (3...8).contains(code.count) ? String(code) : nil
+        }
+        for (index, line) in lines.enumerated() {
+            let text = line.lowercased()
+            guard let word = codeWords.first(where: { text.contains($0) }),
+                  let range = text.range(of: word) else { continue }
+            // "123 456" and "123-456" count as one code; anything after it on the line doesn't.
+            let rest = text[range.upperBound...]
+            if let m = rest.firstMatch(of: /\d[\d \-]{1,10}\d/), let code = digits(m.output) {
+                return code
+            }
+            if index + 1 < lines.count {
+                let next = lines[index + 1].trimmingCharacters(in: .whitespaces)
+                if next.allSatisfy({ $0.isNumber || $0 == " " || $0 == "-" }), let code = digits(Substring(next)) {
+                    return code
+                }
+            }
+        }
+        return nil
+    }
+
+    /// "Хранится до 25 октября", "Срок хранения до 25.10", "Pick up by Oct 25": a day ahead, or only just gone.
+    private static func storageUntil(in lines: [String], now: Date, calendar: Calendar) -> Date? {
+        for line in lines where isAboutStorage(line) {
+            let text = line.lowercased().replacing("ё", with: "е")
+            if let m = text.firstMatch(of: /(\d{1,2})\s+([a-zа-я]{3,})/), let month = month(m.output.2),
+               let d = Int(m.output.1), let date = date(day: d, month: month, now: now, calendar: calendar) {
+                return date
+            }
+            if let m = text.firstMatch(of: /([a-z]{3,})\s+(\d{1,2})/), let month = month(m.output.1),
+               let d = Int(m.output.2), let date = date(day: d, month: month, now: now, calendar: calendar) {
+                return date
+            }
+            if let m = text.firstMatch(of: /(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?/), let d = Int(m.output.1),
+               let month = Int(m.output.2), (1...12).contains(month),
+               let date = date(day: d, month: month, now: now, calendar: calendar) {
+                return date
+            }
+        }
+        return nil
+    }
+
+    /// The pickup point's line, without the words that say it's one: what Maps is asked to find.
+    private static func pickupPoint(in lines: [String]) -> String? {
+        for line in lines {
+            let lowered = line.lowercased()
+            guard let word = pointWords.first(where: { lowered.contains($0) }), let range = lowered.range(of: word) else {
+                continue
+            }
+            let rest = line[line.index(line.startIndex, offsetBy: lowered.distance(from: lowered.startIndex, to: range.upperBound))...]
+                .trimmingCharacters(in: CharacterSet(charactersIn: " :—–-,").union(.whitespaces))
+            // Something that looks like an address: a street, a building number.
+            if rest.count >= 5 && rest.contains(where: \.isNumber) {
+                return rest
+            }
+        }
+        return nil
+    }
+
     // MARK: - The day it was got
 
     private static let gotWords = ["получен", "доставлен", "вручен", "delivered", "received", "picked up"]
@@ -370,6 +460,7 @@ nonisolated enum ParcelParser {
 
     /// Words of the shop's own screens, not of a product.
     private static let screenWords = ["заказ", "доставк", "курьер", "пункт", "оплач", "получ", "трек", "статус",
+                                      "хранит", "код", "пвз", "постамат", "заберите", "pick up", "pickup",
                                       "отследить", "order", "delivery", "track", "status", "shipped", "подробнее",
                                       "итого", "total", "адрес", "address", "ожида", "отмен", "вернуть", "чек"]
 
@@ -393,6 +484,18 @@ extension Countdown {
     var carrier: Carrier? {
         get { Carrier(rawValue: carrierRaw) ?? trackingNumber.flatMap(Carrier.guess) }
         set { carrierRaw = newValue?.rawValue ?? "" }
+    }
+
+    /// "452 118": a code in two halves, easier to read out at the pickup point.
+    var spacedPickupCode: String? {
+        guard let code = pickupCode else { return nil }
+        guard code.count >= 6, code.count % 2 == 0, code.allSatisfy(\.isNumber) else { return code }
+        return "\(code.prefix(code.count / 2)) \(code.suffix(code.count / 2))"
+    }
+
+    /// Days left at the pickup point: 0 on the last day, below 0 once it's over. Nil without a deadline.
+    func storageDaysLeft(now: Date = .now, calendar: Calendar = .app) -> Int? {
+        storageUntil.map { DayMath.days(from: now, to: $0, calendar: calendar) }
     }
 
     /// "Ozon · RA123…85RU": where it's from and its number, shortened.

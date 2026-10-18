@@ -76,6 +76,44 @@ struct ParcelTests {
         #expect(ParcelParser.parse(["Телефон 8 800 1234567"], now: now, calendar: calendar).trackingNumber == nil)
     }
 
+    @Test func waitingToBePickedUp() {
+        let draft = ParcelParser.parse([
+            "Wildberries", "Ожидает в пункте выдачи", "Пункт выдачи Wildberries, ул. Тверская, 7",
+            "Хранится до 9 октября", "Код получения", "452 118", "Кроссовки беговые Asics Gel",
+        ], now: now, calendar: calendar)
+        #expect(draft.pickupCode == "452118")
+        #expect(ymd(draft.storageUntil) == day(10, 9))
+        #expect(draft.pickupPoint == "Wildberries, ул. Тверская, 7")
+        // It's there already: the storage day isn't when it comes.
+        #expect(ymd(draft.from) == day(10, 1))
+        #expect(draft.to == nil)
+        #expect(draft.title == "Кроссовки беговые Asics Gel")
+
+        let english = ParcelParser.parse(["Ready for pickup", "Pickup code: 7731", "Pick up by Oct 6"],
+                                         now: now, calendar: calendar)
+        #expect(english.pickupCode == "7731")
+        #expect(ymd(english.storageUntil) == day(10, 6))
+        #expect(ymd(ParcelParser.parse(["Срок хранения до 12.10"], now: now, calendar: calendar).storageUntil)
+                == day(10, 12))
+        // An order number on the line after isn't a code.
+        #expect(ParcelParser.parse(["Код получения придёт в СМС", "Заказ 12345678901"], now: now, calendar: calendar)
+                .pickupCode == nil)
+    }
+
+    @MainActor @Test func aReminderBeforeTheLastDay() {
+        let parcel = Countdown(title: "Sneakers", symbol: "shippingbox.fill", color: .orange, date: now)
+        parcel.isParcel = true
+        parcel.pickupCode = "452118"
+        parcel.storageUntil = calendar.date(from: DateComponents(year: 2026, month: 10, day: 5, hour: 12))
+        let reminders = Milestones.storageReminders(for: parcel, now: now, calendar: calendar)
+        #expect(reminders.map { ymd($0.date) } == [day(10, 4), day(10, 5)])
+        #expect(reminders[0].name == "Pick it up by tomorrow. Code 452118.")
+        #expect(parcel.spacedPickupCode == "452 118")
+        #expect(parcel.storageDaysLeft(now: now, calendar: calendar) == 4)
+        parcel.markDone(now: now, calendar: calendar)
+        #expect(Milestones.storageReminders(for: parcel, now: now, calendar: calendar).isEmpty)
+    }
+
     @Test func avitoDelivery() {
         let named = ParcelParser.parse(["Авито Доставка", "Номер отправления 1234567890123"], now: now, calendar: calendar)
         #expect(named.carrier == .avito)

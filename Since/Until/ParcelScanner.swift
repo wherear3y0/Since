@@ -21,6 +21,9 @@ enum ParcelScanner {
         if draft.trackingNumber != nil { found.append("tracking number") }
         if draft.shop != nil { found.append("shop") }
         if draft.title != nil { found.append("name") }
+        if draft.pickupCode != nil { found.append("pickup code") }
+        if draft.storageUntil != nil { found.append("the last day it’s kept") }
+        if draft.pickupPoint != nil { found.append("pickup point") }
         if photo != nil { found.append("photo") }
         return Result(draft: draft, photo: photo, found: found)
     }
