@@ -40,9 +40,9 @@ struct CountdownCard: View {
         countdown.hasPassed() && !countdown.isArchived
     }
 
-    /// Today's the day: the card offers to mark it done.
+    /// Today's the day (or a day of its window): the card offers to mark it done.
     private var isTheDay: Bool {
-        countdown.daysLeft() == 0 && !countdown.isArchived
+        countdown.isTheDay() && !countdown.isArchived
     }
 
     private func doneButton(tint: Color) -> some View {
@@ -64,7 +64,7 @@ struct CountdownCard: View {
         VStack(alignment: .leading, spacing: 12) {
             CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
             VStack(alignment: .leading, spacing: 2) {
-                DaysLeftText(days: countdown.daysLeft(), size: 40, parts: countdown.durationParts())
+                DaysLeftText(countdown, size: 40)
                 dateLine
             }
             if needsDecision {
@@ -76,7 +76,8 @@ struct CountdownCard: View {
             } else {
                 switch countdown.style {
                 case .calendar:
-                    MonthGrid(month: countdown.target(), target: countdown.target(), tint: tint)
+                    MonthGrid(month: countdown.target(), target: countdown.target(), tint: tint,
+                              window: countdown.window())
                 case .fill:
                     Spacer(minLength: 0)
                     fillFooter
@@ -104,7 +105,7 @@ struct CountdownCard: View {
                     dateLine
                 }
                 Spacer(minLength: 8)
-                DaysLeftText(days: countdown.daysLeft(), size: 40, parts: countdown.durationParts())
+                DaysLeftText(countdown, size: 40)
             }
             if needsDecision {
                 decision(tint: tint, vertical: false)
@@ -137,7 +138,7 @@ struct CountdownCard: View {
         return VStack(alignment: .leading, spacing: 14) {
             CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
             VStack(alignment: .leading, spacing: 2) {
-                DaysLeftText(days: daysLeft, size: 56, parts: countdown.durationParts())
+                DaysLeftText(countdown, size: 56)
                 dateLine
             }
             if needsDecision {
@@ -177,10 +178,8 @@ struct CountdownCard: View {
 
     private var dateLine: some View {
         let target = countdown.target()
-        let days = countdown.daysLeft()
-        let text = days > 0 ? "until \(target.untilFormat)" : (days == 0 ? target.untilFormat : "on \(target.untilFormat)")
         return HStack(spacing: 4) {
-            Text(text)
+            Text(countdown.dateLine())
                 .lineLimit(1)
             if countdown.rule.repeats {
                 Image(systemName: "repeat")
@@ -199,7 +198,7 @@ struct CountdownCard: View {
         let target = countdown.target()
         return HStack(spacing: 16) {
             ForEach(Calendar.app.monthsShown(now: .now, target: target), id: \.self) { month in
-                MonthGrid(month: month, target: target, tint: tint, showsTitle: true)
+                MonthGrid(month: month, target: target, tint: tint, showsTitle: true, window: countdown.window())
             }
         }
     }
@@ -246,7 +245,8 @@ struct CountdownCard: View {
     }
 }
 
-/// "42 days" to go, "Today" on the day, "3 days ago" after it.
+/// "42 days" to go, "Today" on the day, "3 days ago" after it. "~14 days" ahead of a window, "Any Day" inside it,
+/// and on a day with a time, a live countdown to it.
 struct DaysLeftText: View {
     let days: Int
     var size: CGFloat = 40
@@ -254,24 +254,29 @@ struct DaysLeftText: View {
     var parts: [DurationPart]?
     /// Counted to the middle of a window, so only about right: "~14 days".
     var isApproximate = false
+    /// Inside the window it should come in.
+    var isInWindow = false
+    /// The moment it comes, on the day: counted down to the second instead of "Today".
+    var moment: Date?
 
     var body: some View {
         let count = abs(days)
         Group {
-            if days == 0 {
-                Text("Today")
-                    .font(.system(size: size, weight: .bold))
-                    .minimumScaleFactor(0.6)
+            if isInWindow {
+                word("Any Day")
+            } else if days == 0, let moment {
+                MomentCountdown(moment: moment, size: size)
+            } else if days == 0 {
+                word("Today")
             } else if let parts {
-                DurationPartsText(parts: parts, size: size, suffix: days < 0 ? "ago" : nil)
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    approximately
+                    DurationPartsText(parts: parts, size: size, suffix: days < 0 ? "ago" : nil)
+                }
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     HStack(alignment: .firstTextBaseline, spacing: 1) {
-                        if isApproximate {
-                            Text("~")
-                                .font(.system(size: size * 0.7, weight: .bold))
-                                .foregroundStyle(.secondary)
-                        }
+                        approximately
                         Text(count, format: .number)
                             .font(.system(size: size, weight: .bold))
                             .contentTransition(.numericText(value: Double(count)))
@@ -283,6 +288,30 @@ struct DaysLeftText: View {
             }
         }
         .lineLimit(1)
+    }
+
+    private func word(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: size, weight: .bold))
+            .minimumScaleFactor(0.6)
+    }
+
+    @ViewBuilder
+    private var approximately: some View {
+        if isApproximate {
+            Text("~")
+                .font(.system(size: size * 0.7, weight: .bold))
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+extension DaysLeftText {
+    /// A countdown's days as its card shows them.
+    init(_ countdown: Countdown, size: CGFloat = 40, now: Date = .now) {
+        self.init(days: countdown.daysLeft(now: now), size: size, parts: countdown.durationParts(now: now),
+                  isApproximate: countdown.isApproximate(now: now), isInWindow: countdown.isInWindow(now: now),
+                  moment: countdown.moment(now: now))
     }
 }
 
@@ -330,9 +359,9 @@ struct CountdownMenuPreview: View {
                 .lineLimit(1)
                 .foregroundStyle(tint)
             Spacer(minLength: 4)
-            DaysLeftText(days: countdown.daysLeft(), size: 40)
+            DaysLeftText(countdown, size: 40)
                 .minimumScaleFactor(0.5)
-            Text(target.untilFormat)
+            Text(countdown.dateLine())
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer(minLength: 8)

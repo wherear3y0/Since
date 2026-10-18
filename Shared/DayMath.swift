@@ -194,7 +194,7 @@ nonisolated enum DayMath {
     }
 }
 
-extension Date {
+nonisolated extension Date {
     /// "Jun 8", or "Jun 8, 2025" when it's not this year.
     var sinceFormat: String {
         if Calendar.app.isDate(self, equalTo: .now, toGranularity: .year) {

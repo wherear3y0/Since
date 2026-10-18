@@ -85,14 +85,21 @@ struct CountdownDaysIntent: AppIntent {
         let target = found.target()
         let date = target.formatted(.dateTime.weekday(.wide).month(.wide).day())
         let unit = abs(days) == 1 ? "day" : "days"
-        let dialog: IntentDialog = switch days {
-        case 0: "\(found.title) is today!"
-        case 1...: "\(days) \(unit) until \(found.title), on \(date)."
-        default: "\(found.title) was \(-days) \(unit) ago, on \(date)."
+        let time = found.moment().map { " at \($0.formatted(date: .omitted, time: .shortened))" } ?? ""
+        let dialog: IntentDialog
+        if let window = found.window(), found.isApproximate() {
+            dialog = "\(found.title) is due \(window.rangeFormat), in about \(days) \(unit)."
+        } else if let window = found.window(), found.isInWindow() {
+            dialog = "\(found.title) can come any day now, by \(window.upperBound.formatted(.dateTime.weekday(.wide).month(.wide).day()))."
+        } else {
+            dialog = switch days {
+            case 0: "\(found.title) is today\(time)!"
+            case 1...: "\(days) \(unit) until \(found.title), on \(date)\(time)."
+            default: "\(found.title) was \(-days) \(unit) ago, on \(date)."
+            }
         }
         return .result(dialog: dialog) {
-            CountdownSnippet(title: found.title, symbol: found.symbol, tint: found.color.color,
-                             days: days, target: target)
+            CountdownSnippet(found)
         }
     }
 }
@@ -102,8 +109,8 @@ struct CountdownSnippet: View {
     let title: String
     let symbol: String
     let tint: Color
-    let days: Int
-    let target: Date
+    let days: DaysLeftText
+    let dateLine: String
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -111,12 +118,12 @@ struct CountdownSnippet: View {
                 Label(title, systemImage: symbol)
                     .font(.headline)
                     .foregroundStyle(tint)
-                Text(target.untilFormat)
+                Text(dateLine)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            DaysLeftText(days: days, size: 40)
+            days
         }
         .padding()
         .snippetCard(tint: tint)

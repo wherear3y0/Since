@@ -134,6 +134,12 @@ final class Countdown {
                              of: target(now: now, calendar: calendar))
     }
 
+    /// The line under the days: "until Nov 26 · Thu · 18:30", "Oct 4 – 15", "by Oct 15 · Thu"…
+    func dateLine(now: Date = .now, calendar: Calendar = .app) -> String {
+        DayMath.dateLine(target: target(now: now, calendar: calendar), window: window(calendar: calendar),
+                         moment: moment(now: now, calendar: calendar), now: now, calendar: calendar)
+    }
+
     // MARK: - Window
 
     /// The first and last day of the window it should come in, when it has one.

@@ -55,10 +55,12 @@ nonisolated extension DayMath {
     }
 
     /// A month as a calendar page: six rows of seven days from the week's first day, nil outside the month.
-    /// Always six rows, so two months side by side line up.
-    static func monthGrid(of month: Date, today now: Date, target: Date, calendar: Calendar = .app) -> [[MonthDay?]] {
+    /// Always six rows, so two months side by side line up. Every day of a `window` is marked like the day itself.
+    static func monthGrid(of month: Date, today now: Date, target: Date, window: ClosedRange<Date>? = nil,
+                          calendar: Calendar = .app) -> [[MonthDay?]] {
         let today = calendar.startOfDay(for: now)
-        let targetDay = calendar.startOfDay(for: target)
+        let targetDay = calendar.startOfDay(for: window?.lowerBound ?? target)
+        let lastDay = calendar.startOfDay(for: window?.upperBound ?? target)
         let first = calendar.dateInterval(of: .month, for: month)!.start
         let count = calendar.range(of: .day, in: .month, for: first)!.count
         let lead = (calendar.component(.weekday, from: first) - calendar.firstWeekday + 7) % 7
@@ -68,7 +70,7 @@ nonisolated extension DayMath {
                 let number = row * 7 + column - lead + 1
                 guard (1...count).contains(number) else { return nil }
                 let date = calendar.date(byAdding: .day, value: number - 1, to: first)!
-                let state: MonthDay.State = date == targetDay ? .target
+                let state: MonthDay.State = (targetDay...lastDay).contains(date) ? .target
                     : (date < today ? .gone : (date < targetDay ? .waiting : .later))
                 return MonthDay(date: date, number: number, state: state, isToday: date == today)
             }
@@ -89,6 +91,24 @@ nonisolated extension DayMath {
             .filter { $0 < daysLeft }
     }
 
+    /// The line under the days: "until Nov 26 · Thu", with " · 18:30" when it has a time; "Oct 4 – 15" ahead
+    /// of a window, "by Oct 15 · Thu" inside it; "on …" once it has passed.
+    static func dateLine(target: Date, window: ClosedRange<Date>?, moment: Date?, now: Date,
+                         calendar: Calendar = .app) -> String {
+        if let window {
+            let today = calendar.startOfDay(for: now)
+            if today < window.lowerBound {
+                return window.rangeFormat
+            }
+            return today <= window.upperBound ? "by \(window.upperBound.untilFormat)" : "was due \(window.rangeFormat)"
+        }
+        let days = daysUntil(target, from: now, calendar: calendar)
+        // With a time, the time takes the weekday's place, so the line still fits a small card.
+        let date = moment.map { target.untilFormat.components(separatedBy: " · ")[0] + " · "
+            + $0.formatted(date: .omitted, time: .shortened) } ?? target.untilFormat
+        return days > 0 ? "until \(date)" : (days == 0 ? date : "on \(date)")
+    }
+
     /// "5 days", "6 weeks 1 day", "10 months 14 days": the time left in the unit that reads best.
     static func toGo(from now: Date, to target: Date, calendar: Calendar = .app) -> String {
         let days = daysUntil(target, from: now, calendar: calendar)
@@ -99,7 +119,15 @@ nonisolated extension DayMath {
     }
 }
 
-extension Date {
+nonisolated extension ClosedRange<Date> {
+    /// "Oct 4 – 15", "Oct 28 – Nov 3".
+    var rangeFormat: String {
+        (lowerBound..<Swift.max(upperBound, lowerBound.addingTimeInterval(1)))
+            .formatted(.interval.month(.abbreviated).day())
+    }
+}
+
+nonisolated extension Date {
     /// "Nov 26 · Thu". The year only when it's needed: a day more than a year ahead,
     /// or one gone by in an earlier year.
     var untilFormat: String {

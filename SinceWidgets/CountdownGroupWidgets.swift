@@ -21,7 +21,8 @@ struct CountdownsProvider: AppIntentTimelineProvider {
     }
 
     func timeline(for configuration: SelectCountdownsIntent, in context: Context) async -> Timeline<CountdownsEntry> {
-        let entries = WidgetData.timelineDates().map { entry(for: configuration, at: $0) }
+        let moments = entry(for: configuration, at: .now).countdowns.compactMap(\.moment)
+        let entries = WidgetData.timelineDates(adding: moments).map { entry(for: configuration, at: $0) }
         return Timeline(entries: entries, policy: .atEnd)
     }
 
@@ -106,7 +107,7 @@ struct CountdownTile: View {
         VStack(alignment: .leading, spacing: 0) {
             WidgetTitle(title: countdown.title, symbol: countdown.symbol, tint: countdown.tint,
                         font: .caption.weight(.semibold))
-            WidgetDaysLeft(days: countdown.daysLeft, size: 24)
+            WidgetDaysLeft(countdown, size: 24)
                 .padding(.top, 2)
             Text(countdown.target.sinceFormat)
                 .font(.caption2)
@@ -178,7 +179,7 @@ struct CountdownRow: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(countdown.tint)
                     .lineLimit(1)
-                Text(countdown.target.untilFormat)
+                Text(countdown.dateLine)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

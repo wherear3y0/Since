@@ -76,10 +76,11 @@ enum WidgetData {
         Store.counters()
     }
 
-    /// Now and the coming local midnight, when every count goes up by one.
-    static func timelineDates() -> [Date] {
+    /// Now and the coming local midnight, when every count goes up by one, and any of `moments`
+    /// (countdowns' times) in between.
+    static func timelineDates(adding moments: [Date] = []) -> [Date] {
         let now = Date.now
         let midnight = Calendar.app.date(byAdding: .day, value: 1, to: Calendar.app.startOfDay(for: now))!
-        return [now, midnight]
+        return ([now, midnight] + moments.filter { $0 > now && $0 < midnight }).sorted()
     }
 }

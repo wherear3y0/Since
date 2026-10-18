@@ -202,9 +202,13 @@ struct CalendarImportView: View {
         let picked = events.filter { selected.contains($0.id) }
         // New countdowns go on top, in the order of the list.
         for (event, order) in zip(picked, Countdown.topOrders(picked.count, above: countdowns)) {
+            // An event at a time keeps it; an all-day one is just its day.
             let countdown = Countdown(title: event.title, symbol: event.symbol, color: event.color,
-                                      date: Calendar.app.date(bySettingHour: 12, minute: 0, second: 0, of: event.date) ?? event.date,
+                                      date: event.isAllDay
+                                          ? Calendar.app.date(bySettingHour: 12, minute: 0, second: 0, of: event.date) ?? event.date
+                                          : event.date,
                                       rule: event.rule ?? .never, sortOrder: order)
+            countdown.hasTime = !event.isAllDay
             // Calendar gives the next time, not the first, so there's no telling how many years it's been.
             countdown.countsYears = false
             countdown.isBirthday = countdown.looksLikeBirthday
@@ -227,6 +231,8 @@ struct CalendarEvent: Identifiable {
     let title: String
     /// The next time it happens.
     let date: Date
+    /// No time of day, just the day.
+    var isAllDay = true
     /// Calendar's repeat as Since can follow it; nil for a one-off, or a repeat too fine to follow.
     let rule: RepeatRule?
     let repeatsInCalendar: Bool
@@ -259,7 +265,7 @@ struct CalendarEvent: Identifiable {
             guard !title.isEmpty, seen.insert(event.calendarItemIdentifier).inserted else { return nil }
             let calendarRule = event.recurrenceRules?.first
             return CalendarEvent(id: event.calendarItemIdentifier, externalID: event.calendarItemExternalIdentifier,
-                                 title: title, date: event.startDate,
+                                 title: title, date: event.startDate, isAllDay: event.isAllDay,
                                  rule: calendarRule.flatMap {
                                      RepeatRule($0, start: event.startDate, lastTime: lastTime[event.calendarItemIdentifier])
                                  },

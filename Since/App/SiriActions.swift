@@ -237,6 +237,6 @@ extension CountdownSnippet {
     @MainActor
     init(_ countdown: Countdown) {
         self.init(title: countdown.title, symbol: countdown.symbol, tint: countdown.color.color,
-                  days: countdown.daysLeft(), target: countdown.target())
+                  days: DaysLeftText(countdown, size: 40), dateLine: countdown.dateLine())
     }
 }

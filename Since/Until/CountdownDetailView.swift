@@ -36,7 +36,7 @@ struct CountdownDetailView: View {
                         }
                     }
 
-                if countdown.daysLeft() == 0 && !countdown.isArchived {
+                if countdown.isTheDay() && !countdown.isArchived {
                     doneCard(tint: tint)
                         .detailCard()
                         .blurIn(contentShown, delay: 0.05)
@@ -129,7 +129,7 @@ struct CountdownDetailView: View {
     /// On the day: mark it done. A repeating one moves on to its next time, a one-off one goes to Past.
     private func doneCard(tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            CardHeader(title: "It’s Today", symbol: "party.popper.fill", tint: tint,
+            CardHeader(title: countdown.isInWindow() ? "Any Day Now" : "It’s Today", symbol: "party.popper.fill", tint: tint,
                        text: countdown.rule.repeats
                            ? "Once it’s done, mark it, and it counts down to the next time."
                            : "Once it’s done, mark it, and it moves to Past.")
@@ -191,9 +191,13 @@ struct CountdownDetailView: View {
         let start = countdown.waitStart()
 
         var rows: [SummaryRow] = [
-            SummaryRow(symbol: "calendar", title: "Date",
-                       subtitle: target.formatted(date: .long, time: .omitted),
-                       value: target.formatted(.dateTime.weekday(.wide))),
+            countdown.window().map { window in
+                SummaryRow(symbol: "calendar", title: "Window", subtitle: window.rangeFormat,
+                           value: "\(DayMath.days(from: window.lowerBound, to: window.upperBound) + 1) days")
+            } ?? SummaryRow(symbol: "calendar", title: "Date",
+                            subtitle: target.formatted(date: .long, time: .omitted),
+                            value: countdown.moment()?.formatted(date: .omitted, time: .shortened)
+                                ?? target.formatted(.dateTime.weekday(.wide))),
             SummaryRow(symbol: "repeat", title: "Repeats",
                        subtitle: countdown.rule.end.map { "Until \($0.formatted(date: .long, time: .omitted))" },
                        value: countdown.rule.summary()),
@@ -248,7 +252,8 @@ struct CountdownHeroCard: View {
         let days = countdown.daysLeft()
         let start = countdown.waitStart()
         let waited = DayMath.days(from: start, to: .now)
-        let total = DayMath.days(from: start, to: target)
+        let total = DayMath.days(from: start, to: countdown.windowMiddle() ?? target)
+        let window = countdown.window()
 
         VStack(alignment: .leading, spacing: 18) {
             // The wait in the countdown's style, swapping through a blur when the style changes.
@@ -257,7 +262,7 @@ struct CountdownHeroCard: View {
                 case .calendar:
                     HStack(spacing: 18) {
                         ForEach(Calendar.app.monthsShown(now: .now, target: target), id: \.self) { month in
-                            MonthGrid(month: month, target: target, tint: tint, showsTitle: true)
+                            MonthGrid(month: month, target: target, tint: tint, showsTitle: true, window: window)
                         }
                     }
                     .frame(height: 190)
@@ -283,7 +288,7 @@ struct CountdownHeroCard: View {
             // Two rows, so each side lines up with the other, like the counter's card.
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline, spacing: 16) {
-                    Text(days > 0 ? "until \(target.untilFormat)" : (days == 0 ? target.untilFormat : "on \(target.untilFormat)"))
+                    Text(countdown.dateLine())
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -296,11 +301,17 @@ struct CountdownHeroCard: View {
                     }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 16) {
-                    if days == 0 {
-                        Text("Today")
-                            .font(.system(size: 34, weight: .bold))
+                    if days == 0 || countdown.isInWindow() {
+                        DaysLeftText(countdown, size: 34)
                     } else if days > 0 {
-                        DurationButton(from: .now, to: target, style: countdown.numberStyle, onChange: setNumberStyle)
+                        HStack(alignment: .firstTextBaseline, spacing: 2) {
+                            if countdown.isApproximate() {
+                                Text("~")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundStyle(.secondary)
+                            }
+                            DurationButton(from: .now, to: target, style: countdown.numberStyle, onChange: setNumberStyle)
+                        }
                     } else {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
                             DurationButton(from: target, to: .now, style: countdown.numberStyle, onChange: setNumberStyle)

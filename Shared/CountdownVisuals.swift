@@ -45,10 +45,12 @@ struct MonthGrid: View {
     var now: Date = .now
     var showsTitle = false
     var spacing: CGFloat = 3
+    /// The days it can come on, all marked like the day itself.
+    var window: ClosedRange<Date>? = nil
 
     var body: some View {
         let calendar = Calendar.app
-        let rows = DayMath.monthGrid(of: month, today: now, target: target)
+        let rows = DayMath.monthGrid(of: month, today: now, target: target, window: window)
         let letters = (0..<7).map { calendar.veryShortStandaloneWeekdaySymbols[(calendar.firstWeekday - 1 + $0) % 7] }
 
         VStack(alignment: .leading, spacing: spacing) {
@@ -299,5 +301,31 @@ extension Calendar {
             return [thisMonth, targetMonth]
         }
         return [targetMonth, date(byAdding: .month, value: 1, to: targetMonth)!]
+    }
+}
+
+/// "2:41:05" ticking down to the moment it comes, then "Now".
+struct MomentCountdown: View {
+    let moment: Date
+    var size: CGFloat = 40
+
+    var body: some View {
+        // Drawn again right at the moment, to turn into "Now"; the timer text ticks by itself until then.
+        // (The schedule's own date is the moment itself even before it, so the clock is read instead.)
+        TimelineView(.explicit([moment])) { _ in
+            let now = Date.now
+            Group {
+                if now < moment {
+                    Text(timerInterval: now...moment, countsDown: true)
+                        .monospacedDigit()
+                } else {
+                    Text("Now")
+                }
+            }
+            .font(.system(size: size, weight: .bold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            .contentTransition(.numericText())
+        }
     }
 }

@@ -14,10 +14,21 @@ struct CountdownSnapshot {
     let waitStart: Date
     let date: Date
     var numberStyle: DurationStyle = .days
+    /// The days it can come on, when it's due in a window.
+    var window: ClosedRange<Date>? = nil
+    /// When it comes, when it has a time.
+    var moment: Date? = nil
 
     var daysLeft: Int { DayMath.daysUntil(target, from: date) }
     var waited: Int { DayMath.days(from: waitStart, to: date) }
-    var total: Int { DayMath.days(from: waitStart, to: target) }
+    /// A window's wait is up to its middle.
+    var total: Int {
+        let end = window.map { Calendar.app.date(byAdding: .day, value: DayMath.days(from: $0.lowerBound, to: $0.upperBound) / 2,
+                                                  to: $0.lowerBound)! } ?? target
+        return DayMath.days(from: waitStart, to: end)
+    }
+    var isApproximate: Bool { window.map { Calendar.app.startOfDay(for: date) < $0.lowerBound } ?? false }
+    var isInWindow: Bool { window?.contains(Calendar.app.startOfDay(for: date)) ?? false }
     var progress: Double { total == 0 ? 1 : min(1, Double(waited) / Double(total)) }
     var timeLeft: TimeLeft { DayMath.timeLeft(until: target, from: date) }
 
@@ -31,9 +42,9 @@ struct CountdownSnapshot {
                             : DayMath.parts(from: target, to: date, style: numberStyle)
     }
 
-    /// "until Nov 26 · Thu", the date itself on the day, "on …" after it.
+    /// "until Nov 26 · Thu", the date itself on the day, "on …" after it; the time or the window when it has one.
     var dateLine: String {
-        daysLeft > 0 ? "until \(target.untilFormat)" : (daysLeft == 0 ? target.untilFormat : "on \(target.untilFormat)")
+        DayMath.dateLine(target: target, window: window, moment: moment, now: date)
     }
 }
 
@@ -41,7 +52,8 @@ extension CountdownSnapshot {
     init(_ countdown: Countdown, at date: Date) {
         self.init(id: countdown.id, title: countdown.title, symbol: countdown.symbol, color: countdown.color,
                   tinted: countdown.tinted, style: countdown.style, target: countdown.target(now: date),
-                  waitStart: countdown.waitStart(now: date), date: date, numberStyle: countdown.numberStyle)
+                  waitStart: countdown.waitStart(now: date), date: date, numberStyle: countdown.numberStyle,
+                  window: countdown.window(), moment: countdown.moment(now: date))
     }
 
     /// A stand-in for the widget gallery and placeholders.
@@ -77,7 +89,9 @@ struct CountdownProvider: AppIntentTimelineProvider {
     }
 
     func timeline(for configuration: SelectCountdownIntent, in context: Context) async -> Timeline<CountdownEntry> {
-        let entries = WidgetData.timelineDates().map { entry(for: configuration, at: $0) }
+        // Also at the moment it comes, when it has a time, to turn the ticking time into "Now".
+        let moments = entry(for: configuration, at: .now).countdown?.moment.map { [$0] } ?? []
+        let entries = WidgetData.timelineDates(adding: moments).map { entry(for: configuration, at: $0) }
         return Timeline(entries: entries, policy: .atEnd)
     }
 
@@ -150,26 +164,48 @@ struct CountdownWidgetView: View {
 // MARK: - Home Screen
 
 /// "42 days" to go, "Today" on the day, "3 days ago" after it: a big number with a small gray unit.
+/// "~14 days" ahead of a window and "Any Day" inside it; on a day with a time, the time ticking down to it.
 struct WidgetDaysLeft: View {
     let days: Int
     var size: CGFloat = 40
     /// The time in weeks or months instead, when the countdown is written that way.
     var parts: [DurationPart]?
+    var isApproximate = false
+    var isInWindow = false
+    var moment: Date?
+    /// When the widget is drawn, for the ticking time.
+    var date: Date = .now
 
     var body: some View {
         let count = abs(days)
         Group {
-            if let parts, days != 0 {
+            if isInWindow {
+                word("Any Day")
+            } else if days == 0, let moment {
+                if date < moment {
+                    Text(timerInterval: date...moment, countsDown: true)
+                        .font(.system(size: size, weight: .bold))
+                        .monospacedDigit()
+                        .widgetAccentable()
+                } else {
+                    word("Now")
+                }
+            } else if let parts, days != 0 {
                 DurationPartsText(parts: parts, size: size, suffix: days < 0 ? "ago" : nil)
             } else if days == 0 {
-                Text("Today")
-                    .font(.system(size: size, weight: .bold))
-                    .widgetAccentable()
+                word("Today")
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(count, format: .number)
-                        .font(.system(size: size, weight: .bold))
-                        .widgetAccentable()
+                    HStack(alignment: .firstTextBaseline, spacing: 1) {
+                        if isApproximate {
+                            Text("~")
+                                .font(.system(size: size * 0.7, weight: .bold))
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(count, format: .number)
+                            .font(.system(size: size, weight: .bold))
+                            .widgetAccentable()
+                    }
                     Text(days > 0 ? (count == 1 ? "day" : "days") : (count == 1 ? "day ago" : "days ago"))
                         .font(size > 44 ? .headline : .subheadline.weight(.semibold))
                         .foregroundStyle(.secondary)
@@ -178,6 +214,20 @@ struct WidgetDaysLeft: View {
         }
         .lineLimit(1)
         .minimumScaleFactor(0.5)
+    }
+
+    private func word(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: size, weight: .bold))
+            .widgetAccentable()
+    }
+}
+
+extension WidgetDaysLeft {
+    init(_ countdown: CountdownSnapshot, size: CGFloat = 40) {
+        self.init(days: countdown.daysLeft, size: size, parts: countdown.displayParts,
+                  isApproximate: countdown.isApproximate, isInWindow: countdown.isInWindow,
+                  moment: countdown.moment, date: countdown.date)
     }
 }
 
@@ -216,7 +266,7 @@ struct SmallCountdownView: View {
         VStack(alignment: .leading, spacing: 0) {
             WidgetTitle(title: countdown.title, symbol: countdown.symbol, tint: countdown.tint)
             Spacer(minLength: 4)
-            WidgetDaysLeft(days: countdown.daysLeft, parts: countdown.displayParts)
+            WidgetDaysLeft(countdown)
             Text(countdown.dateLine)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -276,7 +326,7 @@ struct MediumCountdownView: View {
         VStack(alignment: .leading, spacing: 0) {
             WidgetTitle(title: countdown.title, symbol: countdown.symbol, tint: countdown.tint)
             Spacer(minLength: 4)
-            WidgetDaysLeft(days: countdown.daysLeft, parts: countdown.displayParts)
+            WidgetDaysLeft(countdown)
             Text(countdown.dateLine)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -301,7 +351,7 @@ struct LargeCountdownView: View {
                         .lineLimit(1)
                 }
                 Spacer(minLength: 8)
-                WidgetDaysLeft(days: countdown.daysLeft, size: 46, parts: countdown.displayParts)
+                WidgetDaysLeft(countdown, size: 46)
                     .fixedSize()
             }
 
@@ -405,10 +455,7 @@ struct RectangularCountdownView: View {
                 .font(.footnote.weight(.semibold))
                 .lineLimit(1)
                 .widgetAccentable()
-            Text(days == 0 ? "Today" : "\(abs(days)) \(abs(days) == 1 ? "day" : "days")\(days < 0 ? " ago" : "")")
-                .font(.system(size: 22, weight: .bold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
+            WidgetDaysLeft(countdown, size: 22)
             Text(countdown.dateLine)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
