@@ -100,8 +100,8 @@ struct Backup: Codable {
     var countdowns: [CountdownData]?
 
     init(counters: [Counter], countdowns: [Countdown] = []) {
-        // Timers only last a few hours; they aren't worth keeping.
-        self.countdowns = countdowns.filter { !$0.isTimer }.map { countdown in
+        // Timers only last a few hours, and synced ones come back from their calendar: neither is kept.
+        self.countdowns = countdowns.filter { !$0.isTimer && !$0.isSynced }.map { countdown in
             CountdownData(id: countdown.id, title: countdown.title, symbol: countdown.symbol, color: countdown.colorName,
                           tinted: countdown.tinted, size: countdown.sizeRaw, date: countdown.date,
                           repeatRule: countdown.rule, note: countdown.note, sortOrder: countdown.sortOrder,

@@ -39,6 +39,7 @@
 		520138C8DDB860BB01BC0D84 /* ResetEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D07D1CB121C53EECF41F6F0 /* ResetEditor.swift */; };
 		560782A934ADA43857987046 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 455735DD8A0D96C924B574F6 /* Settings.swift */; };
 		5A7CFC1E199FB522CC8AB684 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60485C8EA929119445831121 /* RootView.swift */; };
+		5BDE997EE0698B2C426D52C4 /* CalendarSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C4EA5B2506753DE383354DB /* CalendarSync.swift */; };
 		5BE4FE26CE492BA16B94A7A7 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C164DCB4A53E54B334D5D41 /* Models.swift */; };
 		6030F27902773D095186D408 /* CounterWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5234E8AF202D3DFC0FB13848 /* CounterWidget.swift */; };
 		6392FEEAE4C41C38CF2C6B76 /* SinceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1EE7AF345BA666004F3E34 /* SinceApp.swift */; };
@@ -57,10 +58,12 @@
 		9063138B0ACD9C3C4395E8C7 /* CounterCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B227F4C6280C3677387458E /* CounterCard.swift */; };
 		912D29B3020F9BD6D88981C2 /* SiriTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DE2BC76DE0105DE23534DA2 /* SiriTests.swift */; };
 		914EA344DE490505B7DF8DA5 /* MilestonesAndBackupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7621BD2DEA526CE7145BBE29 /* MilestonesAndBackupTests.swift */; };
+		9175A3DCB6BA48FE8DC02ACF /* CalendarSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31F7DA63BB572E7B9287BC0F /* CalendarSyncTests.swift */; };
 		951FE945FB44833CFD6A4609 /* Savings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD372845F590F1787E38C7A /* Savings.swift */; };
 		966F1D6D997AC10136ABA21C /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD250AC40DF1EFF46C4F3AF /* Place.swift */; };
 		96B137A27560CFEC0490FDA2 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487E6968B8B9CED3CF2C9F /* Palette.swift */; };
 		9CC37FA2FE93FF996992F959 /* DayMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95F25134630F58C11830184E /* DayMathTests.swift */; };
+		9DA067880029B45877224A84 /* CalendarSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C4EA5B2506753DE383354DB /* CalendarSync.swift */; };
 		9E186E80DF0438ECC2AE4C7D /* BlurIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EDA996518D5E001153B2F41 /* BlurIn.swift */; };
 		9E4D3D696268C38C22285110 /* HoldToResetButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 333EC300B5F3E037313E1699 /* HoldToResetButton.swift */; };
 		9E997942110AD99EE273DE6F /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD250AC40DF1EFF46C4F3AF /* Place.swift */; };
@@ -158,9 +161,11 @@
 		2B55588456FF7AF0BF2F9A17 /* RepeatRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatRule.swift; sourceTree = "<group>"; };
 		2D3FA6A1A786A25370602156 /* UntilTimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilTimeTests.swift; sourceTree = "<group>"; };
 		312230FC468CA8CA26BE6A55 /* SiriIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriIntents.swift; sourceTree = "<group>"; };
+		31F7DA63BB572E7B9287BC0F /* CalendarSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSyncTests.swift; sourceTree = "<group>"; };
 		333EC300B5F3E037313E1699 /* HoldToResetButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldToResetButton.swift; sourceTree = "<group>"; };
 		385CD372B7F7D896D8724CB4 /* CountdownCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownCard.swift; sourceTree = "<group>"; };
 		3A649F3EA1C4FC76F164BD93 /* SinceWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SinceWidgets.entitlements; sourceTree = "<group>"; };
+		3C4EA5B2506753DE383354DB /* CalendarSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSync.swift; sourceTree = "<group>"; };
 		3F241F4AFED8D854065AD8FF /* Since.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Since.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4074A2B9AD8F7787CA38768E /* CountdownWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownWidget.swift; sourceTree = "<group>"; };
 		455735DD8A0D96C924B574F6 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
@@ -252,6 +257,7 @@
 		432987CEE65D0EA21BCE408B /* SinceTests */ = {
 			isa = PBXGroup;
 			children = (
+				31F7DA63BB572E7B9287BC0F /* CalendarSyncTests.swift */,
 				95F25134630F58C11830184E /* DayMathTests.swift */,
 				74743AFF433DB4CE578B19C2 /* HabitTests.swift */,
 				F7284C1015E85D2703EE249F /* ImportTests.swift */,
@@ -325,6 +331,7 @@
 		A7C2F6460F57AF3D6E61BF0F /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				3C4EA5B2506753DE383354DB /* CalendarSync.swift */,
 				18B8C889511EF84DF2C65C08 /* CardSize.swift */,
 				19BF10FC363E186A6739CCD6 /* CardStyle.swift */,
 				1B62B5F2666897694E16D181 /* Countdown.swift */,
@@ -527,6 +534,7 @@
 				E11045DB82DDDC2F40BB5018 /* Backup.swift in Sources */,
 				9E186E80DF0438ECC2AE4C7D /* BlurIn.swift in Sources */,
 				C2C00DF4C06F2489D41F4073 /* CalendarImport.swift in Sources */,
+				5BDE997EE0698B2C426D52C4 /* CalendarSync.swift in Sources */,
 				45A6B0874C7247CFDE3BC843 /* CardGrid.swift in Sources */,
 				1B5B24DEA26EAD94F27C2880 /* CardSize.swift in Sources */,
 				C67DE2A5029342F21CAE2153 /* CardStyle.swift in Sources */,
@@ -588,6 +596,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9DA067880029B45877224A84 /* CalendarSync.swift in Sources */,
 				3484D2B546CC1B8B0654086F /* CardSize.swift in Sources */,
 				51D5BD7089368BFF79F33501 /* CardStyle.swift in Sources */,
 				AA8002E4621AAC288E2E50BB /* Countdown.swift in Sources */,
@@ -623,6 +632,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9175A3DCB6BA48FE8DC02ACF /* CalendarSyncTests.swift in Sources */,
 				9CC37FA2FE93FF996992F959 /* DayMathTests.swift in Sources */,
 				26E8C15AE7E834891DE10A65 /* HabitTests.swift in Sources */,
 				8F172ECD4711EBC69ED4475A /* ImportTests.swift in Sources */,

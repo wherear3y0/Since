@@ -70,6 +70,11 @@ final class Countdown {
     var travelModeRaw: String = "car"
     /// A notification when it's time to set off, worked out from the travel time.
     var remindsToLeave: Bool = false
+    /// Kept in step with a calendar or a Reminders list chosen in Settings: "calendar" or "reminders"
+    /// (a `SyncSource`), empty when it isn't. Its item is `calendarItemID`.
+    var syncSourceRaw: String = ""
+    /// The calendar or Reminders list it comes from, so it goes when that one is no longer synced.
+    var syncCalendarID: String? = nil
 
     init(title: String, symbol: String, color: CounterColor, date: Date, rule: RepeatRule = .never,
          note: String? = nil, sortOrder: Int = 0) {
@@ -175,10 +180,14 @@ final class Countdown {
         window(calendar: calendar).map { calendar.startOfDay(for: now) < $0.lowerBound } ?? false
     }
 
-    /// The day itself, or any day of its window: when it can be marked done.
+    /// The day itself, or any day of its window: when it can be marked done. A task from Reminders
+    /// can be done from its day on, overdue too.
     func isTheDay(now: Date = .now, calendar: Calendar = .app) -> Bool {
-        window(calendar: calendar) == nil ? daysLeft(now: now, calendar: calendar) == 0
-                                          : isInWindow(now: now, calendar: calendar)
+        if syncSourceRaw == SyncSource.reminders.rawValue {
+            return daysLeft(now: now, calendar: calendar) <= 0
+        }
+        return window(calendar: calendar) == nil ? daysLeft(now: now, calendar: calendar) == 0
+                                                 : isInWindow(now: now, calendar: calendar)
     }
 
     /// Moves it to a later day or window, keeping the day it was set for in its history.
@@ -242,8 +251,9 @@ final class Countdown {
         DayMath.daysUntil(target(now: now, calendar: calendar), from: now, calendar: calendar)
     }
 
+    /// Gone by. A task from Reminders never is while it isn't done: it's overdue.
     func hasPassed(now: Date = .now, calendar: Calendar = .app) -> Bool {
-        daysLeft(now: now, calendar: calendar) < 0
+        syncSourceRaw != SyncSource.reminders.rawValue && daysLeft(now: now, calendar: calendar) < 0
     }
 
     /// A yearly countdown with the cake icon: how a birthday is recognized where it wasn't marked as one
