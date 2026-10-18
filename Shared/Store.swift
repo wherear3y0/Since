@@ -85,11 +85,12 @@ enum Store {
     }
 
     /// All counters in the app's order, read in a fresh context (for widgets and intents).
+    /// Owned things that are gone are left out: they're only kept in Past.
     @MainActor
     static func counters() -> [Counter] {
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<Counter>(sortBy: [SortDescriptor(\.sortOrder)])
-        return (try? context.fetch(descriptor)) ?? []
+        return ((try? context.fetch(descriptor)) ?? []).filter { !$0.isGone }
     }
 
     /// All countdowns in the app's order, read in a fresh context (for widgets and intents).

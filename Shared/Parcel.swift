@@ -62,6 +62,8 @@ nonisolated struct ParcelDraft: Equatable {
     var from: Date?
     /// The last day of the window; nil for a single day.
     var to: Date?
+    /// The day it came or was bought, when that's already behind: for a thing that's had now.
+    var got: Date?
 }
 
 /// Reads an order's details out of the lines of text recognized on a screenshot: the delivery dates
@@ -82,6 +84,7 @@ nonisolated enum ParcelParser {
         draft.shop = shop(in: lines)
         (draft.trackingNumber, draft.carrier) = tracking(in: lines)
         (draft.from, draft.to) = dates(in: lines, now: now, calendar: calendar)
+        draft.got = got(in: lines, delivery: draft.to ?? draft.from, now: now, calendar: calendar)
         draft.title = title(in: lines, shop: draft.shop)
         return draft
     }
@@ -272,6 +275,83 @@ nonisolated enum ParcelParser {
             return calendar.date(byAdding: .year, value: 1, to: date)
         }
         return date
+    }
+
+    // MARK: - The day it was got
+
+    private static let gotWords = ["получен", "доставлен", "вручен", "delivered", "received", "picked up"]
+    private static let boughtWords = ["заказ от", "оформлен", "оплачен", "куплен", "покупк", "ordered", "placed",
+                                      "paid", "purchased", "bought"]
+
+    /// The day it came, else the day it was bought (a receipt's "18.09.2026" too), else a delivery day
+    /// that's already gone by. Never a day still ahead.
+    private static func got(in lines: [String], delivery: Date?, now: Date, calendar: Calendar) -> Date? {
+        let texts = lines.map { $0.lowercased().replacing("ё", with: "е") }
+        let past = { (d: Substring, m: Substring) -> Date? in
+            guard let month = month(m), let d = Int(d) else { return nil }
+            return pastDate(day: d, month: month, now: now, calendar: calendar)
+        }
+        let named = { (text: String) -> Date? in
+            for m in text.matches(of: /(\d{1,2})\s+([a-zа-я]{3,})/) {
+                if let date = past(m.output.1, m.output.2) {
+                    return date
+                }
+            }
+            for m in text.matches(of: /([a-z]{3,})\s+(\d{1,2})/) {
+                if let date = past(m.output.2, m.output.1) {
+                    return date
+                }
+            }
+            return nil
+        }
+        for words in [gotWords, boughtWords] {
+            for text in texts where words.contains(where: { text.contains($0) }) {
+                if let date = named(text) ?? numericDate(in: text, now: now, calendar: calendar) {
+                    return date
+                }
+            }
+        }
+        for text in texts {
+            if let date = numericDate(in: text, now: now, calendar: calendar) {
+                return date
+            }
+        }
+        if let delivery, calendar.startOfDay(for: delivery) <= calendar.startOfDay(for: now) {
+            return delivery
+        }
+        return nil
+    }
+
+    /// "18.09.2026" or "18.09.26", as on a receipt; only a day already come.
+    private static func numericDate(in text: String, now: Date, calendar: Calendar) -> Date? {
+        for m in text.matches(of: /(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})\b/) {
+            guard let day = Int(m.output.1), let month = Int(m.output.2), var year = Int(m.output.3),
+                  (1...31).contains(day), (1...12).contains(month) else { continue }
+            if year < 100 {
+                year += 2000
+            }
+            if let date = calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12)),
+               calendar.startOfDay(for: date) <= calendar.startOfDay(for: now) {
+                return date
+            }
+        }
+        return nil
+    }
+
+    /// A day this year, or last year when this year's is far ahead. One only a little ahead isn't behind yet.
+    private static func pastDate(day: Int, month: Int, now: Date, calendar: Calendar) -> Date? {
+        guard (1...31).contains(day) else { return nil }
+        let year = calendar.component(.year, from: now)
+        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12)) else {
+            return nil
+        }
+        if calendar.startOfDay(for: date) <= calendar.startOfDay(for: now) {
+            return date
+        }
+        if date > calendar.date(byAdding: .day, value: 60, to: now)! {
+            return calendar.date(byAdding: .year, value: -1, to: date)
+        }
+        return nil
     }
 
     // MARK: - Title

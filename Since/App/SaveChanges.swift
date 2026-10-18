@@ -21,7 +21,7 @@ func refreshMirrors(_ context: ModelContext) {
 
     // Siri and Spotlight find counters and countdowns by meaning. Their day counts go stale overnight,
     // and there are only a handful, so everything is indexed afresh.
-    let counterEntities = counters.map(CounterEntity.init)
+    let counterEntities = counters.filter { !$0.isGone }.map(CounterEntity.init)
     let countdownEntities = countdowns.filter { !$0.isTimer }.map(CountdownEntity.init)
     Task {
         let index = CSSearchableIndex.default()

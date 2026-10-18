@@ -24,6 +24,7 @@ struct CounterDaysIntent: AppIntent {
         let dialog: IntentDialog = switch found.kind {
         case .quit: "\(found.title): \(days) \(unit), since \(since)."
         case .lastTime: "It’s been \(days) \(unit) since \(found.title), on \(since)."
+        case .owned: "You’ve had \(found.title) for \(days) \(unit), since \(since)."
         }
         return .result(dialog: dialog) {
             CounterSnippet(title: found.title, symbol: found.symbol, tint: found.color.color,

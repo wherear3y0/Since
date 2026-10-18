@@ -203,7 +203,8 @@ struct WidgetRecordBar: View {
     }
 }
 
-/// Progress toward the best streak or, for "last time" counters, toward the usual gap.
+/// Progress toward the best streak or, for "last time" counters, toward the usual gap; for an owned thing,
+/// toward its next whole year.
 struct WidgetProgressBar: View {
     let counter: CounterSnapshot
 
@@ -213,6 +214,9 @@ struct WidgetProgressBar: View {
             WidgetRecordBar(current: counter.days, target: counter.best, targetLabel: "Best", tint: counter.tint)
         case .lastTime:
             WidgetRecordBar(current: counter.days, target: counter.average, targetLabel: "Avg", tint: counter.tint)
+        case .owned:
+            let next = counter.nextYear
+            WidgetRecordBar(current: counter.days, target: next.days, targetLabel: "\(next.years)y", tint: counter.tint)
         }
     }
 }

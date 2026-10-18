@@ -23,6 +23,11 @@ struct ResetCounterIntent: AppIntent {
             return .result(dialog: "That counter no longer exists.") { EmptyView() }
         }
         let kind = found.kind
+        guard kind != .owned else {
+            return .result(dialog: "\(found.title) is a thing you have: it counts until it’s gone, with nothing to reset.") {
+                CounterSnippet(found)
+            }
+        }
         if found.isDoneToday() {
             let dialog: IntentDialog = kind == .quit
                 ? "\(found.title) was already reset today."
@@ -65,9 +70,10 @@ struct LogSlipIntent: AppIntent {
             return .result(dialog: "That counter no longer exists.") { EmptyView() }
         }
         guard found.kind == .quit else {
-            return .result(dialog: "\(found.title) counts since the last time, so it has no slips. Log it instead.") {
-                CounterSnippet(found)
-            }
+            let dialog: IntentDialog = found.kind == .owned
+                ? "\(found.title) is a thing you have, so it has no slips."
+                : "\(found.title) counts since the last time, so it has no slips. Log it instead."
+            return .result(dialog: dialog) { CounterSnippet(found) }
         }
         guard found.canSlipToday() else {
             return .result(dialog: "\(found.title) was reset today, so it starts over from today anyway.") {
@@ -114,6 +120,9 @@ struct AddPastResetIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         guard let found = Store.counter(counter.id) else {
             return .result(dialog: "That counter no longer exists.") { EmptyView() }
+        }
+        guard found.kind != .owned else {
+            return .result(dialog: "\(found.title) is a thing you have, with nothing to reset.") { CounterSnippet(found) }
         }
         let calendar = Calendar.app
         let day = calendar.startOfDay(for: date)

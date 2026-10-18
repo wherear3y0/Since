@@ -31,6 +31,15 @@ struct CounterSnapshot: Identifiable {
     /// For "last time" counters: the gap is already longer than usual.
     var isOverdue: Bool { kind == .lastTime && average > 0 && days > average }
 
+    /// For an owned thing: the next whole year it will have been had, and how many days that is from the start.
+    var nextYear: (years: Int, days: Int) {
+        let calendar = Calendar.app
+        let had = calendar.dateComponents([.year], from: calendar.startOfDay(for: start),
+                                          to: calendar.startOfDay(for: date)).year ?? 0
+        let next = calendar.date(byAdding: .year, value: had + 1, to: start) ?? date
+        return (had + 1, DayMath.days(from: start, to: next))
+    }
+
     var tint: Color { color.color.onCard(tinted: tinted) }
     var url: URL { URL(string: "since://counter/\(id.uuidString)")! }
 

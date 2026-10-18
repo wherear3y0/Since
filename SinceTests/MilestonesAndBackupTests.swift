@@ -137,10 +137,21 @@ struct MilestonesAndBackupTests {
         timer.isTimer = true
         context.insert(timer)
 
-        let data = try Backup(counters: [counter], countdowns: [countdown, timer]).encoded()
+        let phone = Counter(title: "iPhone", symbol: "iphone", color: .cyan, kind: .owned,
+                            startDate: date(2024, 9, 20), sortOrder: 1)
+        phone.photoData = Data([4, 5])
+        phone.letGo(on: date(2026, 9, 1), reason: .sold)
+        context.insert(phone)
+
+        let data = try Backup(counters: [counter, phone], countdowns: [countdown, timer]).encoded()
         try Backup.decode(data).restore(into: context)
 
-        let restored = try context.fetch(FetchDescriptor<Counter>())
+        let restoredPhone = try #require(try context.fetch(FetchDescriptor<Counter>()).first { $0.kind == .owned })
+        #expect(restoredPhone.photoData == Data([4, 5]))
+        #expect(restoredPhone.goneDate == date(2026, 9, 1))
+        #expect(restoredPhone.goneReason == .sold)
+
+        let restored = try context.fetch(FetchDescriptor<Counter>()).filter { $0.kind != .owned }
         #expect(restored.count == 1)
         #expect(restored[0].title == "Called mom")
         #expect(restored[0].kind == .lastTime)

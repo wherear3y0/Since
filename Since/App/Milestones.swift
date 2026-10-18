@@ -28,10 +28,11 @@ enum Milestones {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
 
-        for counter in counters where counter.notifyMilestones {
+        for counter in counters where counter.notifyMilestones && !counter.isGone {
+            let since = counter.currentStreakStart.formatted(date: .long, time: .omitted)
             for milestone in upcoming(for: counter).prefix(3) {
                 schedule(title: counter.title,
-                         body: "\(milestone.name) since \(counter.currentStreakStart.formatted(date: .long, time: .omitted)).",
+                         body: counter.isOwned ? "\(milestone.name) with it, since \(since)." : "\(milestone.name) since \(since).",
                          on: milestone.date, id: counter.id, url: "since://counter/\(counter.id.uuidString)")
             }
         }

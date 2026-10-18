@@ -128,13 +128,20 @@ struct LargeCounterView: View {
 
             FillingWidgetHeatmap(counter: counter)
 
-            if counter.kind == .quit || counter.average > 0 {
+            if counter.kind != .lastTime || counter.average > 0 {
                 WidgetProgressBar(counter: counter)
             }
-            HStack(alignment: .top) {
-                stat(counter.kind == .quit ? "Best" : "Longest", "\(counter.best)d")
-                stat("Average", "\(counter.average)d")
-                stat(counter.kind.resetsTitle, "\(counter.resetDates.count)")
+            if counter.kind == .owned {
+                HStack(alignment: .top) {
+                    stat("Got", counter.start.formatted(date: .abbreviated, time: .omitted))
+                    stat("Next Year", "in \(counter.nextYear.days - counter.days)d")
+                }
+            } else {
+                HStack(alignment: .top) {
+                    stat(counter.kind == .quit ? "Best" : "Longest", "\(counter.best)d")
+                    stat("Average", "\(counter.average)d")
+                    stat(counter.kind.resetsTitle, "\(counter.resetDates.count)")
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
@@ -154,12 +161,16 @@ struct LargeCounterView: View {
 
 // MARK: - Lock Screen
 
-/// The number in a ring that fills toward the best streak (or the usual gap).
+/// The number in a ring that fills toward the best streak (or the usual gap, or an owned thing's next year).
 struct CircularCounterView: View {
     let counter: CounterSnapshot
 
     var body: some View {
-        let target = counter.kind == .quit ? counter.best : counter.average
+        let target = switch counter.kind {
+        case .quit: counter.best
+        case .lastTime: counter.average
+        case .owned: counter.nextYear.days
+        }
         let progress = target == 0 ? 1 : min(1, Double(counter.days) / Double(target))
         Gauge(value: progress) {
             Image(systemName: counter.symbol)
@@ -203,6 +214,7 @@ struct RectangularCounterView: View {
         switch counter.kind {
         case .quit: return "\(since) · best \(counter.best)"
         case .lastTime: return counter.average > 0 ? "\(since) · usually \(counter.average)" : since
+        case .owned: return since
         }
     }
 }

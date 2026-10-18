@@ -1,9 +1,10 @@
 import Foundation
 
 /// What a reset means. For `quit` it's a slip, for `lastTime` it's the event itself
-/// (e.g. "Called mom"), so the wording and the stats differ.
+/// (e.g. "Called mom"), so the wording and the stats differ. An `owned` thing has no resets: it counts
+/// from the day it was got until it's gone.
 nonisolated enum CounterKind: String, CaseIterable, Identifiable {
-    case quit, lastTime
+    case quit, lastTime, owned
 
     var id: String { rawValue }
 
@@ -11,6 +12,7 @@ nonisolated enum CounterKind: String, CaseIterable, Identifiable {
         switch self {
         case .quit: "Quit"
         case .lastTime: "Last Time"
+        case .owned: "Owned"
         }
     }
 
@@ -18,6 +20,7 @@ nonisolated enum CounterKind: String, CaseIterable, Identifiable {
         switch self {
         case .quit: "For habits you’re quitting. A reset is a slip, and the days without one count as clean."
         case .lastTime: "For things you do now and then, like calling mom. Logging it starts the count again."
+        case .owned: "For things you have, like a phone or a bike: the days since you got them. Once one is gone, it’s kept in Past."
         }
     }
 

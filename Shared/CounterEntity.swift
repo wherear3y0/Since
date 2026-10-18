@@ -19,7 +19,7 @@ struct CounterEntity: IndexedEntity {
     var since: Date
     @Property(title: "Best Streak")
     var best: Int
-    /// "Quit" or "Last Time".
+    /// "Quit", "Last Time" or "Owned".
     @Property(title: "Type")
     var kind: String
 
@@ -41,9 +41,12 @@ struct CounterEntity: IndexedEntity {
     /// What Spotlight and Siri's semantic index know beyond the title.
     var attributeSet: CSSearchableItemAttributeSet {
         let attributes = defaultAttributeSet
-        attributes.contentDescription = kind == CounterKind.quit.title
-            ? "\(days) days without \(title), since \(since.formatted(date: .long, time: .omitted)). Best streak \(best) days."
-            : "\(days) days since \(title), last on \(since.formatted(date: .long, time: .omitted))."
+        let day = since.formatted(date: .long, time: .omitted)
+        attributes.contentDescription = switch kind {
+        case CounterKind.quit.title: "\(days) days without \(title), since \(day). Best streak \(best) days."
+        case CounterKind.owned.title: "Had \(title) for \(days) days, since \(day)."
+        default: "\(days) days since \(title), last on \(day)."
+        }
         attributes.keywords = ["days since", "streak", "counter", kind]
         return attributes
     }

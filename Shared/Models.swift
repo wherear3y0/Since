@@ -37,6 +37,12 @@ final class Counter {
     var durationStyleRaw: Int = DurationStyle.days.rawValue
     /// What a "quit" counter is about (a `Habit`); "" is Other.
     var habitRaw: String = ""
+    /// An owned thing's picture.
+    @Attribute(.externalStorage) var photoData: Data? = nil
+    /// The day an owned thing left: sold, broken, lost. Nil while it's still had.
+    var goneDate: Date? = nil
+    /// Why it left (a `GoneReason`); "" when not said.
+    var goneReasonRaw: String = ""
 
     @Relationship(deleteRule: .cascade, inverse: \Reset.counter)
     var resets: [Reset] = []
@@ -88,7 +94,12 @@ final class Counter {
 
     /// The current streak written in the counter's number style, for cards and widgets.
     func durationParts(now: Date = .now, calendar: Calendar = .app) -> [DurationPart] {
-        DayMath.parts(from: currentStreakStart, to: now, style: numberStyle, calendar: calendar)
+        DayMath.parts(from: currentStreakStart, to: countEnd(now), style: numberStyle, calendar: calendar)
+    }
+
+    /// Where the count stops: the day an owned thing left, or now.
+    func countEnd(_ now: Date) -> Date {
+        goneDate.map { min($0, now) } ?? now
     }
 
     var color: CounterColor {
@@ -188,7 +199,7 @@ final class Counter {
     }
 
     func days(on date: Date = .now, calendar: Calendar = .app) -> Int {
-        DayMath.days(from: currentStreakStart, to: date, calendar: calendar)
+        DayMath.days(from: currentStreakStart, to: countEnd(date), calendar: calendar)
     }
 
     func streaks(now: Date = .now, calendar: Calendar = .app) -> [Streak] {

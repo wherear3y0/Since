@@ -32,6 +32,10 @@ struct Backup: Codable {
         var durationStyle: Int?
         /// Missing in backups made before habits.
         var habit: String?
+        // An owned thing's picture and when and why it left; missing in backups made before owned things.
+        var photo: Data?
+        var goneDate: Date?
+        var goneReason: String?
     }
 
     struct ResetData: Codable {
@@ -139,7 +143,8 @@ struct Backup: Codable {
                         unitName: counter.unitName, unitsPerDay: counter.unitsPerDay, price: counter.price,
                         unitsPerPrice: counter.unitsPerPrice, minutesPerUnit: counter.minutesPerUnit,
                         showsHealth: counter.showsHealth, extraSlips: counter.extraSlips,
-                        durationStyle: counter.durationStyleRaw, habit: counter.habitRaw)
+                        durationStyle: counter.durationStyleRaw, habit: counter.habitRaw,
+                        photo: counter.photoData, goneDate: counter.goneDate, goneReason: counter.goneReasonRaw)
         }
     }
 
@@ -182,6 +187,9 @@ struct Backup: Codable {
             counter.extraSlips = data.extraSlips ?? 0
             counter.durationStyleRaw = data.durationStyle ?? DurationStyle.days.rawValue
             counter.habitRaw = data.habit ?? ""
+            counter.photoData = data.photo
+            counter.goneDate = data.goneDate
+            counter.goneReasonRaw = data.goneReason ?? ""
             context.insert(counter)
             for resetData in data.resets {
                 let reset = Reset(date: resetData.date, note: resetData.note, isSlip: resetData.isSlip ?? false,

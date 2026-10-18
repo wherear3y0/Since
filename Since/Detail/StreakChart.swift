@@ -90,6 +90,8 @@ struct StreakSummary: View {
         case (.quit, false): return "Your current streak is shorter than your average."
         case (.lastTime, true): return "It’s been longer than usual since the last time."
         case (.lastTime, false): return "Still within your usual gap."
+        // An owned thing has a page of its own, without streaks.
+        case (.owned, _): return ""
         }
     }
 }

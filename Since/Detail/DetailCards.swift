@@ -775,8 +775,8 @@ struct WeekdaysCard: View {
         switch (counter.kind, empty) {
         case (.quit, true): "No resets yet."
         case (.quit, false): "Most resets happen on \(busiest)s."
-        case (.lastTime, true): "Nothing logged yet."
-        case (.lastTime, false): "Most often on \(busiest)s."
+        case (.lastTime, true), (.owned, true): "Nothing logged yet."
+        case (.lastTime, false), (.owned, false): "Most often on \(busiest)s."
         }
     }
 
