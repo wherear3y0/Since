@@ -213,7 +213,7 @@ struct BirthdayImportSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(Color.pageBackground)
-            .navigationTitle(newCount == 1 ? "Add Birthday" : "Add \(newCount) Birthdays")
+            .navigationTitle(title(adding: newCount))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -257,6 +257,15 @@ struct BirthdayImportSheet: View {
             }
         }
         .opacity(isAdded ? 0.5 : 1)
+    }
+
+    /// Everyone picked may already have a countdown; then there's nothing to add.
+    private func title(adding newCount: Int) -> String {
+        switch newCount {
+        case 0: "Already Added"
+        case 1: "Add Birthday"
+        default: "Add \(newCount) Birthdays"
+        }
     }
 
     /// Someone already counted down to: a yearly countdown on the same day with their name in the title.
