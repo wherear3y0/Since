@@ -49,6 +49,9 @@ targets:
           - INAlternativeAppName: Синс
         NSUserActivityTypes: [me.wherar3y0.since.counter, me.wherar3y0.since.countdown]
         NSCalendarsFullAccessUsageDescription: Since reads your calendars so you can pick events to count down to. Nothing leaves your iPhone.
+        NSLocationWhenInUseUsageDescription: Since uses your location only when you ask how long it takes to get to a countdown's place.
+        # Directions can open in these, when they're on the iPhone.
+        LSApplicationQueriesSchemes: [yandexmaps, comgooglemaps]
         # A countdown's day can be shown on the Lock Screen and in the Dynamic Island.
         NSSupportsLiveActivities: true
         UILaunchScreen: {}

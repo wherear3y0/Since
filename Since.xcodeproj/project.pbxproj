@@ -93,6 +93,7 @@
 		DFAEA8974DD9150EE1952BFD /* Savings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD372845F590F1787E38C7A /* Savings.swift */; };
 		E11045DB82DDDC2F40BB5018 /* Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11C424BC505F2C411FAB3103 /* Backup.swift */; };
 		E310B6DBC8BEF7FA7E54F594 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 455735DD8A0D96C924B574F6 /* Settings.swift */; };
+		E31223F636A9B43B8153FAA9 /* PlaceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F030BE4AB9523B2A082FF796 /* PlaceCard.swift */; };
 		E636A09B9F752F0FD2A25401 /* CountdownEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C590D2E94156ECCE83D2E04 /* CountdownEntity.swift */; };
 		E86F634A8B8FC52E088F014B /* CounterSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933F83BB1890FE68C76CEA10 /* CounterSnapshot.swift */; };
 		EDF957CDEEB6296141D1FF27 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C8D7FC76FBE774E64C654F12 /* Assets.xcassets */; };
@@ -215,6 +216,7 @@
 		E68D7D478B4571160C35F82A /* UntilView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilView.swift; sourceTree = "<group>"; };
 		E8F010D35925EAB327BC31B8 /* CountdownGroupWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownGroupWidgets.swift; sourceTree = "<group>"; };
 		EC18B3B741CAB65DC52065C5 /* PostponeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostponeSheet.swift; sourceTree = "<group>"; };
+		F030BE4AB9523B2A082FF796 /* PlaceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceCard.swift; sourceTree = "<group>"; };
 		F7284C1015E85D2703EE249F /* ImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportTests.swift; sourceTree = "<group>"; };
 		FB8EB1A79952DEF98963DD44 /* CounterEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterEditor.swift; sourceTree = "<group>"; };
 		FC1C1E5DB9F0A4985B444B83 /* CounterKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterKind.swift; sourceTree = "<group>"; };
@@ -377,6 +379,7 @@
 				8E72A3EEC696BFE2D4E3CA69 /* CountdownCalendarCard.swift */,
 				385CD372B7F7D896D8724CB4 /* CountdownCard.swift */,
 				DD58300EF8A73F6B24D66FEF /* CountdownDetailView.swift */,
+				F030BE4AB9523B2A082FF796 /* PlaceCard.swift */,
 				78A7E6ED64D3CAD557E26F80 /* PlacePicker.swift */,
 				EC18B3B741CAB65DC52065C5 /* PostponeSheet.swift */,
 				0B9D0657FF3FE95F13346E25 /* TimerSheet.swift */,
@@ -551,6 +554,7 @@
 				D51CAF2CC76123C2E305E532 /* Models.swift in Sources */,
 				27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */,
 				966F1D6D997AC10136ABA21C /* Place.swift in Sources */,
+				E31223F636A9B43B8153FAA9 /* PlaceCard.swift in Sources */,
 				2C401E79615DF43254858938 /* PlacePicker.swift in Sources */,
 				CAC141493347C3642B949E27 /* PostponeSheet.swift in Sources */,
 				80E008887769E725375324D6 /* PressEffect.swift in Sources */,

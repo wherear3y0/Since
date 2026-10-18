@@ -53,6 +53,12 @@ struct CountdownDetailView: View {
                 .detailCard()
                 .blurIn(contentShown, delay: 0.1)
 
+                if countdown.hasPlace {
+                    PlaceCard(countdown: countdown)
+                        .detailCard()
+                        .blurIn(contentShown, delay: 0.11)
+                }
+
                 if !countdown.postponedFrom.isEmpty {
                     PostponedCard(countdown: countdown)
                         .detailCard()
