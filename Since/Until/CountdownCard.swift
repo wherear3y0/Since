@@ -252,6 +252,8 @@ struct DaysLeftText: View {
     var size: CGFloat = 40
     /// The same time in weeks or months ("6w 1d"), when the countdown is written that way.
     var parts: [DurationPart]?
+    /// Counted to the middle of a window, so only about right: "~14 days".
+    var isApproximate = false
 
     var body: some View {
         let count = abs(days)
@@ -264,9 +266,16 @@ struct DaysLeftText: View {
                 DurationPartsText(parts: parts, size: size, suffix: days < 0 ? "ago" : nil)
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(count, format: .number)
-                        .font(.system(size: size, weight: .bold))
-                        .contentTransition(.numericText(value: Double(count)))
+                    HStack(alignment: .firstTextBaseline, spacing: 1) {
+                        if isApproximate {
+                            Text("~")
+                                .font(.system(size: size * 0.7, weight: .bold))
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(count, format: .number)
+                            .font(.system(size: size, weight: .bold))
+                            .contentTransition(.numericText(value: Double(count)))
+                    }
                     Text(days > 0 ? (count == 1 ? "day" : "days") : (count == 1 ? "day ago" : "days ago"))
                         .font(size > 44 ? .headline : .subheadline.weight(.semibold))
                         .foregroundStyle(.secondary)

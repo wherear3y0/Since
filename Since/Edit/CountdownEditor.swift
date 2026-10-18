@@ -22,6 +22,13 @@ struct CountdownEditor: View {
     @State private var isBirthday: Bool
     @State private var showsLiveActivity: Bool
     @State private var numberStyle: DurationStyle
+    @State private var hasTime: Bool
+    @State private var hasWindow: Bool
+    @State private var windowEnd: Date
+    /// The start of the wait shows up for editing only once its chip is turned on.
+    @State private var editsWaitStart = false
+    @State private var waitStart: Date
+    @State private var liveActivityLead: Int
     @State private var isPickingSymbol = false
     @State private var savedEdits = 0
     @State private var isConfirmingDelete = false
@@ -47,15 +54,33 @@ struct CountdownEditor: View {
         _note = State(initialValue: countdown?.note ?? "")
         _isBirthday = State(initialValue: countdown?.isBirthday ?? false)
         _showsLiveActivity = State(initialValue: countdown?.showsLiveActivity ?? false)
+        _hasTime = State(initialValue: countdown?.hasTime ?? false)
+        _hasWindow = State(initialValue: countdown?.windowEnd != nil)
+        _windowEnd = State(initialValue: countdown?.windowEnd
+                           ?? Calendar.app.date(byAdding: .day, value: 7, to: countdown?.date ?? .now)!)
+        _waitStart = State(initialValue: countdown?.createdAt ?? .now)
+        _liveActivityLead = State(initialValue: countdown?.liveActivityLead ?? 0)
     }
 
     private var trimmedTitle: String {
         title.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// The countdown as it will be after saving, for the preview's numbers. Never inserted.
+    private var draft: Countdown {
+        let draft = Countdown(title: trimmedTitle, symbol: symbol, color: color, date: date, rule: rule)
+        draft.windowEnd = showsWindow ? windowEnd : nil
+        return draft
+    }
+
     /// The day the preview counts down to, as it will be after saving.
     private var target: Date {
-        rule.occurrence(rule.targetIndex(from: date, now: .now), from: date)
+        draft.target()
+    }
+
+    /// A window only for a day that doesn't repeat, and never for a birthday.
+    private var showsWindow: Bool {
+        hasWindow && !rule.repeats && !isBirthday
     }
 
     var body: some View {
@@ -118,8 +143,19 @@ struct CountdownEditor: View {
                 }
 
                 Section {
-                    DatePicker(rule.repeats ? "Starts" : "Date", selection: $date.animation(.smooth),
-                               displayedComponents: .date)
+                    DatePicker(showsWindow ? "From" : (rule.repeats ? "Starts" : "Date"),
+                               selection: $date.animation(.smooth), displayedComponents: .date)
+                        .onChange(of: date) { old, new in
+                            // The window moves along with its first day.
+                            if showsWindow {
+                                windowEnd = windowEnd.addingTimeInterval(new.timeIntervalSince(old))
+                            }
+                        }
+                    if showsWindow {
+                        DatePicker("To", selection: $windowEnd.animation(.smooth),
+                                   in: Calendar.app.startOfDay(for: date)..., displayedComponents: .date)
+                            .transition(.blurReplace)
+                    }
                     NavigationLink {
                         RepeatPicker(rule: $rule.animation(.smooth), start: date, tint: color.color)
                     } label: {
@@ -134,10 +170,10 @@ struct CountdownEditor: View {
                         }
                         .transition(.blurReplace)
                     }
+                    optionChips
+                    optionRows
                 } footer: {
-                    Text(rule.repeats
-                         ? "After each time, it counts down to the next one. For a birthday, the first day can be the day of birth."
-                         : "Once the day has passed, you can count the days since it.")
+                    Text(dateFooter)
                         .contentTransition(.opacity)
                         .blurIn(isPreviewShown, delay: 0.2)
                 }
@@ -164,18 +200,6 @@ struct CountdownEditor: View {
                         .blurIn(isPreviewShown, delay: 0.23)
                 }
                 .sectionReveal(isPreviewShown, delay: 0.23)
-
-                Section {
-                    Toggle("Reminders", isOn: $notifyBefore)
-                        .tint(color.color)
-                    Toggle("Live Activity on the Day", isOn: $showsLiveActivity)
-                        .tint(color.color)
-                } footer: {
-                    Text("Reminders: a notification a week before, the day before and on the day. "
-                         + "Live Activity: the day on the Lock Screen and in the Dynamic Island, for the days that matter most.")
-                        .blurIn(isPreviewShown, delay: 0.26)
-                }
-                .sectionReveal(isPreviewShown, delay: 0.26)
 
                 Section("Note") {
                     TextField("Optional", text: $note, axis: .vertical)
@@ -224,6 +248,7 @@ struct CountdownEditor: View {
             .sensoryFeedback(.selection, trigger: style)
             .sensoryFeedback(.selection, trigger: rule)
             .sensoryFeedback(.selection, trigger: date)
+            .sensoryFeedback(.selection, trigger: [hasTime, hasWindow, editsWaitStart, notifyBefore, showsLiveActivity])
             .sensoryFeedback(.success, trigger: savedEdits)
             .sheet(isPresented: $isPickingSymbol) {
                 SymbolPicker(selection: $symbol, tint: color.color)
@@ -271,7 +296,7 @@ struct CountdownEditor: View {
                 .font(.headline)
                 .foregroundStyle(tint)
                 Spacer()
-                DaysLeftText(days: days, size: 22)
+                DaysLeftText(days: days, size: 22, isApproximate: draft.isApproximate())
             }
 
             Group {
@@ -311,6 +336,100 @@ struct CountdownEditor: View {
         }
     }
 
+    // MARK: - Extras
+
+    private var dateFooter: String {
+        if showsWindow {
+            return "It comes any day from the first date to the second. Until then the days are about right: "
+                + "they count to the middle."
+        }
+        return rule.repeats
+            ? "After each time, it counts down to the next one. For a birthday, the first day can be the day of birth."
+            : "Once the day has passed, you can count the days since it."
+    }
+
+    /// Extras for the day, off until tapped, like the buttons under a new reminder.
+    private var optionChips: some View {
+        HStack(spacing: 12) {
+            if !isBirthday {
+                OptionChip(title: "Time", symbol: "clock", isOn: hasTime, tint: color.color) {
+                    withAnimation(.smooth) { setTime(!hasTime) }
+                }
+            }
+            if !rule.repeats && !isBirthday {
+                OptionChip(title: "Window", symbol: "arrow.left.and.right", isOn: hasWindow, tint: color.color) {
+                    withAnimation(.smooth) {
+                        hasWindow.toggle()
+                        // A window has no time: it's any day in it. It starts a week long.
+                        if hasWindow {
+                            hasTime = false
+                            if windowEnd <= date {
+                                windowEnd = Calendar.app.date(byAdding: .day, value: 7, to: date)!
+                            }
+                        }
+                    }
+                }
+            }
+            if !rule.repeats {
+                OptionChip(title: "Waiting Since", symbol: "hourglass.bottomhalf.filled", isOn: editsWaitStart,
+                           tint: color.color) {
+                    withAnimation(.smooth) {
+                        editsWaitStart.toggle()
+                        if !editsWaitStart {
+                            waitStart = countdown?.createdAt ?? .now
+                        }
+                    }
+                }
+            }
+            OptionChip(title: "Reminders", symbol: "bell", isOn: notifyBefore, tint: color.color) {
+                withAnimation(.smooth) { notifyBefore.toggle() }
+            }
+            OptionChip(title: "Live Activity", symbol: "platter.filled.bottom.iphone", isOn: showsLiveActivity,
+                       tint: color.color) {
+                withAnimation(.smooth) { showsLiveActivity.toggle() }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    /// The settings of the chips that are on.
+    @ViewBuilder
+    private var optionRows: some View {
+        if hasTime && !isBirthday {
+            DatePicker("Time", selection: $date, displayedComponents: .hourAndMinute)
+                .transition(.blurReplace)
+        }
+        if editsWaitStart && !rule.repeats {
+            DatePicker("Waiting Since", selection: $waitStart.animation(.smooth), in: ...Date.now,
+                       displayedComponents: .date)
+                .transition(.blurReplace)
+        }
+        if notifyBefore {
+            LabeledContent("Reminders", value: "A week before, the day before, on the day")
+                .transition(.blurReplace)
+        }
+        if showsLiveActivity {
+            Picker("Live Activity", selection: $liveActivityLead) {
+                Text("On the Day").tag(0)
+                Text("1 Day Before").tag(1)
+                Text("3 Days Before").tag(3)
+                Text("A Week Before").tag(7)
+            }
+            .transition(.blurReplace)
+        }
+    }
+
+    /// Turning the time on starts it at the next full hour.
+    private func setTime(_ isOn: Bool) {
+        hasTime = isOn
+        guard isOn else { return }
+        hasWindow = false
+        if countdown?.hasTime != true {
+            let hour = (Calendar.app.component(.hour, from: .now) + 1) % 24
+            date = Calendar.app.date(bySettingHour: hour, minute: 0, second: 0, of: date) ?? date
+        }
+    }
+
     private func save() {
         let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
         let finalNote = trimmedNote.isEmpty ? nil : trimmedNote
@@ -319,14 +438,26 @@ struct CountdownEditor: View {
         if let end = finalRule.end, end < date {
             finalRule.end = date
         }
+        let finalWindowEnd = showsWindow ? max(windowEnd, date) : nil
+        let finalHasTime = hasTime && !isBirthday && finalWindowEnd == nil
+        // A time is to the minute.
+        let time = Calendar.app.dateComponents([.hour, .minute], from: date)
+        let finalDate = finalHasTime
+            ? Calendar.app.date(bySettingHour: time.hour ?? 0, minute: time.minute ?? 0, second: 0, of: date) ?? date
+            : date
 
         if let countdown {
             countdown.title = trimmedTitle
             // A first day set by hand is taken as the real one, so a yearly day counts years from it.
-            if countdown.date != date {
+            if countdown.date != finalDate {
                 countdown.countsYears = true
             }
-            countdown.date = date
+            countdown.date = finalDate
+            countdown.hasTime = finalHasTime
+            countdown.windowEnd = finalWindowEnd
+            if editsWaitStart {
+                countdown.createdAt = waitStart
+            }
             countdown.rule = finalRule
             countdown.symbol = symbol
             countdown.color = color
@@ -336,10 +467,11 @@ struct CountdownEditor: View {
             countdown.note = finalNote
             countdown.isBirthday = isBirthday
             countdown.numberStyle = numberStyle
-            if showsLiveActivity && !countdown.showsLiveActivity {
+            if showsLiveActivity && (!countdown.showsLiveActivity || countdown.liveActivityLead != liveActivityLead) {
                 LiveActivities.allowRestart(of: countdown.id)
             }
             countdown.showsLiveActivity = showsLiveActivity
+            countdown.liveActivityLead = liveActivityLead
             // Moved to a day still ahead, or made to repeat: it's upcoming again.
             if !countdown.hasPassed() {
                 countdown.isArchived = false
@@ -347,7 +479,7 @@ struct CountdownEditor: View {
             savedEdits += 1
         } else {
             // New countdowns go on top.
-            let newCountdown = Countdown(title: trimmedTitle, symbol: symbol, color: color, date: date,
+            let newCountdown = Countdown(title: trimmedTitle, symbol: symbol, color: color, date: finalDate,
                                          rule: finalRule, note: finalNote,
                                          sortOrder: Countdown.topOrders(1, above: countdowns)[0])
             newCountdown.tinted = tinted
@@ -356,6 +488,12 @@ struct CountdownEditor: View {
             newCountdown.isBirthday = isBirthday
             newCountdown.showsLiveActivity = showsLiveActivity
             newCountdown.numberStyle = numberStyle
+            newCountdown.hasTime = finalHasTime
+            newCountdown.windowEnd = finalWindowEnd
+            newCountdown.liveActivityLead = liveActivityLead
+            if editsWaitStart {
+                newCountdown.createdAt = waitStart
+            }
             context.insert(newCountdown)
         }
         saveChanges(context)

@@ -103,3 +103,29 @@ extension View {
             .accessibilityHidden(true)
     }
 }
+
+/// A round button under a countdown's date, like the ones under a new reminder: gray while off,
+/// in the countdown's color once on. Turning one on brings up its setting underneath.
+struct OptionChip: View {
+    let title: String
+    let symbol: String
+    let isOn: Bool
+    let tint: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 17, weight: .semibold))
+                // Plain colors: inside a button, `.primary` and the like take on the button's tint.
+                .foregroundStyle(isOn ? tint : Color.primary.opacity(0.75))
+                .frame(width: 46, height: 46)
+                .background(isOn ? tint.opacity(0.22) : Color.primary.opacity(0.08), in: Circle())
+                .animation(.smooth(duration: 0.3), value: isOn)
+        }
+        // Borderless, so each chip in the row is its own button rather than the whole row being one.
+        .buttonStyle(.borderless)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+}
