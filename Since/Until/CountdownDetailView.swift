@@ -11,6 +11,7 @@ struct CountdownDetailView: View {
     @Environment(\.modelContext) private var context
     @State private var isEditing = false
     @State private var converting: Countdown?
+    @State private var isPostponing = false
     /// The calendar wave plays once per opening, not again when the card scrolls back into view.
     @State private var heroRevealed = false
     /// Turns true when the page opens; the blocks under the calendar then blur in one after another.
@@ -51,6 +52,12 @@ struct CountdownDetailView: View {
                 }
                 .detailCard()
                 .blurIn(contentShown, delay: 0.1)
+
+                if !countdown.postponedFrom.isEmpty {
+                    PostponedCard(countdown: countdown)
+                        .detailCard()
+                        .blurIn(contentShown, delay: 0.12)
+                }
 
                 if countdown.rule.repeats && !countdown.hasPassed() {
                     ComingUpCard(countdown: countdown)
@@ -124,6 +131,9 @@ struct CountdownDetailView: View {
             CountdownEditor(countdown: countdown, onDelete: onDelete)
         }
         .countSinceAlert($converting, onDone: onCountedSince)
+        .sheet(isPresented: $isPostponing) {
+            PostponeSheet(countdown: countdown)
+        }
     }
 
     /// On the day: mark it done. A repeating one moves on to its next time, a one-off one goes to Past.
@@ -145,6 +155,9 @@ struct CountdownDetailView: View {
             .tint(tint)
             .controlSize(.large)
             .font(.subheadline.weight(.semibold))
+            if !countdown.rule.repeats {
+                postponeButton
+            }
         }
         .padding(.vertical, 8)
         .sensoryFeedback(.success, trigger: countdown.doneDay)
@@ -182,8 +195,24 @@ struct CountdownDetailView: View {
             .font(.subheadline.weight(.semibold))
             .lineLimit(1)
             .controlSize(.large)
+            if !countdown.rule.repeats {
+                postponeButton
+            }
         }
         .padding(.vertical, 8)
+    }
+
+    /// It didn't happen, or won't: move it to a later day, keeping this one in its history.
+    private var postponeButton: some View {
+        Button {
+            isPostponing = true
+        } label: {
+            Label("Postpone…", systemImage: "calendar.badge.clock")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.glass)
+        .controlSize(.large)
+        .font(.subheadline.weight(.semibold))
     }
 
     private var summary: some View {
@@ -459,5 +488,67 @@ struct TimeLeftCard: View {
         if let countdown = countdowns.first {
             CountdownDetailView(countdown: countdown, onDelete: {}, onCountedSince: {})
         }
+    }
+}
+
+/// The days a countdown was set for before it was postponed: "Oct 10 → Oct 14 → Oct 18".
+struct PostponedCard: View {
+    let countdown: Countdown
+
+    var body: some View {
+        let tint = countdown.color.color
+        let times = countdown.postponedFrom.count
+        let now = countdown.window()?.rangeFormat ?? countdown.date.formatted(.dateTime.month(.abbreviated).day())
+
+        VStack(alignment: .leading, spacing: 14) {
+            CardHeader(title: times == 1 ? "Postponed Once" : "Postponed \(times) Times", symbol: "calendar.badge.clock",
+                       tint: tint, text: "From the day it was first set for to now.")
+            // The days it was set for, struck through, then the one it's set for now.
+            FlowingDays(days: countdown.postponedFrom.map { $0.formatted(.dateTime.month(.abbreviated).day()) },
+                        current: now, tint: tint)
+        }
+        .padding(.vertical, 8)
+    }
+}
+
+private struct FlowingDays: View {
+    let days: [String]
+    let current: String
+    let tint: Color
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            row
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(Array(days.enumerated()), id: \.offset) { _, day in
+                    old(day)
+                }
+                Text(current)
+                    .font(.headline)
+                    .foregroundStyle(tint)
+            }
+        }
+    }
+
+    private var row: some View {
+        HStack(spacing: 8) {
+            ForEach(Array(days.enumerated()), id: \.offset) { _, day in
+                old(day)
+                Image(systemName: "arrow.right")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.tertiary)
+            }
+            Text(current)
+                .font(.headline)
+                .foregroundStyle(tint)
+        }
+        .lineLimit(1)
+    }
+
+    private func old(_ day: String) -> some View {
+        Text(day)
+            .font(.subheadline.weight(.semibold))
+            .strikethrough()
+            .foregroundStyle(.secondary)
     }
 }

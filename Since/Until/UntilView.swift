@@ -27,6 +27,7 @@ struct UntilView: View {
     @State private var editing: Countdown?
     @State private var deleting: Countdown?
     @State private var converting: Countdown?
+    @State private var postponing: Countdown?
     /// Just moved to Past; the toast can still take it back. Kept by id, so a countdown deleted meanwhile
     /// just drops out of the query instead of being touched after it's gone.
     @State private var archivedRecentlyID: UUID?
@@ -235,6 +236,9 @@ struct UntilView: View {
             }
             .sheet(isPresented: $isShowingSettings) {
                 SettingsView()
+            }
+            .sheet(item: $postponing) { countdown in
+                PostponeSheet(countdown: countdown)
             }
             .sheet(item: $editing) { countdown in
                 CountdownEditor(countdown: countdown)
@@ -457,9 +461,14 @@ extension UntilView {
                 Button("Not Done", systemImage: "arrow.uturn.backward") {
                     undoDone(countdown)
                 }
-            } else if countdown.daysLeft() == 0 && !countdown.isArchived {
+            } else if countdown.isTheDay() && !countdown.isArchived {
                 Button("Mark as Done", systemImage: "checkmark.circle") {
                     markDone(countdown)
+                }
+            }
+            if !countdown.rule.repeats && !countdown.isTimer {
+                Button("Postpone…", systemImage: "calendar.badge.clock") {
+                    postponing = countdown
                 }
             }
             if !countdown.isArchived {
