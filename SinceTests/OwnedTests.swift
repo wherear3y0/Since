@@ -52,6 +52,19 @@ struct OwnedTests {
         #expect(phone.nextAnniversary(now: date(2026, 10, 2), calendar: calendar) == nil)
     }
 
+    @Test func aParcelThatCameIsOwned() {
+        let parcel = Countdown(title: "Headphones", symbol: "headphones", color: .orange, date: date(2026, 10, 4))
+        parcel.isParcel = true
+        parcel.photoData = Data([7])
+        parcel.markDone(now: date(2026, 10, 2), calendar: calendar)
+        let owned = Counter(owning: parcel, sortOrder: 3, now: date(2026, 10, 3))
+        #expect(owned.kind == .owned)
+        #expect(owned.title == "Headphones")
+        #expect(owned.photoData == Data([7]))
+        #expect(ymd(owned.startDate) == day(2026, 10, 2))
+        #expect(owned.sortOrder == 3)
+    }
+
     @Test func theDayItWasGot() {
         let now = date(2026, 10, 1)
         let got = { (lines: [String]) in ymd(ParcelParser.parse(lines, now: now, calendar: calendar).got) }

@@ -44,6 +44,12 @@ struct CountdownDetailView: View {
                         .blurIn(contentShown, delay: 0.05)
                 }
 
+                if countdown.isParcel && countdown.isArchived {
+                    receivedCard(tint: tint)
+                        .detailCard()
+                        .blurIn(contentShown, delay: 0.05)
+                }
+
                 if showsTimeCard {
                     Group {
                         if countdown.hasPassed() {
@@ -165,11 +171,47 @@ struct CountdownDetailView: View {
         }
     }
 
-    /// A parcel past its window is still on its way: it's waited for, not counted since.
+    /// A parcel has no time left once it's here, and isn't counted since when it's late: it's still on its way.
     private var showsTimeCard: Bool {
-        !(countdown.isParcel && !countdown.isArchived && countdown.hasPassed())
+        !countdown.isParcel || (!countdown.isArchived && !countdown.hasPassed())
     }
 
+    /// A parcel that's here can go on as a thing owned, counted on the Since tab.
+    private func receivedCard(tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            CardHeader(title: "Received", symbol: "checkmark.seal.fill", tint: tint,
+                       text: "Add it to Owned to count the days you’ve had it, on the Since tab.")
+            Button {
+                addToOwned()
+            } label: {
+                Label("Add to Owned", systemImage: "bag.badge.plus")
+                    .frame(maxWidth: .infinity)
+                    .foregroundStyle(.black.opacity(0.8))
+            }
+            .buttonStyle(.glassProminent)
+            .tint(tint)
+            Button {
+                withAnimation(.smooth) { countdown.undoDone() }
+                saveChanges(context)
+            } label: {
+                Label("Not Received", systemImage: "arrow.uturn.backward")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.glass)
+        }
+        .controlSize(.large)
+        .font(.subheadline.weight(.semibold))
+        .padding(.vertical, 8)
+    }
+
+    /// The parcel turns into a thing owned, which blurs in on the Since tab.
+    private func addToOwned() {
+        let counters = (try? context.fetch(FetchDescriptor<Counter>())) ?? []
+        context.insert(Counter(owning: countdown, sortOrder: (counters.map(\.sortOrder).max() ?? -1) + 1))
+        context.delete(countdown)
+        saveChanges(context)
+        onCountedSince()
+    }
 
     private var doneTitle: String {
         if countdown.isInWindow() { return "Any Day Now" }

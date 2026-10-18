@@ -478,6 +478,11 @@ extension UntilView {
                     markDone(countdown)
                 }
             }
+            if countdown.isParcel && countdown.isArchived {
+                Button("Add to Owned", systemImage: "bag.badge.plus") {
+                    addToOwned(countdown)
+                }
+            }
             // A synced one follows its calendar; it's postponed there.
             if !countdown.rule.repeats && !countdown.isTimer && !countdown.isSynced {
                 Button("Postpone…", systemImage: "calendar.badge.clock") {
@@ -609,6 +614,18 @@ extension UntilView {
         }
         RemindersBridge.setCompleted(true, for: countdown)
         saveChanges(context)
+    }
+
+    /// A parcel that came turns into a thing owned, which blurs in on the Since tab.
+    private func addToOwned(_ countdown: Countdown) {
+        let counters = (try? context.fetch(FetchDescriptor<Counter>())) ?? []
+        context.insert(Counter(owning: countdown, sortOrder: (counters.map(\.sortOrder).max() ?? -1) + 1))
+        if archivedRecentlyID == countdown.id {
+            archivedRecentlyID = nil
+        }
+        context.delete(countdown)
+        saveChanges(context)
+        onCountedSince()
     }
 
     private func undoDone(_ countdown: Countdown) {

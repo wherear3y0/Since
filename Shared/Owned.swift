@@ -28,6 +28,14 @@ nonisolated enum GoneReason: String, CaseIterable, Identifiable {
 }
 
 extension Counter {
+    /// A thing owned from a parcel that came: its name, icon, color and picture, counted from the day it came.
+    convenience init(owning parcel: Countdown, sortOrder: Int, now: Date = .now) {
+        self.init(title: parcel.title, symbol: parcel.symbol, color: parcel.color, kind: .owned,
+                  startDate: parcel.doneDay ?? min(parcel.target(), now), note: parcel.note, sortOrder: sortOrder)
+        tinted = parcel.tinted
+        photoData = parcel.photoData
+    }
+
     var isOwned: Bool { kind == .owned }
 
     /// An owned thing that's gone: it's kept in Past, its count stopped on that day.
