@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+import WidgetKit
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -325,15 +326,16 @@ struct SettingsView: View {
         do {
             pendingImport = try Backup.decode(Data(contentsOf: url))
         } catch {
-            message = "That file isn’t a Since backup."
+            message = (error as? Backup.RestoreError)?.localizedDescription ?? "That file isn’t a Since backup."
         }
     }
 
     private func restorePendingImport() {
         guard let backup = pendingImport else { return }
         do {
-            try backup.restore(into: context)
-            saveChanges(context)
+            try backup.restoreAndSave(into: context)
+            WidgetCenter.shared.reloadAllTimelines()
+            refreshMirrors(context)
             message = "Restored \(backup.counters.count) counters and \(backup.countdowns?.count ?? 0) countdowns."
             // On a new iPhone nothing has asked for notifications yet, so restored reminders would never show.
             if backup.counters.contains(where: \.notifyMilestones) || (backup.countdowns ?? []).contains(where: \.notifyBefore) {
@@ -344,7 +346,7 @@ struct SettingsView: View {
                 }
             }
         } catch {
-            message = "The backup couldn’t be restored."
+            message = (error as? Backup.RestoreError)?.localizedDescription ?? "The backup couldn’t be restored. Your previous data has been kept."
         }
         pendingImport = nil
     }

@@ -156,7 +156,9 @@ struct Backup: Codable {
     static func decode(_ data: Data) throws -> Backup {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(Backup.self, from: data)
+        let backup = try decoder.decode(Backup.self, from: data)
+        try backup.validate()
+        return backup
     }
 
     func encoded() throws -> Data {
@@ -166,9 +168,76 @@ struct Backup: Codable {
         return try encoder.encode(self)
     }
 
+    enum RestoreError: LocalizedError {
+        case unsupportedVersion, invalidData, pendingChanges
+
+        var errorDescription: String? {
+            switch self {
+            case .unsupportedVersion: "This backup was made by an unsupported version of Since."
+            case .invalidData: "This backup contains invalid or duplicate records. Your data hasn’t been replaced."
+            case .pendingChanges: "Save your current changes before restoring a backup."
+            }
+        }
+    }
+
+    /// Validate before deleting anything. Codable checks types, but not usable dates, IDs or repeat rules.
+    func validate() throws {
+        guard version == 1 else { throw RestoreError.unsupportedVersion }
+        func validDate(_ date: Date) -> Bool {
+            date.timeIntervalSince1970.isFinite && date.timeIntervalSince1970 > -62_135_596_800
+                && date.timeIntervalSince1970 < 253_402_300_800
+        }
+        var resetIDs = Set<UUID>()
+        guard Set(counters.map(\.id)).count == counters.count,
+              Set((countdowns ?? []).map(\.id)).count == (countdowns ?? []).count else {
+            throw RestoreError.invalidData
+        }
+        for counter in counters {
+            guard [counter.startDate, counter.createdAt].allSatisfy(validDate),
+                  counter.goneDate.map(validDate) ?? true else { throw RestoreError.invalidData }
+            for reset in counter.resets {
+                guard validDate(reset.date), resetIDs.insert(reset.id).inserted else { throw RestoreError.invalidData }
+            }
+        }
+        for countdown in countdowns ?? [] {
+            let dates = [countdown.date, countdown.createdAt, countdown.windowEnd, countdown.doneDay,
+                         countdown.storageUntil, countdown.repeatRule?.end].compactMap { $0 }
+            guard dates.allSatisfy(validDate), (countdown.postponedFrom ?? []).allSatisfy(validDate) else {
+                throw RestoreError.invalidData
+            }
+            if let rule = countdown.repeatRule {
+                guard (1...10_000).contains(rule.interval), rule.weekdays.allSatisfy({ (1...7).contains($0) }) else {
+                    throw RestoreError.invalidData
+                }
+            }
+            if countdown.placeLatitude != nil || countdown.placeLongitude != nil {
+                guard let latitude = countdown.placeLatitude, let longitude = countdown.placeLongitude,
+                      latitude.isFinite, longitude.isFinite, (-90...90).contains(latitude),
+                      (-180...180).contains(longitude) else { throw RestoreError.invalidData }
+            }
+        }
+    }
+
+    /// Commit replacement once. A failure restores the original records and never reports success.
+    func restoreAndSave(into context: ModelContext) throws {
+        try validate()
+        guard !context.hasChanges else { throw RestoreError.pendingChanges }
+        let autosave = context.autosaveEnabled
+        context.autosaveEnabled = false
+        defer { context.autosaveEnabled = autosave }
+        do {
+            try restore(into: context)
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+    }
+
     /// Deletes every counter, then inserts the ones from the backup. Countdowns are replaced the same way,
     /// unless the backup is older than countdowns and has none: then the ones here are kept.
     func restore(into context: ModelContext) throws {
+        try validate()
         // One by one, so the cascade removes resets too and unsaved objects go as well.
         for counter in try context.fetch(FetchDescriptor<Counter>()) {
             context.delete(counter)

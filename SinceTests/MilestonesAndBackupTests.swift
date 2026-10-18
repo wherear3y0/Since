@@ -231,4 +231,45 @@ struct MilestonesAndBackupTests {
 
         #expect(try context.fetch(FetchDescriptor<Countdown>()).count == 1)
     }
+    @Test func invalidBackupDoesNotDeleteExistingRecords() throws {
+        let container = try ModelContainer(for: Counter.self, Reset.self, Countdown.self,
+                                           configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let original = Counter(title: "Keep me", symbol: "star", color: .blue, kind: .quit, startDate: date(2026, 1, 1))
+        context.insert(original)
+        try context.save()
+        var backup = Backup(counters: [])
+        backup.version = 99
+        #expect(throws: Backup.RestoreError.unsupportedVersion) { try backup.restoreAndSave(into: context) }
+        #expect(try context.fetch(FetchDescriptor<Counter>()).map(\.title) == ["Keep me"])
+        #expect(!context.hasChanges)
+
+        backup = Backup(counters: [original, original])
+        #expect(throws: Backup.RestoreError.invalidData) { try backup.restore(into: context) }
+        #expect(try context.fetchCount(FetchDescriptor<Counter>()) == 1)
+
+        let countdown = Countdown(title: "Bad repeat", symbol: "star", color: .cyan, date: date(2026, 10, 20),
+                                  rule: RepeatRule(frequency: .weekly, weekdays: [0, 8]))
+        backup = Backup(counters: [], countdowns: [countdown])
+        #expect(throws: Backup.RestoreError.invalidData) { try backup.restoreAndSave(into: context) }
+        #expect(try context.fetchCount(FetchDescriptor<Counter>()) == 1)
+    }
+
+    @Test func restoredBackupIsPersistedAndPendingEditsAreProtected() throws {
+        let container = try ModelContainer(for: Counter.self, Reset.self, Countdown.self,
+                                           configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let original = Counter(title: "Original", symbol: "star", color: .blue, kind: .quit, startDate: date(2026, 1, 1))
+        context.insert(original)
+        let replacement = Counter(title: "Replacement", symbol: "star", color: .blue, kind: .quit, startDate: date(2026, 2, 1))
+        let backup = Backup(counters: [replacement])
+        #expect(throws: Backup.RestoreError.pendingChanges) { try backup.restoreAndSave(into: context) }
+        #expect(original.title == "Original")
+        try context.save()
+        try backup.restoreAndSave(into: context)
+        #expect(!context.hasChanges)
+        let fresh = ModelContext(container)
+        #expect(try fresh.fetch(FetchDescriptor<Counter>()).map(\.title) == ["Replacement"])
+    }
+
 }
