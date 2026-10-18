@@ -75,6 +75,16 @@ final class Countdown {
     var syncSourceRaw: String = ""
     /// The calendar or Reminders list it comes from, so it goes when that one is no longer synced.
     var syncCalendarID: String? = nil
+    /// A parcel on its way: listed with the parcels, and "Received" rather than "Done".
+    var isParcel: Bool = false
+    var trackingNumber: String? = nil
+    /// Who brings it (a `Carrier`); empty when it isn't known.
+    var carrierRaw: String = ""
+    var shopName: String? = nil
+    /// The order's page at the shop.
+    var orderURL: String? = nil
+    /// A picture of what's coming, kept small.
+    @Attribute(.externalStorage) var photoData: Data? = nil
 
     init(title: String, symbol: String, color: CounterColor, date: Date, rule: RepeatRule = .never,
          note: String? = nil, sortOrder: Int = 0) {

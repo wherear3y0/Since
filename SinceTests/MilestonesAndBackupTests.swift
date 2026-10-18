@@ -127,6 +127,10 @@ struct MilestonesAndBackupTests {
         countdown.travelMinutes = 25
         countdown.travelMode = .transit
         countdown.remindsToLeave = true
+        countdown.isParcel = true
+        countdown.trackingNumber = "RA123456785RU"
+        countdown.shopName = "Ozon"
+        countdown.photoData = Data([1, 2, 3])
         context.insert(countdown)
         // A timer isn't kept.
         let timer = Countdown(title: "Tea", symbol: "timer", color: .orange, date: date(2026, 10, 1))
@@ -170,6 +174,10 @@ struct MilestonesAndBackupTests {
         #expect(restoredCountdowns[0].travelMinutes == 25)
         #expect(restoredCountdowns[0].travelMode == .transit)
         #expect(restoredCountdowns[0].remindsToLeave)
+        #expect(restoredCountdowns[0].isParcel)
+        #expect(restoredCountdowns[0].carrier == .russianPost)
+        #expect(restoredCountdowns[0].parcelLine == "Ozon · RA123…85RU")
+        #expect(restoredCountdowns[0].photoData == Data([1, 2, 3]))
     }
 
     @Test func backupsFromBeforeSlipsStillRestore() throws {

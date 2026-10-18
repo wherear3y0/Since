@@ -287,3 +287,17 @@ nonisolated enum ParcelParser {
         return best.count > 60 ? String(best.prefix(57)) + "…" : best
     }
 }
+
+extension Countdown {
+    var carrier: Carrier? {
+        get { Carrier(rawValue: carrierRaw) ?? trackingNumber.flatMap(Carrier.guess) }
+        set { carrierRaw = newValue?.rawValue ?? "" }
+    }
+
+    /// "Ozon · RA123…85RU": where it's from and its number, shortened.
+    var parcelLine: String? {
+        let number = trackingNumber.map { $0.count > 12 ? "\($0.prefix(5))…\($0.suffix(4))" : $0 }
+        let parts = [shopName, number].compactMap { $0 }.filter { !$0.isEmpty }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+}

@@ -91,6 +91,13 @@ struct Backup: Codable {
         var travelMinutes: Int?
         var travelMode: String?
         var remindsToLeave: Bool?
+        /// Missing in backups made before parcels.
+        var isParcel: Bool?
+        var trackingNumber: String?
+        var carrier: String?
+        var shopName: String?
+        var orderURL: String?
+        var photo: Data?
     }
 
     var version = 1
@@ -117,7 +124,9 @@ struct Backup: Codable {
                           placeName: countdown.placeName, placeAddress: countdown.placeAddress,
                           placeLatitude: countdown.placeLatitude, placeLongitude: countdown.placeLongitude,
                           travelMinutes: countdown.travelMinutes, travelMode: countdown.travelModeRaw,
-                          remindsToLeave: countdown.remindsToLeave)
+                          remindsToLeave: countdown.remindsToLeave, isParcel: countdown.isParcel,
+                          trackingNumber: countdown.trackingNumber, carrier: countdown.carrierRaw,
+                          shopName: countdown.shopName, orderURL: countdown.orderURL, photo: countdown.photoData)
         }
         self.counters = counters.map { counter in
             CounterData(id: counter.id, title: counter.title, symbol: counter.symbol, color: counter.colorName,
@@ -220,6 +229,12 @@ struct Backup: Codable {
             countdown.travelMinutes = data.travelMinutes
             countdown.travelModeRaw = data.travelMode ?? TravelMode.car.rawValue
             countdown.remindsToLeave = data.remindsToLeave ?? false
+            countdown.isParcel = data.isParcel ?? false
+            countdown.trackingNumber = data.trackingNumber
+            countdown.carrierRaw = data.carrier ?? ""
+            countdown.shopName = data.shopName
+            countdown.orderURL = data.orderURL
+            countdown.photoData = data.photo
             context.insert(countdown)
         }
     }
