@@ -68,7 +68,16 @@ nonisolated struct ParcelDraft: Equatable {
 /// ("4–15 октября", "Oct 28 – Nov 2", "завтра"), the tracking number, the shop and the product's name.
 nonisolated enum ParcelParser {
     static func parse(_ lines: [String], now: Date = .now, calendar: Calendar = .app) -> ParcelDraft {
-        let lines = lines.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        // A name broken over two lines with a hyphen ("Sony WH-" / "1000XM5") is put back together.
+        var joined: [String] = []
+        for line in lines.map({ $0.trimmingCharacters(in: .whitespaces) }) where !line.isEmpty {
+            if let last = joined.last, last.hasSuffix("-"), last.count > 1 {
+                joined[joined.count - 1] = last + line
+            } else {
+                joined.append(line)
+            }
+        }
+        let lines = joined
         var draft = ParcelDraft()
         draft.shop = shop(in: lines)
         (draft.trackingNumber, draft.carrier) = tracking(in: lines)

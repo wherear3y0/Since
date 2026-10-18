@@ -35,6 +35,12 @@ struct ParcelTests {
         #expect(draft.title == "Наушники беспроводные Sony WH-1000XM5")
     }
 
+    @Test func aNameBrokenOverTwoLines() {
+        let draft = ParcelParser.parse(["Наушники беспроводные Sony WH-", "1000XM5", "Доставка 21–28 октября"],
+                                       now: now, calendar: calendar)
+        #expect(draft.title == "Наушники беспроводные Sony WH-1000XM5")
+    }
+
     @Test func anEnglishOrderAcrossMonths() {
         let draft = ParcelParser.parse([
             "AliExpress", "Ordered Sep 30", "Mechanical keyboard with brown switches",
