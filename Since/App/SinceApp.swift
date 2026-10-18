@@ -35,6 +35,7 @@ struct SinceApp: App {
         .onChange(of: scenePhase) { _, phase in
             // A new day can bring a new milestone into the scheduling window.
             if phase == .active {
+                Store.removeEndedTimers(Store.container.mainContext)
                 refreshMirrors(Store.container.mainContext)
             }
         }

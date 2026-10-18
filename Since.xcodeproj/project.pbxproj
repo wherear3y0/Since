@@ -20,6 +20,7 @@
 		1EE7F006EFA486339B30E0EC /* SymbolPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1998AEBEF753AB605A774D10 /* SymbolPicker.swift */; };
 		22A3DC7E436E1BF221D35CBF /* TabWave.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108797F464215F67DAA31DA5 /* TabWave.swift */; };
 		23E5DBA9412F0432AF447263 /* LiveActivities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B608E953A0589558D3CF8882 /* LiveActivities.swift */; };
+		242C9503F8E038A162A889D1 /* TimerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9D0657FF3FE95F13346E25 /* TimerSheet.swift */; };
 		26E8C15AE7E834891DE10A65 /* HabitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74743AFF433DB4CE578B19C2 /* HabitTests.swift */; };
 		27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487E6968B8B9CED3CF2C9F /* Palette.swift */; };
 		2FC7D75DCA7C6EE02A8A2A44 /* HeatmapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D2AD3EEDB36F1A2B314BC53 /* HeatmapView.swift */; };
@@ -47,6 +48,7 @@
 		6C86446898F6AB7A371084CB /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F4826166E5D9C411E574AE /* Habit.swift */; };
 		6E43F7715CD0E42C52532651 /* CountdownEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E445EF58E5002FF7A2273A3 /* CountdownEditor.swift */; };
 		80E008887769E725375324D6 /* PressEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7715FFBD6E1378B16839A8ED /* PressEffect.swift */; };
+		821DC2C4E45B6A26FEDF8703 /* CompletionBurst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC16ADB0799153DB504F61E /* CompletionBurst.swift */; };
 		8725BE5FA717E194F3A7B8ED /* StreakChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E3A5464C2BA6CD190ED2A51 /* StreakChart.swift */; };
 		8925D4C9877595E13C99519E /* CounterKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC1C1E5DB9F0A4985B444B83 /* CounterKind.swift */; };
 		8F172ECD4711EBC69ED4475A /* ImportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7284C1015E85D2703EE249F /* ImportTests.swift */; };
@@ -134,6 +136,7 @@
 		00BBB616E5F9E7CB37FDDFBC /* CountdownLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownLiveActivity.swift; sourceTree = "<group>"; };
 		017679D7A023A295B4BC7A02 /* DayMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayMath.swift; sourceTree = "<group>"; };
 		02A6A7BC5E8492B366AA8F51 /* SinceWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SinceWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B9D0657FF3FE95F13346E25 /* TimerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSheet.swift; sourceTree = "<group>"; };
 		0C164DCB4A53E54B334D5D41 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		108797F464215F67DAA31DA5 /* TabWave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabWave.swift; sourceTree = "<group>"; };
 		11C424BC505F2C411FAB3103 /* Backup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
@@ -159,6 +162,7 @@
 		47F2F9FB4D2F5FED1B18F0A0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		48F780858E40DE674183F78D /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		4BFEB5A2A0F2402D4FB5D7C1 /* Milestones.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Milestones.swift; sourceTree = "<group>"; };
+		4CC16ADB0799153DB504F61E /* CompletionBurst.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionBurst.swift; sourceTree = "<group>"; };
 		4F59E11FC4F1BD810B383204 /* UntilMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilMath.swift; sourceTree = "<group>"; };
 		5234E8AF202D3DFC0FB13848 /* CounterWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterWidget.swift; sourceTree = "<group>"; };
 		57F4826166E5D9C411E574AE /* Habit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Habit.swift; sourceTree = "<group>"; };
@@ -362,11 +366,13 @@
 			isa = PBXGroup;
 			children = (
 				87438E01D89F98EBCA739C5A /* CalendarImport.swift */,
+				4CC16ADB0799153DB504F61E /* CompletionBurst.swift */,
 				A9BA6312DB34532977870594 /* ContactBirthdays.swift */,
 				8E72A3EEC696BFE2D4E3CA69 /* CountdownCalendarCard.swift */,
 				385CD372B7F7D896D8724CB4 /* CountdownCard.swift */,
 				DD58300EF8A73F6B24D66FEF /* CountdownDetailView.swift */,
 				EC18B3B741CAB65DC52065C5 /* PostponeSheet.swift */,
+				0B9D0657FF3FE95F13346E25 /* TimerSheet.swift */,
 				E68D7D478B4571160C35F82A /* UntilView.swift */,
 			);
 			path = Until;
@@ -511,6 +517,7 @@
 				45A6B0874C7247CFDE3BC843 /* CardGrid.swift in Sources */,
 				1B5B24DEA26EAD94F27C2880 /* CardSize.swift in Sources */,
 				C67DE2A5029342F21CAE2153 /* CardStyle.swift in Sources */,
+				821DC2C4E45B6A26FEDF8703 /* CompletionBurst.swift in Sources */,
 				06CB2FA6E295DF7AF5B81733 /* ContactBirthdays.swift in Sources */,
 				38CC2A583B6B20D2CF308542 /* Countdown.swift in Sources */,
 				16B374C2CD48938C0364CE9C /* CountdownActivity.swift in Sources */,
@@ -554,6 +561,7 @@
 				8725BE5FA717E194F3A7B8ED /* StreakChart.swift in Sources */,
 				1EE7F006EFA486339B30E0EC /* SymbolPicker.swift in Sources */,
 				22A3DC7E436E1BF221D35CBF /* TabWave.swift in Sources */,
+				242C9503F8E038A162A889D1 /* TimerSheet.swift in Sources */,
 				F1492ECEE2B658ED9196BB38 /* UntilMath.swift in Sources */,
 				AB8B4108222A352AF3D47E75 /* UntilView.swift in Sources */,
 			);

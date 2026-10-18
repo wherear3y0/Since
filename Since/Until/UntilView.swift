@@ -20,6 +20,9 @@ struct UntilView: View {
     @State private var path: [UUID] = []
     @State private var dragged: Countdown?
     @State private var isAdding = false
+    @State private var isAddingTimer = false
+    /// Timers that have just ended, playing their ending before they go.
+    @State private var finishing: Set<UUID> = []
     @State private var isPickingContacts = false
     @State private var isImportingCalendar = false
     @State private var isShowingSettings = false
@@ -58,17 +61,20 @@ struct UntilView: View {
         let reorders: Bool
     }
 
-    /// Pinned first, then the other days ahead, then birthdays (soonest first), then the ones kept in Past.
+    /// Running timers first, then pinned, then the other days ahead, then birthdays (soonest first),
+    /// then the ones kept in Past.
     private var sections: [CardSection] {
-        let upcoming = countdowns.filter { !$0.isArchived }
+        let timers = countdowns.filter(\.isTimer).sorted { $0.date < $1.date }
+        let upcoming = countdowns.filter { !$0.isArchived && !$0.isTimer }
         let pinned = upcoming.filter(\.isPinned)
         let events = upcoming.filter { !$0.isPinned && !$0.isBirthday }
         let birthdays = upcoming.filter { !$0.isPinned && $0.isBirthday }
             .sorted { $0.daysLeft() < $1.daysLeft() }
         // Kept after their day, latest first.
-        let past = countdowns.filter(\.isArchived).sorted { $0.target() > $1.target() }
-        let needsHeadings = !pinned.isEmpty || !birthdays.isEmpty
+        let past = countdowns.filter { $0.isArchived && !$0.isTimer }.sorted { $0.target() > $1.target() }
+        let needsHeadings = !pinned.isEmpty || !birthdays.isEmpty || !timers.isEmpty
         return [
+            CardSection(id: "timers", title: "Timers", items: timers, reorders: false),
             CardSection(id: "pinned", title: "Pinned", items: pinned, reorders: true),
             CardSection(id: "events", title: needsHeadings ? "Events" : nil, items: events, reorders: true),
             CardSection(id: "birthdays", title: "Birthdays", items: birthdays, reorders: false),
@@ -169,6 +175,9 @@ struct UntilView: View {
                 Button("New Countdown", systemImage: "hourglass") {
                     isAdding = true
                 }
+                Button("Timer", systemImage: "timer") {
+                    isAddingTimer = true
+                }
                 Button("Birthdays…", systemImage: "birthday.cake") {
                     isPickingContacts = true
                 }
@@ -237,6 +246,9 @@ struct UntilView: View {
             .sheet(isPresented: $isShowingSettings) {
                 SettingsView()
             }
+            .sheet(isPresented: $isAddingTimer) {
+                TimerSheet()
+            }
             .sheet(item: $postponing) { countdown in
                 PostponeSheet(countdown: countdown)
             }
@@ -257,6 +269,9 @@ struct UntilView: View {
             .countSinceAlert($converting, onDone: onCountedSince)
             .overlay(alignment: .bottom) {
                 toast
+            }
+            .task(id: countdowns.filter(\.isTimer).map(\.date)) {
+                await endTimers()
             }
             .task(id: archivedRecentlyID) {
                 guard archivedRecentlyID != nil else { return }
@@ -353,8 +368,12 @@ struct UntilView: View {
         let slot = CardGridLayout.slots(for: items.map(\.size), firstRow: firstRow)[index]
         // A just-added countdown blurs in on its own, without the wave.
         let isNew = !unrevealed.isEmpty
-        return CountdownCard(countdown: countdown, isReshaping: reshaping.contains(countdown.id)) {
-            path.append(countdown.id)
+        return CountdownCard(countdown: countdown, isReshaping: reshaping.contains(countdown.id),
+                             isFinishing: finishing.contains(countdown.id)) {
+            // A timer has no page of its own.
+            if !countdown.isTimer {
+                path.append(countdown.id)
+            }
         } onCountSince: {
             converting = countdown
         } onArchive: {
@@ -408,9 +427,30 @@ struct UntilView: View {
 }
 
 extension UntilView {
-    /// Long-press menu, laid out like the one on the Since tab.
+    /// Long-press menu, laid out like the one on the Since tab. A timer's has just more time and Stop.
     @ViewBuilder
     private func menu(for countdown: Countdown) -> some View {
+        if countdown.isTimer {
+            timerMenu(for: countdown)
+        } else {
+            countdownMenu(for: countdown)
+        }
+    }
+
+    @ViewBuilder
+    private func timerMenu(for timer: Countdown) -> some View {
+        Button("5 More Minutes", systemImage: "plus") {
+            withAnimation(.smooth) { timer.date = max(timer.date, .now).addingTimeInterval(5 * 60) }
+            saveChanges(context)
+        }
+        Button("Stop Timer", systemImage: "stop.fill", role: .destructive) {
+            withAnimation(.smooth) { context.delete(timer) }
+            saveChanges(context)
+        }
+    }
+
+    @ViewBuilder
+    private func countdownMenu(for countdown: Countdown) -> some View {
         ControlGroup {
             Button("Edit", systemImage: "pencil") {
                 editing = countdown
@@ -562,6 +602,27 @@ extension UntilView {
             countdown.isArchived = isArchived
             archivedRecentlyID = isArchived ? countdown.id : nil
             toastIsDone = false
+        }
+        saveChanges(context)
+    }
+
+    /// Waits for the next timer to end, then lets it play its ending and go. Started again whenever
+    /// a timer is added, extended or stopped.
+    private func endTimers() async {
+        let timers = countdowns.filter(\.isTimer)
+        guard let next = timers.map(\.date).min() else { return }
+        let wait = next.timeIntervalSinceNow
+        if wait > 0 {
+            guard (try? await Task.sleep(for: .seconds(wait))) != nil else { return }
+        }
+        let ended = timers.filter { $0.date <= .now }
+        withAnimation(.smooth) { finishing.formUnion(ended.map(\.id)) }
+        guard (try? await Task.sleep(for: .seconds(1.6))) != nil else { return }
+        withAnimation(.smooth(duration: 0.5)) {
+            for timer in ended {
+                context.delete(timer)
+            }
+            finishing.subtract(ended.map(\.id))
         }
         saveChanges(context)
     }

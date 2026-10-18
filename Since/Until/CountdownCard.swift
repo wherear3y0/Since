@@ -8,6 +8,8 @@ struct CountdownCard: View {
     let countdown: Countdown
     /// The card is changing size: its content is faded out meanwhile.
     var isReshaping = false
+    /// A timer that has just ended, about to go.
+    var isFinishing = false
     let onOpen: () -> Void
     var onCountSince: () -> Void = {}
     var onArchive: () -> Void = {}
@@ -21,10 +23,14 @@ struct CountdownCard: View {
         // A new style swaps in through a blur.
         ZStack(alignment: .topLeading) {
             Group {
-                switch countdown.size {
-                case .m: compact(tint: tint)
-                case .l: wide(tint: tint)
-                case .xl: large(tint: tint)
+                if countdown.isTimer {
+                    timer(tint: tint)
+                } else {
+                    switch countdown.size {
+                    case .m: compact(tint: tint)
+                    case .l: wide(tint: tint)
+                    case .xl: large(tint: tint)
+                    }
                 }
             }
             .id(countdown.style)
@@ -33,6 +39,16 @@ struct CountdownCard: View {
         .reshaping(isReshaping)
         .homeCard(size: countdown.size, color: countdown.color.color, tinted: countdown.tinted,
                   fillLevel: fills ? countdown.progress() : nil, onOpen: onOpen)
+        // A timer that has ended blurs away after its burst. Only the blur is slow; "Time's up" comes at once.
+        .animation(.easeIn(duration: 1.2).delay(0.4)) { card in
+            card
+                .blur(radius: isFinishing ? 8 : 0)
+                .opacity(isFinishing ? 0.5 : 1)
+        }
+        // A timer ending, Done, or a day's time coming while it's on screen.
+        .completionBurst(isActive: isFinishing || countdown.isDone(),
+                         at: countdown.isTimer ? nil : countdown.moment(), symbol: countdown.symbol,
+                         tint: countdown.color.color)
     }
 
     /// A one-off day that has gone by and still waits for a choice.
@@ -58,6 +74,29 @@ struct CountdownCard: View {
     }
 
     // MARK: - Sizes
+
+    /// A timer: the time left ticking down, when it ends, and a bar that fills as it runs.
+    private func timer(tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
+            VStack(alignment: .leading, spacing: 2) {
+                MomentCountdown(moment: countdown.date, size: 40)
+                Text(isFinishing ? "Time’s up" : "ends at \(countdown.date.formatted(date: .omitted, time: .shortened))")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .contentTransition(.opacity)
+            }
+            Spacer(minLength: 0)
+            if countdown.createdAt < countdown.date {
+                ProgressView(timerInterval: countdown.createdAt...countdown.date, countsDown: false) {
+                    EmptyView()
+                } currentValueLabel: {
+                    EmptyView()
+                }
+                .tint(tint)
+            }
+        }
+    }
 
     /// M: title, days to go, the date, and the wait in the countdown's style.
     private func compact(tint: Color) -> some View {

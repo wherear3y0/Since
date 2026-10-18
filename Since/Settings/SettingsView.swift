@@ -144,7 +144,7 @@ struct SettingsView: View {
     private var countdownRemindersSection: some View {
         Section {
             // Kept ones get no reminders, so they aren't listed.
-            ForEach(countdowns.filter { !$0.isArchived }) { countdown in
+            ForEach(countdowns.filter { !$0.isArchived && !$0.isTimer }) { countdown in
                 Toggle(isOn: reminderBinding(for: countdown)) {
                     Label {
                         Text(countdown.title)

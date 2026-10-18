@@ -311,8 +311,9 @@ struct MomentCountdown: View {
 
     var body: some View {
         // Drawn again right at the moment, to turn into "Now"; the timer text ticks by itself until then.
-        // (The schedule's own date is the moment itself even before it, so the clock is read instead.)
-        TimelineView(.explicit([moment])) { _ in
+        // (The schedule's own date is the moment itself even before it, so the clock is read instead; and the
+        // redraw is asked for a moment after it, as it can come a little early.)
+        TimelineView(.explicit([moment, moment.addingTimeInterval(1)])) { _ in
             let now = Date.now
             Group {
                 if now < moment {

@@ -93,10 +93,22 @@ enum Store {
     }
 
     /// All countdowns in the app's order, read in a fresh context (for widgets and intents).
+    /// Timers are left out: they're only for the Until tab and the Lock Screen.
     @MainActor
     static func countdowns() -> [Countdown] {
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<Countdown>(sortBy: [SortDescriptor(\.sortOrder)])
-        return (try? context.fetch(descriptor)) ?? []
+        return ((try? context.fetch(descriptor)) ?? []).filter { !$0.isTimer }
+    }
+
+    /// Timers that have ended go away; run when the app comes back.
+    @MainActor
+    static func removeEndedTimers(_ context: ModelContext, now: Date = .now) {
+        let ended = ((try? context.fetch(FetchDescriptor<Countdown>())) ?? []).filter { $0.isTimer && $0.date <= now }
+        guard !ended.isEmpty else { return }
+        for timer in ended {
+            context.delete(timer)
+        }
+        try? context.save()
     }
 }
