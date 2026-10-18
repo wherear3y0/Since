@@ -102,4 +102,22 @@ struct UntilTimeTests {
         #expect(timer.wantsLiveActivity(now: date(2026, 10, 5, hour: 14), calendar: calendar))
         #expect(!timer.wantsLiveActivity(now: date(2026, 10, 5, hour: 16), calendar: calendar))
     }
+
+    @Test func remindersComeAtTheTimeAndAheadOfTheWindow() {
+        let concert = countdown(on: date(2026, 10, 25, hour: 19, minute: 30))
+        concert.hasTime = true
+        let reminders = Milestones.reminders(for: concert, now: date(2026, 10, 15), calendar: calendar)
+        #expect(reminders.last?.isExact == true)
+        #expect(reminders.last?.date == date(2026, 10, 25, hour: 19, minute: 30))
+
+        let parcel = countdown(on: date(2026, 10, 25))
+        parcel.windowEnd = date(2026, 11, 2)
+        let due = Milestones.reminders(for: parcel, now: date(2026, 10, 15), calendar: calendar)
+        #expect(due.map { calendar.component(.day, from: $0.date) } == [18, 24, 25])
+
+        let timer = countdown(on: date(2026, 10, 15, hour: 16))
+        timer.isTimer = true
+        #expect(Milestones.reminders(for: timer, now: date(2026, 10, 15, hour: 15), calendar: calendar).map(\.isExact) == [true])
+        #expect(Milestones.reminders(for: timer, now: date(2026, 10, 15, hour: 17), calendar: calendar).isEmpty)
+    }
 }
