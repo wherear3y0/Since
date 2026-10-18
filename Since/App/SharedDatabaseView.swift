@@ -18,12 +18,12 @@ struct SharedDatabaseView: View {
     var body: some View {
         RootView()
             .onChange(of: scenePhase) { _, phase in
-                if phase == .active {
-                    refresh(force: true)
-                    Store.removeEndedTimers(context)
-                    refreshMirrors(context)
-                    Task { await CalendarSyncRunner.run(context) }
-                }
+                guard phase == .active else { return }
+                // Widgets, Siri and the Lock Screen may have written while Since was away.
+                let context = refresh(force: true) ?? context
+                Store.removeEndedTimers(context)
+                refreshMirrors(context)
+                Task { await CalendarSyncRunner.run(context) }
             }
             .saveFailureAlert()
             .environment(\.modelContext, context)
@@ -44,23 +44,29 @@ struct SharedDatabaseView: View {
                 Store.removeEndedTimers(context)
                 refreshMirrors(context)
                 await CalendarSyncRunner.run(context)
+            }
+            // Started again with every phase, so it sees the current one: a task that ran from launch
+            // kept the phase it started with and never looked. It also stops while Since is away.
+            .task(id: scenePhase) {
+                guard scenePhase == .active else { return }
                 while !Task.isCancelled {
-                    refresh()
                     do { try await Task.sleep(for: .seconds(2)) }
-                    catch { break }
+                    catch { return }
+                    if let context = refresh() { refreshMirrors(context) }
                 }
             }
     }
 
-    private func refresh(force: Bool = false) {
-        guard scenePhase == .active else { return }
+    /// A fresh context for the queries after an extension wrote, or when forced. Nil when it was kept.
+    private func refresh(force: Bool = false) -> ModelContext? {
         let latest = ExtensionChanges.revision
-        guard force || latest != revision, !context.hasChanges else { return }
+        guard force || latest != revision, !context.hasChanges else { return nil }
         // Never discard an editor's unsaved @State values, or dismiss a sheet under someone's fingers.
         let windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows)
-        guard !windows.contains(where: { $0.rootViewController?.presentedViewController != nil }) else { return }
-        context = ModelContext(container)
+        guard !windows.contains(where: { $0.rootViewController?.presentedViewController != nil }) else { return nil }
+        let fresh = ModelContext(container)
+        context = fresh
         revision = latest
-        refreshMirrors(context)
+        return fresh
     }
 }
