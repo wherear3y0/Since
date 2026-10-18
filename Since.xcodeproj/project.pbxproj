@@ -28,6 +28,7 @@
 		17B47320AB5DA819781BBF47 /* CardSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18B8C889511EF84DF2C65C08 /* CardSize.swift */; };
 		17F30DBE5933D4089155DB85 /* SharedMessageImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 214E6B4DE9045265C5EBF6D8 /* SharedMessageImport.swift */; };
 		18896F17745D899332ED42D0 /* CountdownEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C590D2E94156ECCE83D2E04 /* CountdownEntity.swift */; };
+		195EEAFACF70E095DD46FBE7 /* StoreAccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AEBDA60EBD28874B88AB87E /* StoreAccessView.swift */; };
 		198E8BA6C835D590CBDD8811 /* CounterKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC1C1E5DB9F0A4985B444B83 /* CounterKind.swift */; };
 		1B5B24DEA26EAD94F27C2880 /* CardSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18B8C889511EF84DF2C65C08 /* CardSize.swift */; };
 		1EE7F006EFA486339B30E0EC /* SymbolPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1998AEBEF753AB605A774D10 /* SymbolPicker.swift */; };
@@ -112,6 +113,7 @@
 		9486089D0679C71B8B803377 /* ParcelShare.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF8008DAAC0D6A2F8B7B38CE /* ParcelShare.swift */; };
 		94E76206C618B0832E8ECB9B /* CalendarSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C4EA5B2506753DE383354DB /* CalendarSync.swift */; };
 		951FE945FB44833CFD6A4609 /* Savings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD372845F590F1787E38C7A /* Savings.swift */; };
+		955F181B09071521E166CD0F /* StoreAccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AEBDA60EBD28874B88AB87E /* StoreAccessView.swift */; };
 		966F1D6D997AC10136ABA21C /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD250AC40DF1EFF46C4F3AF /* Place.swift */; };
 		96B137A27560CFEC0490FDA2 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487E6968B8B9CED3CF2C9F /* Palette.swift */; };
 		9964CE6DB371016EEFD80BF0 /* CounterEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7EE177525F8A6376A3436D /* CounterEntity.swift */; };
@@ -126,7 +128,9 @@
 		9E4D3D696268C38C22285110 /* HoldToResetButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 333EC300B5F3E037313E1699 /* HoldToResetButton.swift */; };
 		9E997942110AD99EE273DE6F /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD250AC40DF1EFF46C4F3AF /* Place.swift */; };
 		A0241D721EC0704EA82C2004 /* WidgetParts.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63FB79DD78124E11E74E861 /* WidgetParts.swift */; };
+		A02C6061777734679920319E /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2DE316B0B8D264C7F15439E2 /* MainInterface.storyboard */; };
 		A108B38E820F653BC8F2DB69 /* RepeatRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B55588456FF7AF0BF2F9A17 /* RepeatRule.swift */; };
+		A11FE194ADC6428E7B9C88BD /* StoreAccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AEBDA60EBD28874B88AB87E /* StoreAccessView.swift */; };
 		A3D8F167445396B5E9A9808C /* Owned.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9FBFCEBBEACE2A402DE4713 /* Owned.swift */; };
 		A768B5E3337CED7742BEC45F /* Owned.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9FBFCEBBEACE2A402DE4713 /* Owned.swift */; };
 		AA211858534DA118E6E5E81F /* CounterGroupWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DA943B7AEDE64523FF393F /* CounterGroupWidgets.swift */; };
@@ -140,6 +144,7 @@
 		AE320F45CF35D84560770E6C /* ShareParcelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8E3778DBC6556C3E1A5937 /* ShareParcelView.swift */; };
 		AED476CEA77974D5B01F582F /* ParcelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F893FCB6E46E3C8CA5289DC /* ParcelTests.swift */; };
 		AFD77AEEFF37650602516D3E /* UntilMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F59E11FC4F1BD810B383204 /* UntilMath.swift */; };
+		B11CECDF09E965D395BB6045 /* StoreAccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AEBDA60EBD28874B88AB87E /* StoreAccessView.swift */; };
 		B14EE53D582DF0B08C2EA52F /* MessagesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4AC466A98C8AB88C35228DD /* MessagesViewController.swift */; };
 		B1B1B3169AE3CEEEE1B6ACBA /* CardSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8570C0F737AA5B8990EFDD9 /* CardSections.swift */; };
 		B26DEEDBE950D64BC850AA6F /* Parcel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EBC98E2F5B1DB7553FF51 /* Parcel.swift */; };
@@ -282,6 +287,7 @@
 		2B227F4C6280C3677387458E /* CounterCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterCard.swift; sourceTree = "<group>"; };
 		2B55588456FF7AF0BF2F9A17 /* RepeatRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatRule.swift; sourceTree = "<group>"; };
 		2D3FA6A1A786A25370602156 /* UntilTimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilTimeTests.swift; sourceTree = "<group>"; };
+		2DE316B0B8D264C7F15439E2 /* MainInterface.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = MainInterface.storyboard; sourceTree = "<group>"; };
 		312230FC468CA8CA26BE6A55 /* SiriIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriIntents.swift; sourceTree = "<group>"; };
 		31F7DA63BB572E7B9287BC0F /* CalendarSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSyncTests.swift; sourceTree = "<group>"; };
 		333EC300B5F3E037313E1699 /* HoldToResetButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldToResetButton.swift; sourceTree = "<group>"; };
@@ -329,6 +335,7 @@
 		801BCF82830FA7B3275D5DAF /* CardGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGrid.swift; sourceTree = "<group>"; };
 		83C3E987C60F9B0C5C809903 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		87438E01D89F98EBCA739C5A /* CalendarImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarImport.swift; sourceTree = "<group>"; };
+		8AEBDA60EBD28874B88AB87E /* StoreAccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreAccessView.swift; sourceTree = "<group>"; };
 		8CAA006A9EB97259264D3843 /* SiriActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriActions.swift; sourceTree = "<group>"; };
 		8E445EF58E5002FF7A2273A3 /* CountdownEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownEditor.swift; sourceTree = "<group>"; };
 		8E72A3EEC696BFE2D4E3CA69 /* CountdownCalendarCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownCalendarCard.swift; sourceTree = "<group>"; };
@@ -449,6 +456,7 @@
 			isa = PBXGroup;
 			children = (
 				961ED850CDDBBF1CB44AD787 /* Info.plist */,
+				2DE316B0B8D264C7F15439E2 /* MainInterface.storyboard */,
 				E4289C5660BE59F0F8FF1CB7 /* MessageCard.swift */,
 				19B3EC9BB26C13AE71717E04 /* MessageMap.swift */,
 				1893DCBAEA8E031BCA7900E1 /* MessagesView.swift */,
@@ -533,6 +541,7 @@
 				EE32DB366F2C2CAE5817A91D /* SharedMessageCard.swift */,
 				214E6B4DE9045265C5EBF6D8 /* SharedMessageImport.swift */,
 				11F835E8D977E82F6FEBE99F /* Store.swift */,
+				8AEBDA60EBD28874B88AB87E /* StoreAccessView.swift */,
 				4F59E11FC4F1BD810B383204 /* UntilMath.swift */,
 			);
 			path = Shared;
@@ -678,6 +687,7 @@
 			buildConfigurationList = 66AB0956656F5719E0979563 /* Build configuration list for PBXNativeTarget "SinceMessages" */;
 			buildPhases = (
 				4D8593FA905847903DFC21FB /* Sources */,
+				F0EFB04BEBF17948FC1891B1 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -773,6 +783,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F0EFB04BEBF17948FC1891B1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A02C6061777734679920319E /* MainInterface.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -847,6 +865,7 @@
 				127D2C6E93E541B778BDC118 /* SiriActions.swift in Sources */,
 				10889B126693E1852AB545DB /* SiriIntents.swift in Sources */,
 				FF98DA19AEEE2D5468678916 /* Store.swift in Sources */,
+				A11FE194ADC6428E7B9C88BD /* StoreAccessView.swift in Sources */,
 				8725BE5FA717E194F3A7B8ED /* StreakChart.swift in Sources */,
 				1EE7F006EFA486339B30E0EC /* SymbolPicker.swift in Sources */,
 				61760DF6378CC42C58A94884 /* SyncSettingsView.swift in Sources */,
@@ -897,6 +916,7 @@
 				17F30DBE5933D4089155DB85 /* SharedMessageImport.swift in Sources */,
 				B40CBAC1D485AE48614CC63D /* SinceWidgetsBundle.swift in Sources */,
 				4938D303BE75E5DA399C89A1 /* Store.swift in Sources */,
+				955F181B09071521E166CD0F /* StoreAccessView.swift in Sources */,
 				AFD77AEEFF37650602516D3E /* UntilMath.swift in Sources */,
 				A0241D721EC0704EA82C2004 /* WidgetParts.swift in Sources */,
 			);
@@ -939,6 +959,7 @@
 				EC03FC665BB597D50FC0B1D8 /* SharedMessageCard.swift in Sources */,
 				F2A021B980F246A6013FD8E4 /* SharedMessageImport.swift in Sources */,
 				0722F8C4FD4DE26297021FFC /* Store.swift in Sources */,
+				B11CECDF09E965D395BB6045 /* StoreAccessView.swift in Sources */,
 				668C6E00A9E476A4234959E2 /* UntilMath.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1000,6 +1021,7 @@
 				3DB06162B1F7C0A5B27FA45D /* SharedMessageCard.swift in Sources */,
 				9B8D911B1BA4074B5153943E /* SharedMessageImport.swift in Sources */,
 				120EAF98BCDD91718DFFA838 /* Store.swift in Sources */,
+				195EEAFACF70E095DD46FBE7 /* StoreAccessView.swift in Sources */,
 				AC6FEB7AAC39B07A10083CDA /* UntilMath.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
