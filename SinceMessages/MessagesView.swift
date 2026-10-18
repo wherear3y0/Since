@@ -3,11 +3,12 @@ import SwiftUI
 import UIKit
 
 struct MessagesView: View {
+    let container: ModelContainer
     let insert: @MainActor (UIImage, SharedMessageCard, MessageFormat) async throws -> Void
     let expand: () -> Void
     let collapse: () -> Void
 
-    @State private var context = ModelContext(Store.container)
+    @State private var context: ModelContext?
     @State private var counters: [Counter] = []
     @State private var countdowns: [Countdown] = []
     @State private var search = ""
@@ -58,7 +59,10 @@ struct MessagesView: View {
                 if counters.isEmpty && countdowns.isEmpty {
                     Text("Create a countdown here, or add counters in Since.").foregroundStyle(.secondary)
                 }
-                if let error { Text(error).foregroundStyle(.red) }
+                if let error {
+                    Text(error).foregroundStyle(.red)
+                    Button("Try Again") { reload() }
+                }
             }
             .navigationTitle("Since")
             .searchable(text: $search, prompt: "Find a card")
@@ -177,7 +181,9 @@ struct MessagesView: View {
     }
 
     private func reload() {
-        context = ModelContext(Store.container)
+        let context = ModelContext(container)
+        self.context = context
+        error = nil
         do {
             counters = try context.fetch(FetchDescriptor<Counter>(sortBy: [SortDescriptor(\.sortOrder)]))
                 .filter { !$0.isGone }
@@ -230,8 +236,8 @@ struct MessageCountdownEditor: View {
 
     private func save() {
         guard !saved else { return }
-        let context = ModelContext(Store.container)
         do {
+            let context = ModelContext(try Store.open())
             let rows = try context.fetch(FetchDescriptor<Countdown>())
             let countdown = Countdown(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                                       symbol: "hourglass", color: .cyan, date: date,

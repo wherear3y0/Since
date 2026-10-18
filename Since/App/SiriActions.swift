@@ -43,7 +43,7 @@ struct ResetCounterIntent: AppIntent {
         try await requestConfirmation(actionName: kind == .quit ? .continue : .log, dialog: question)
 
         found.resets.append(Reset(date: .now))
-        saveChanges(Store.container.mainContext)
+        try persistChanges(Store.open().mainContext)
         let done: IntentDialog = kind == .quit
             ? "Done. \(found.title) starts again from today, after \(days) \(unit)."
             : "Logged. It had been \(days) \(unit) since the last time."
@@ -83,7 +83,7 @@ struct LogSlipIntent: AppIntent {
 
         let days = found.days()
         let logged = found.logSlip()
-        saveChanges(Store.container.mainContext)
+        try persistChanges(Store.open().mainContext)
         if logged.addedToToday {
             let dialog: IntentDialog = "Logged one more. That’s \(logged.slip.amount) today for \(found.title)."
             return .result(dialog: dialog) { CounterSnippet(found) }
@@ -141,7 +141,7 @@ struct AddPastResetIntent: AppIntent {
 
         let trimmed = note?.trimmingCharacters(in: .whitespacesAndNewlines)
         found.resets.append(Reset(date: date, note: trimmed?.isEmpty == false ? trimmed : nil))
-        saveChanges(Store.container.mainContext)
+        try persistChanges(Store.open().mainContext)
         let days = found.days()
         return .result(dialog: "Added \(when) to \(found.title). It’s now \(days) \(days == 1 ? "day" : "days").") {
             CounterSnippet(found)
@@ -177,7 +177,7 @@ struct CreateCountdownIntent: AppIntent {
             return .result(dialog: "That day has already passed.") { EmptyView() }
         }
 
-        let context = Store.container.mainContext
+        let context = try Store.open().mainContext
         let existing = (try? context.fetch(FetchDescriptor<Countdown>())) ?? []
         // Colors take turns, so countdowns added one after another don't all look the same.
         let colors: [CounterColor] = [.cyan, .pink, .purple, .orange, .mint, .yellow, .blue, .lime, .green, .red]
@@ -187,7 +187,7 @@ struct CreateCountdownIntent: AppIntent {
                                   sortOrder: Countdown.topOrders(1, above: existing)[0])
         countdown.isBirthday = countdown.looksLikeBirthday
         context.insert(countdown)
-        saveChanges(context)
+        try persistChanges(context)
 
         let days = countdown.daysLeft()
         let target = countdown.target().formatted(.dateTime.weekday(.wide).month(.wide).day())
@@ -230,7 +230,7 @@ extension Store {
     /// A counter in the main context, for changes the app shows right away.
     @MainActor
     static func counter(_ id: UUID) -> Counter? {
-        try? container.mainContext.fetch(FetchDescriptor<Counter>(predicate: #Predicate { $0.id == id })).first
+        try? open().mainContext.fetch(FetchDescriptor<Counter>(predicate: #Predicate { $0.id == id })).first
     }
 }
 

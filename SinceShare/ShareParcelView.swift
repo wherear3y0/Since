@@ -134,8 +134,8 @@ struct ShareParcelView: View {
 
     private func save() {
         saving = true
-        let context = ModelContext(Store.container)
         do {
+            let context = ModelContext(try Store.open())
             let rows = try context.fetch(FetchDescriptor<Countdown>())
             let parcel = Countdown(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                                    symbol: "shippingbox.fill", color: .orange, date: date,

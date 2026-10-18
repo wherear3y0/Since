@@ -26,6 +26,10 @@ enum SyncSettings {
     /// A synced countdown deleted here stays deleted.
     static func skip(_ countdown: Countdown) {
         guard countdown.isSynced, let id = countdown.calendarItemID else { return }
+        skip(id: id)
+    }
+
+    static func skip(id: String) {
         Settings.defaults.set(Array(skipped.union([id])), forKey: skippedKey)
     }
 

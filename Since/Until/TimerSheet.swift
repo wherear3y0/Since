@@ -8,6 +8,7 @@ struct TimerSheet: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Countdown.sortOrder) private var countdowns: [Countdown]
 
+    @State private var saveError: String?
     @State private var name = ""
     @State private var hours = 0
     @State private var minutes = 10
@@ -61,6 +62,9 @@ struct TimerSheet: View {
             .background(Color.pageBackground)
             .navigationTitle("Timer")
             .navigationBarTitleDisplayMode(.inline)
+            .alert("Couldn’t Save", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+                Button("OK", role: .cancel) { }
+            } message: { Text(saveError ?? "") }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark", role: .cancel) {
@@ -82,7 +86,10 @@ struct TimerSheet: View {
         timer.createdAt = now
         timer.showsLiveActivity = true
         context.insert(timer)
-        saveChanges(context)
+        guard saveChanges(context, onFailure: { _ in
+            context.rollback()
+            saveError = "Your changes couldn’t be saved. Your form is still here; try again."
+        }) else { return }
         // It says when it's up, so it needs notifications.
         Task {
             _ = await Milestones.requestPermission()

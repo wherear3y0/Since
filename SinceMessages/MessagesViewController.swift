@@ -8,8 +8,16 @@ final class MessagesViewController: MSMessagesAppViewController {
     private var host: UIHostingController<AnyView>?
     private var attachments: [URL] = []
 
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+        // Always mount a screen during UIKit loading, including before a conversation is available.
+        showLibrary()
+    }
+
     override func willBecomeActive(with conversation: MSConversation) {
         super.willBecomeActive(with: conversation)
+        loadViewIfNeeded()
         showSelected(in: conversation)
     }
 
@@ -35,14 +43,16 @@ final class MessagesViewController: MSMessagesAppViewController {
     }
 
     private func showLibrary() {
-        mount(AnyView(MessagesView(insert: { [weak self] image, card, format in
-            guard let self else { throw MessageCardError.noConversation }
-            try await self.insert(image, card: card, format: format)
-        }, expand: { [weak self] in
-            self?.requestPresentationStyle(.expanded)
-        }, collapse: { [weak self] in
-            self?.requestPresentationStyle(.compact)
-        })))
+        mount(AnyView(StoreAccessView { [weak self] container in
+            MessagesView(container: container, insert: { [weak self] image, card, format in
+                guard let self else { throw MessageCardError.noConversation }
+                try await self.insert(image, card: card, format: format)
+            }, expand: { [weak self] in
+                self?.requestPresentationStyle(.expanded)
+            }, collapse: { [weak self] in
+                self?.requestPresentationStyle(.compact)
+            })
+        }))
     }
 
     private func mount(_ content: AnyView) {

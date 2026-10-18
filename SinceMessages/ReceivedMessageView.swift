@@ -47,15 +47,15 @@ struct ReceivedMessageView: View {
             .navigationTitle("Since Card")
             .toolbar { ToolbarItem(placement: .topBarLeading) { Button("Your Cards", action: onBack) } }
             .task {
-                do { alreadySaved = try SharedMessageImport.contains(card, in: ModelContext(Store.container)) }
+                do { alreadySaved = try SharedMessageImport.contains(card, in: ModelContext(try Store.open())) }
                 catch { self.error = "Couldn’t check the saved cards." }
             }
         }
     }
 
     private func save() {
-        let context = ModelContext(Store.container)
         do {
+            let context = ModelContext(try Store.open())
             try SharedMessageImport.save(card, in: context)
             alreadySaved = true
             if card.isParcel {

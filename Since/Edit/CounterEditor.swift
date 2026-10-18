@@ -11,6 +11,7 @@ struct CounterEditor: View {
     let counter: Counter?
     let onDelete: () -> Void
 
+    @State private var saveError: String?
     @State private var title: String
     @State private var startDate: Date
     @State private var symbol: String
@@ -190,6 +191,9 @@ struct CounterEditor: View {
             .navigationTitle(kind == .owned ? (counter == nil ? "New Thing" : "Edit Thing")
                                             : (counter == nil ? "New Counter" : "Edit Counter"))
             .navigationBarTitleDisplayMode(.inline)
+            .alert("Couldn’t Save", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+                Button("OK", role: .cancel) { }
+            } message: { Text(saveError ?? "") }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark", role: .cancel) {
@@ -482,7 +486,10 @@ struct CounterEditor: View {
             applySavings(to: newCounter)
             context.insert(newCounter)
         }
-        saveChanges(context)
+        guard saveChanges(context, onFailure: { _ in
+            context.rollback()
+            saveError = "Your changes couldn’t be saved. Your form is still here; try again."
+        }) else { return }
         if notifyMilestones {
             Task {
                 _ = await Milestones.requestPermission()
@@ -517,7 +524,10 @@ struct CounterEditor: View {
     private func delete() {
         guard let counter else { return }
         context.delete(counter)
-        saveChanges(context)
+        guard saveChanges(context, onFailure: { _ in
+            context.rollback()
+            saveError = "Your changes couldn’t be saved. Your form is still here; try again."
+        }) else { return }
         dismiss()
         onDelete()
     }

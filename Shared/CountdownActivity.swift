@@ -52,11 +52,11 @@ struct CompleteCountdownIntent: LiveActivityIntent {
     @MainActor
     func perform() async throws -> some IntentResult {
         guard let id = UUID(uuidString: countdownID) else { return .result() }
-        let context = Store.container.mainContext
+        let context = try Store.open().mainContext
         if let countdown = try? context.fetch(FetchDescriptor<Countdown>(predicate: #Predicate { $0.id == id })).first {
             countdown.markDone()
             RemindersBridge.setCompleted(true, for: countdown)
-            try? context.save()
+            try context.save()
             WidgetCenter.shared.reloadAllTimelines()
         }
         await CountdownActivityEnder.end(countdownID: id)

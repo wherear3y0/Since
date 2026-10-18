@@ -13,6 +13,7 @@ struct CountdownEditor: View {
     /// A parcel on its way, with its tracking number, shop and picture.
     let isParcel: Bool
 
+    @State private var saveError: String?
     @State private var title: String
     @State private var date: Date
     @State private var rule: RepeatRule
@@ -271,6 +272,9 @@ struct CountdownEditor: View {
             .navigationTitle(countdown == nil ? (isParcel ? "New Parcel" : "New Countdown")
                                               : (isParcel ? "Edit Parcel" : "Edit Countdown"))
             .navigationBarTitleDisplayMode(.inline)
+            .alert("Couldn’t Save", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+                Button("OK", role: .cancel) { }
+            } message: { Text(saveError ?? "") }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark", role: .cancel) {
@@ -807,7 +811,10 @@ struct CountdownEditor: View {
             }
             context.insert(newCountdown)
         }
-        saveChanges(context)
+        guard saveChanges(context, onFailure: { _ in
+            context.rollback()
+            saveError = "Your changes couldn’t be saved. Your form is still here; try again."
+        }) else { return }
         if notifyBefore || (isParcel && hasStorage) {
             Task {
                 _ = await Milestones.requestPermission()
@@ -819,9 +826,14 @@ struct CountdownEditor: View {
 
     private func delete() {
         guard let countdown else { return }
-        SyncSettings.skip(countdown)
+        let deletedSource = countdown.syncSource
+        let deletedID = countdown.calendarItemID
         context.delete(countdown)
-        saveChanges(context)
+        guard saveChanges(context, onFailure: { _ in
+            context.rollback()
+            saveError = "Your changes couldn’t be saved. Your form is still here; try again."
+        }) else { return }
+        if deletedSource != nil, let deletedID { SyncSettings.skip(id: deletedID) }
         dismiss()
         onDelete()
     }
