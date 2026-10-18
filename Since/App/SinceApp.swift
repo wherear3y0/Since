@@ -1,3 +1,4 @@
+import EventKit
 import SwiftUI
 import SwiftData
 import UserNotifications
@@ -37,6 +38,7 @@ struct SinceApp: App {
             if phase == .active {
                 Store.removeEndedTimers(Store.container.mainContext)
                 refreshMirrors(Store.container.mainContext)
+                Task { await CalendarSyncRunner.run(Store.container.mainContext) }
             }
         }
     }

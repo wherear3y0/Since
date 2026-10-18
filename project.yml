@@ -49,6 +49,7 @@ targets:
           - INAlternativeAppName: Синс
         NSUserActivityTypes: [me.wherar3y0.since.counter, me.wherar3y0.since.countdown]
         NSCalendarsFullAccessUsageDescription: Since reads your calendars so you can pick events to count down to. Nothing leaves your iPhone.
+        NSRemindersFullAccessUsageDescription: Since reads the Reminders lists you choose so their tasks appear as countdowns, and ticks a task off when you mark it done.
         NSLocationWhenInUseUsageDescription: Since uses your location only when you ask how long it takes to get to a countdown's place.
         # Directions can open in these, when they're on the iPhone.
         LSApplicationQueriesSchemes: [yandexmaps, comgooglemaps]

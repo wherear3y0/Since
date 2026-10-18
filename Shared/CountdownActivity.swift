@@ -55,6 +55,7 @@ struct CompleteCountdownIntent: LiveActivityIntent {
         let context = Store.container.mainContext
         if let countdown = try? context.fetch(FetchDescriptor<Countdown>(predicate: #Predicate { $0.id == id })).first {
             countdown.markDone()
+            RemindersBridge.setCompleted(true, for: countdown)
             try? context.save()
             WidgetCenter.shared.reloadAllTimelines()
         }

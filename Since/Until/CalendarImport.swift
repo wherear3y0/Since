@@ -246,17 +246,20 @@ struct CalendarEvent: Identifiable {
     /// Calendar's repeat as Since can follow it; nil for a one-off, or a repeat too fine to follow.
     let rule: RepeatRule?
     let repeatsInCalendar: Bool
+    var calendarID = ""
     let calendarTitle: String
     let color: CounterColor
     let symbol: String
 
-    /// Events in the next year, one per repeating series (its next time), soonest first.
+    /// Events in the next year (or `days`), one per repeating series (its next time), soonest first.
     /// Birthdays are left out: they come from Contacts, with the year.
-    static func upcoming(in store: EKEventStore, now: Date = .now) -> [CalendarEvent] {
+    static func upcoming(in store: EKEventStore, calendars chosen: [EKCalendar]? = nil, days: Int = 366,
+                         now: Date = .now) -> [CalendarEvent] {
         let calendar = Calendar.app
-        let calendars = store.calendars(for: .event).filter { $0.type != .birthday }
+        let calendars = (chosen ?? store.calendars(for: .event)).filter { $0.type != .birthday }
+        guard !calendars.isEmpty else { return [] }
         let start = calendar.startOfDay(for: now)
-        let end = calendar.date(byAdding: .year, value: 1, to: start)!
+        let end = calendar.date(byAdding: .day, value: days, to: start)!
         let found = store.events(matching: store.predicateForEvents(withStart: start, end: end, calendars: calendars))
             // Events already under way (a vacation that began last week) overlap the range too; they'd import
             // as gone by. A repeating one keeps its next real time instead.
@@ -282,6 +285,7 @@ struct CalendarEvent: Identifiable {
                                      RepeatRule($0, start: event.startDate, lastTime: lastTime[event.calendarItemIdentifier])
                                  },
                                  repeatsInCalendar: calendarRule != nil,
+                                 calendarID: event.calendar.calendarIdentifier,
                                  calendarTitle: event.calendar.title,
                                  color: CounterColor.nearest(to: UIColor(cgColor: event.calendar.cgColor)),
                                  symbol: symbol(for: title))
@@ -394,6 +398,26 @@ enum SampleCalendarEvents {
                 event.addRecurrenceRule(rule)
             }
             try? store.save(event, span: .futureEvents)
+        }
+        insertReminders(into: store)
+    }
+
+    /// A few tasks with due dates in the default Reminders list.
+    private static func insertReminders(into store: EKEventStore) {
+        guard EKEventStore.authorizationStatus(for: .reminder) == .fullAccess,
+              let list = store.defaultCalendarForNewReminders() else { return }
+        let calendar = Calendar.app
+        let samples: [(String, Int, Int?)] = [("Pay for internet", 3, nil), ("Buy a gift for Anna", 8, 18),
+                                              ("Call the plumber", -1, nil)]
+        for (title, days, hour) in samples {
+            let reminder = EKReminder(eventStore: store)
+            reminder.title = title
+            reminder.calendar = list
+            let day = calendar.date(byAdding: .day, value: days, to: calendar.startOfDay(for: .now))!
+            var due = calendar.dateComponents([.year, .month, .day], from: day)
+            due.hour = hour
+            reminder.dueDateComponents = due
+            try? store.save(reminder, commit: true)
         }
     }
 }

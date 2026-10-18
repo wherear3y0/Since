@@ -348,6 +348,11 @@ struct CountdownEditor: View {
     // MARK: - Extras
 
     private var dateFooter: String {
+        if let source = countdown?.syncSource {
+            return source == .calendar
+                ? "It comes from Calendar: its date, time and place follow the event there."
+                : "It comes from Reminders: its due date follows the task there."
+        }
         if showsWindow {
             return "It comes any day from the first date to the second. Until then the days are about right: "
                 + "they count to the middle."
@@ -552,6 +557,7 @@ struct CountdownEditor: View {
 
     private func delete() {
         guard let countdown else { return }
+        SyncSettings.skip(countdown)
         context.delete(countdown)
         saveChanges(context)
         dismiss()

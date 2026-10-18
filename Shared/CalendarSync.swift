@@ -1,4 +1,5 @@
 import CoreLocation
+import EventKit
 import Foundation
 
 /// Where a synced countdown comes from.
@@ -168,5 +169,20 @@ nonisolated enum CalendarSync {
         } else if countdown.placeName != nil && item.location != nil {
             countdown.removePlace()
         }
+    }
+}
+
+/// Ticks a task off in Reminders when it's done here, and back when that's undone.
+enum RemindersBridge {
+    private static let store = EKEventStore()
+
+    @MainActor
+    static func setCompleted(_ isCompleted: Bool, for countdown: Countdown) {
+        guard countdown.isReminder, EKEventStore.authorizationStatus(for: .reminder) == .fullAccess,
+              let id = countdown.calendarItemID,
+              let reminder = store.calendarItem(withIdentifier: id) as? EKReminder,
+              reminder.isCompleted != isCompleted else { return }
+        reminder.isCompleted = isCompleted
+        try? store.save(reminder, commit: true)
     }
 }

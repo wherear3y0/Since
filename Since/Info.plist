@@ -52,6 +52,8 @@
 	<string>Since reads your calendars so you can pick events to count down to. Nothing leaves your iPhone.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Since uses your location only when you ask how long it takes to get to a countdown's place.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Since reads the Reminders lists you choose so their tasks appear as countdowns, and ticks a task off when you mark it done.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSUserActivityTypes</key>

@@ -1,3 +1,6 @@
+import Combine
+import EventKit
+import SwiftData
 import SwiftUI
 
 /// Two tabs: days since (counters) and days until (countdowns).
@@ -6,6 +9,7 @@ struct RootView: View {
         case since, until
     }
 
+    @Environment(\.modelContext) private var context
     @State private var page: Page = .since
     /// Replays the cards' wave on the tab that comes on screen.
     @State private var arrival = TabArrival()
@@ -29,6 +33,10 @@ struct RootView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        // Calendar or Reminders changed while Since is open: synced countdowns follow.
+        .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged).receive(on: RunLoop.main)) { _ in
+            Task { await CalendarSyncRunner.run(context) }
+        }
         .sensoryFeedback(.selection, trigger: page)
         .onOpenURL(perform: open)
         // Siri's "open" actions hand over the same links.

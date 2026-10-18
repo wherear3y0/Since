@@ -67,16 +67,24 @@ struct UntilView: View {
         let timers = countdowns.filter(\.isTimer).sorted { $0.date < $1.date }
         let upcoming = countdowns.filter { !$0.isArchived && !$0.isTimer }
         let pinned = upcoming.filter(\.isPinned)
-        let events = upcoming.filter { !$0.isPinned && !$0.isBirthday }
+        let events = upcoming.filter { !$0.isPinned && !$0.isBirthday && !$0.isSynced }
+        // Kept in step with Calendar and Reminders: soonest first, in sections of their own under Events.
+        let fromCalendar = upcoming.filter { !$0.isPinned && !$0.isBirthday && $0.syncSource == .calendar }
+            .sorted { $0.target() < $1.target() }
+        let fromReminders = upcoming.filter { !$0.isPinned && $0.syncSource == .reminders }
+            .sorted { $0.target() < $1.target() }
         let birthdays = upcoming.filter { !$0.isPinned && $0.isBirthday }
             .sorted { $0.daysLeft() < $1.daysLeft() }
         // Kept after their day, latest first.
         let past = countdowns.filter { $0.isArchived && !$0.isTimer }.sorted { $0.target() > $1.target() }
-        let needsHeadings = !pinned.isEmpty || !birthdays.isEmpty || !timers.isEmpty
+        let needsHeadings = !pinned.isEmpty || !birthdays.isEmpty || !timers.isEmpty || !fromCalendar.isEmpty
+            || !fromReminders.isEmpty
         return [
             CardSection(id: "timers", title: "Timers", items: timers, reorders: false),
             CardSection(id: "pinned", title: "Pinned", items: pinned, reorders: true),
             CardSection(id: "events", title: needsHeadings ? "Events" : nil, items: events, reorders: true),
+            CardSection(id: "calendar", title: "Calendar", items: fromCalendar, reorders: false),
+            CardSection(id: "reminders", title: "Reminders", items: fromReminders, reorders: false),
             CardSection(id: "birthdays", title: "Birthdays", items: birthdays, reorders: false),
             CardSection(id: "past", title: "Past", items: past, reorders: false),
         ]
@@ -258,6 +266,7 @@ struct UntilView: View {
             .alert(deleteTitle, isPresented: isDeleting) {
                 Button("Delete", role: .destructive) {
                     if let countdown = deleting {
+                        SyncSettings.skip(countdown)
                         withAnimation { context.delete(countdown) }
                         saveChanges(context)
                     }
@@ -506,7 +515,8 @@ extension UntilView {
                     markDone(countdown)
                 }
             }
-            if !countdown.rule.repeats && !countdown.isTimer {
+            // A synced one follows its calendar; it's postponed there.
+            if !countdown.rule.repeats && !countdown.isTimer && !countdown.isSynced {
                 Button("Postpone…", systemImage: "calendar.badge.clock") {
                     postponing = countdown
                 }
@@ -634,6 +644,7 @@ extension UntilView {
             archivedRecentlyID = countdown.id
             toastIsDone = true
         }
+        RemindersBridge.setCompleted(true, for: countdown)
         saveChanges(context)
     }
 
@@ -642,6 +653,7 @@ extension UntilView {
             countdown.undoDone()
             archivedRecentlyID = nil
         }
+        RemindersBridge.setCompleted(false, for: countdown)
         saveChanges(context)
     }
 }
@@ -675,6 +687,7 @@ private struct CountSinceAlert: ViewModifier {
         counter.tinted = countdown.tinted
         counter.size = countdown.size
         context.insert(counter)
+        SyncSettings.skip(countdown)
         context.delete(countdown)
         saveChanges(context)
         self.countdown = nil

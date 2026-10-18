@@ -151,7 +151,11 @@ final class Countdown {
 
     /// The line under the days: "until Nov 26 · Thu · 18:30", "Oct 4 – 15", "by Oct 15 · Thu"…
     func dateLine(now: Date = .now, calendar: Calendar = .app) -> String {
-        DayMath.dateLine(target: target(now: now, calendar: calendar), window: window(calendar: calendar),
+        // A task from Reminders not done in time is overdue.
+        if syncSourceRaw == SyncSource.reminders.rawValue && daysLeft(now: now, calendar: calendar) < 0 {
+            return "was due \(target(now: now, calendar: calendar).untilFormat)"
+        }
+        return DayMath.dateLine(target: target(now: now, calendar: calendar), window: window(calendar: calendar),
                          moment: moment(now: now, calendar: calendar), now: now, calendar: calendar)
     }
 

@@ -33,6 +33,7 @@ struct SettingsView: View {
                 if countdowns.contains(where: { !$0.isArchived }) {
                     liveActivitiesSection
                 }
+                syncSection
                 backupSection
                 aboutSection
             }
@@ -197,6 +198,26 @@ struct SettingsView: View {
                  + "that matter most.")
         }
         .sectionReveal(isRevealed, delay: 0.18)
+    }
+
+    private var syncSection: some View {
+        Section {
+            NavigationLink {
+                SyncSettingsView()
+            } label: {
+                LabeledContent {
+                    let count = SyncSettings.ranges.count
+                    Text(count == 0 ? "Off" : "\(count)")
+                } label: {
+                    Label("Calendars & Reminders", systemImage: "arrow.triangle.2.circlepath")
+                }
+            }
+        } header: {
+            Text("Sync")
+        } footer: {
+            Text("Events and tasks from the calendars and lists you choose appear on the Until tab by themselves.")
+        }
+        .sectionReveal(isRevealed, delay: 0.185)
     }
 
     private var backupSection: some View {

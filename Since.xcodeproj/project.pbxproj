@@ -42,6 +42,7 @@
 		5BDE997EE0698B2C426D52C4 /* CalendarSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C4EA5B2506753DE383354DB /* CalendarSync.swift */; };
 		5BE4FE26CE492BA16B94A7A7 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C164DCB4A53E54B334D5D41 /* Models.swift */; };
 		6030F27902773D095186D408 /* CounterWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5234E8AF202D3DFC0FB13848 /* CounterWidget.swift */; };
+		61760DF6378CC42C58A94884 /* SyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018E7276FE46B8060BB112D4 /* SyncSettingsView.swift */; };
 		6392FEEAE4C41C38CF2C6B76 /* SinceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1EE7AF345BA666004F3E34 /* SinceApp.swift */; };
 		651E06A76430AE449AF238D3 /* CountdownCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 385CD372B7F7D896D8724CB4 /* CountdownCard.swift */; };
 		6557E67FB102EA8630756499 /* CounterEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7EE177525F8A6376A3436D /* CounterEntity.swift */; };
@@ -100,6 +101,7 @@
 		E31223F636A9B43B8153FAA9 /* PlaceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F030BE4AB9523B2A082FF796 /* PlaceCard.swift */; };
 		E636A09B9F752F0FD2A25401 /* CountdownEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C590D2E94156ECCE83D2E04 /* CountdownEntity.swift */; };
 		E86F634A8B8FC52E088F014B /* CounterSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933F83BB1890FE68C76CEA10 /* CounterSnapshot.swift */; };
+		EAAD6B415E3E7E249F8FD894 /* CalendarSyncRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534524136D4F9FD22B3C99DB /* CalendarSyncRunner.swift */; };
 		EDF957CDEEB6296141D1FF27 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C8D7FC76FBE774E64C654F12 /* Assets.xcassets */; };
 		F1492ECEE2B658ED9196BB38 /* UntilMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F59E11FC4F1BD810B383204 /* UntilMath.swift */; };
 		F31D38086CF6AE925F98548B /* CountdownActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EA16268354109D9C33F5C87 /* CountdownActivity.swift */; };
@@ -143,6 +145,7 @@
 /* Begin PBXFileReference section */
 		00BBB616E5F9E7CB37FDDFBC /* CountdownLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownLiveActivity.swift; sourceTree = "<group>"; };
 		017679D7A023A295B4BC7A02 /* DayMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayMath.swift; sourceTree = "<group>"; };
+		018E7276FE46B8060BB112D4 /* SyncSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSettingsView.swift; sourceTree = "<group>"; };
 		02A6A7BC5E8492B366AA8F51 /* SinceWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SinceWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B9D0657FF3FE95F13346E25 /* TimerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSheet.swift; sourceTree = "<group>"; };
 		0C164DCB4A53E54B334D5D41 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
@@ -175,6 +178,7 @@
 		4CC16ADB0799153DB504F61E /* CompletionBurst.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionBurst.swift; sourceTree = "<group>"; };
 		4F59E11FC4F1BD810B383204 /* UntilMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilMath.swift; sourceTree = "<group>"; };
 		5234E8AF202D3DFC0FB13848 /* CounterWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterWidget.swift; sourceTree = "<group>"; };
+		534524136D4F9FD22B3C99DB /* CalendarSyncRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSyncRunner.swift; sourceTree = "<group>"; };
 		5491BE5FA37446FACB4732E9 /* MapSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapSnapshot.swift; sourceTree = "<group>"; };
 		57F4826166E5D9C411E574AE /* Habit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Habit.swift; sourceTree = "<group>"; };
 		60485C8EA929119445831121 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
@@ -235,6 +239,7 @@
 			children = (
 				11C424BC505F2C411FAB3103 /* Backup.swift */,
 				47F2F9FB4D2F5FED1B18F0A0 /* SettingsView.swift */,
+				018E7276FE46B8060BB112D4 /* SyncSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -383,6 +388,7 @@
 			isa = PBXGroup;
 			children = (
 				87438E01D89F98EBCA739C5A /* CalendarImport.swift */,
+				534524136D4F9FD22B3C99DB /* CalendarSyncRunner.swift */,
 				4CC16ADB0799153DB504F61E /* CompletionBurst.swift */,
 				A9BA6312DB34532977870594 /* ContactBirthdays.swift */,
 				8E72A3EEC696BFE2D4E3CA69 /* CountdownCalendarCard.swift */,
@@ -535,6 +541,7 @@
 				9E186E80DF0438ECC2AE4C7D /* BlurIn.swift in Sources */,
 				C2C00DF4C06F2489D41F4073 /* CalendarImport.swift in Sources */,
 				5BDE997EE0698B2C426D52C4 /* CalendarSync.swift in Sources */,
+				EAAD6B415E3E7E249F8FD894 /* CalendarSyncRunner.swift in Sources */,
 				45A6B0874C7247CFDE3BC843 /* CardGrid.swift in Sources */,
 				1B5B24DEA26EAD94F27C2880 /* CardSize.swift in Sources */,
 				C67DE2A5029342F21CAE2153 /* CardStyle.swift in Sources */,
@@ -585,6 +592,7 @@
 				FF98DA19AEEE2D5468678916 /* Store.swift in Sources */,
 				8725BE5FA717E194F3A7B8ED /* StreakChart.swift in Sources */,
 				1EE7F006EFA486339B30E0EC /* SymbolPicker.swift in Sources */,
+				61760DF6378CC42C58A94884 /* SyncSettingsView.swift in Sources */,
 				22A3DC7E436E1BF221D35CBF /* TabWave.swift in Sources */,
 				242C9503F8E038A162A889D1 /* TimerSheet.swift in Sources */,
 				F1492ECEE2B658ED9196BB38 /* UntilMath.swift in Sources */,

@@ -71,9 +71,12 @@ struct CountdownDetailView: View {
                         .blurIn(contentShown, delay: 0.14)
                 }
 
-                CountdownCalendarCard(countdown: countdown)
-                    .detailCard()
-                    .blurIn(contentShown, delay: 0.155)
+                // A task from Reminders has no Calendar event to show.
+                if !countdown.isReminder {
+                    CountdownCalendarCard(countdown: countdown)
+                        .detailCard()
+                        .blurIn(contentShown, delay: 0.155)
+                }
 
                 Group {
                     sectionHeader("Summary")
@@ -127,7 +130,7 @@ struct CountdownDetailView: View {
                         if !countdown.hasPassed() {
                             LockScreenButton(countdown: countdown)
                         }
-                        if !countdown.rule.repeats {
+                        if !countdown.rule.repeats && !countdown.isSynced {
                             Button("Postpone…", systemImage: "calendar.badge.clock") {
                                 isPostponing = true
                             }
@@ -162,6 +165,7 @@ struct CountdownDetailView: View {
                            : "Once it’s done, mark it, and it moves to Past.")
             Button {
                 withAnimation(.smooth) { countdown.markDone() }
+                RemindersBridge.setCompleted(true, for: countdown)
                 saveChanges(context)
             } label: {
                 Label("Done", systemImage: "checkmark")
@@ -172,7 +176,7 @@ struct CountdownDetailView: View {
             .tint(tint)
             .controlSize(.large)
             .font(.subheadline.weight(.semibold))
-            if !countdown.rule.repeats {
+            if !countdown.rule.repeats && !countdown.isSynced {
                 postponeButton
             }
         }
@@ -212,7 +216,7 @@ struct CountdownDetailView: View {
             .font(.subheadline.weight(.semibold))
             .lineLimit(1)
             .controlSize(.large)
-            if !countdown.rule.repeats {
+            if !countdown.rule.repeats && !countdown.isSynced {
                 postponeButton
             }
         }
