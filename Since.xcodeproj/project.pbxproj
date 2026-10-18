@@ -25,6 +25,7 @@
 		27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487E6968B8B9CED3CF2C9F /* Palette.swift */; };
 		2C401E79615DF43254858938 /* PlacePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A7E6ED64D3CAD557E26F80 /* PlacePicker.swift */; };
 		2FC7D75DCA7C6EE02A8A2A44 /* HeatmapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D2AD3EEDB36F1A2B314BC53 /* HeatmapView.swift */; };
+		33D7D08CC62863EF1E2DE442 /* Parcel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EBC98E2F5B1DB7553FF51 /* Parcel.swift */; };
 		3484D2B546CC1B8B0654086F /* CardSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18B8C889511EF84DF2C65C08 /* CardSize.swift */; };
 		384212ABF00E00FFA5C3C064 /* UntilTimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3FA6A1A786A25370602156 /* UntilTimeTests.swift */; };
 		38CC2A583B6B20D2CF308542 /* Countdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B62B5F2666897694E16D181 /* Countdown.swift */; };
@@ -75,6 +76,7 @@
 		AB8B4108222A352AF3D47E75 /* UntilView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E68D7D478B4571160C35F82A /* UntilView.swift */; };
 		AC79EE0E422B2B79E6C1FBD6 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D873BD1E9FE11B4C85AA1DDF /* PreviewData.swift */; };
 		AE2A7F046FB8D110AF2810FB /* CounterEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8EB1A79952DEF98963DD44 /* CounterEditor.swift */; };
+		AED476CEA77974D5B01F582F /* ParcelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F893FCB6E46E3C8CA5289DC /* ParcelTests.swift */; };
 		AFD77AEEFF37650602516D3E /* UntilMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F59E11FC4F1BD810B383204 /* UntilMath.swift */; };
 		B40CBAC1D485AE48614CC63D /* SinceWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989198991BFA00080193D971 /* SinceWidgetsBundle.swift */; };
 		B54C5A91BC456705C1D4EF34 /* UntilTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67E5389C7BA2F8F719230640 /* UntilTests.swift */; };
@@ -82,6 +84,7 @@
 		B6298D5B6F6B94E070F6B866 /* SinceWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 02A6A7BC5E8492B366AA8F51 /* SinceWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B68E46076A81EF11F47B963F /* CountdownDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD58300EF8A73F6B24D66FEF /* CountdownDetailView.swift */; };
 		BAC8ED597863CFB03E636455 /* DayMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 017679D7A023A295B4BC7A02 /* DayMath.swift */; };
+		BCE4E42752C586B5105CC485 /* Parcel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EBC98E2F5B1DB7553FF51 /* Parcel.swift */; };
 		C29CA59CEB10E719E9692293 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F780858E40DE674183F78D /* HomeView.swift */; };
 		C2C00DF4C06F2489D41F4073 /* CalendarImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87438E01D89F98EBCA739C5A /* CalendarImport.swift */; };
 		C36B227D2B2973FA39827162 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F2F9FB4D2F5FED1B18F0A0 /* SettingsView.swift */; };
@@ -210,6 +213,7 @@
 		989198991BFA00080193D971 /* SinceWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinceWidgetsBundle.swift; sourceTree = "<group>"; };
 		98B9CBA5A84DE5C424757FDC /* AppShortcuts.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = AppShortcuts.xcstrings; sourceTree = "<group>"; };
 		9EDA996518D5E001153B2F41 /* BlurIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurIn.swift; sourceTree = "<group>"; };
+		9F893FCB6E46E3C8CA5289DC /* ParcelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParcelTests.swift; sourceTree = "<group>"; };
 		A63FB79DD78124E11E74E861 /* WidgetParts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetParts.swift; sourceTree = "<group>"; };
 		A9BA6312DB34532977870594 /* ContactBirthdays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactBirthdays.swift; sourceTree = "<group>"; };
 		AFB82C13849347109E7C6E5C /* SinceTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SinceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -219,6 +223,7 @@
 		B608E953A0589558D3CF8882 /* LiveActivities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivities.swift; sourceTree = "<group>"; };
 		B8487E6968B8B9CED3CF2C9F /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		BCD800830BF60E85F25812C6 /* CountdownVisuals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownVisuals.swift; sourceTree = "<group>"; };
+		BD1EBC98E2F5B1DB7553FF51 /* Parcel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parcel.swift; sourceTree = "<group>"; };
 		C8D7FC76FBE774E64C654F12 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C8F575A322A38EC5C5E7F091 /* Providers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Providers.swift; sourceTree = "<group>"; };
 		D873BD1E9FE11B4C85AA1DDF /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
@@ -268,6 +273,7 @@
 				F7284C1015E85D2703EE249F /* ImportTests.swift */,
 				7621BD2DEA526CE7145BBE29 /* MilestonesAndBackupTests.swift */,
 				7AB56ED1685F6BB404855D1B /* PaletteTests.swift */,
+				9F893FCB6E46E3C8CA5289DC /* ParcelTests.swift */,
 				6DE2BC76DE0105DE23534DA2 /* SiriTests.swift */,
 				67E5389C7BA2F8F719230640 /* UntilTests.swift */,
 				2D3FA6A1A786A25370602156 /* UntilTimeTests.swift */,
@@ -349,6 +355,7 @@
 				57F4826166E5D9C411E574AE /* Habit.swift */,
 				0C164DCB4A53E54B334D5D41 /* Models.swift */,
 				B8487E6968B8B9CED3CF2C9F /* Palette.swift */,
+				BD1EBC98E2F5B1DB7553FF51 /* Parcel.swift */,
 				6BD250AC40DF1EFF46C4F3AF /* Place.swift */,
 				D873BD1E9FE11B4C85AA1DDF /* PreviewData.swift */,
 				2B55588456FF7AF0BF2F9A17 /* RepeatRule.swift */,
@@ -572,6 +579,7 @@
 				D47EFE6E3CE819D6F52C0FC1 /* Milestones.swift in Sources */,
 				D51CAF2CC76123C2E305E532 /* Models.swift in Sources */,
 				27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */,
+				33D7D08CC62863EF1E2DE442 /* Parcel.swift in Sources */,
 				966F1D6D997AC10136ABA21C /* Place.swift in Sources */,
 				E31223F636A9B43B8153FAA9 /* PlaceCard.swift in Sources */,
 				2C401E79615DF43254858938 /* PlacePicker.swift in Sources */,
@@ -623,6 +631,7 @@
 				6C86446898F6AB7A371084CB /* Habit.swift in Sources */,
 				5BE4FE26CE492BA16B94A7A7 /* Models.swift in Sources */,
 				96B137A27560CFEC0490FDA2 /* Palette.swift in Sources */,
+				BCE4E42752C586B5105CC485 /* Parcel.swift in Sources */,
 				9E997942110AD99EE273DE6F /* Place.swift in Sources */,
 				AC79EE0E422B2B79E6C1FBD6 /* PreviewData.swift in Sources */,
 				AB6E79EDDF2535B734E7D891 /* Providers.swift in Sources */,
@@ -646,6 +655,7 @@
 				8F172ECD4711EBC69ED4475A /* ImportTests.swift in Sources */,
 				914EA344DE490505B7DF8DA5 /* MilestonesAndBackupTests.swift in Sources */,
 				F6C83F276E2979A60482C523 /* PaletteTests.swift in Sources */,
+				AED476CEA77974D5B01F582F /* ParcelTests.swift in Sources */,
 				912D29B3020F9BD6D88981C2 /* SiriTests.swift in Sources */,
 				B54C5A91BC456705C1D4EF34 /* UntilTests.swift in Sources */,
 				384212ABF00E00FFA5C3C064 /* UntilTimeTests.swift in Sources */,
