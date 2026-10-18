@@ -236,9 +236,13 @@ struct CountdownFillFooter: View {
                 .font(.title2.bold())
                 .contentTransition(.numericText(value: progress))
             Spacer(minLength: 4)
-            Text(daysLeft > 0 ? "Day \(waited) of \(waited + daysLeft)" : "The day")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+            // "356 of 365" where "Day 356 of 365" doesn't fit, like on a small widget.
+            ViewThatFits(in: .horizontal) {
+                Text(daysLeft > 0 ? "Day \(waited) of \(waited + daysLeft)" : "The day")
+                Text(daysLeft > 0 ? "\(waited) of \(waited + daysLeft)" : "The day")
+            }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
         }
         .lineLimit(1)
     }

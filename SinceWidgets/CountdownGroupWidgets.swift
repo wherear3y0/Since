@@ -28,9 +28,10 @@ struct CountdownsProvider: AppIntentTimelineProvider {
     private func entry(for configuration: SelectCountdownsIntent, at date: Date) -> CountdownsEntry {
         let countdowns = Store.countdowns()
         let chosenIDs = (configuration.countdowns ?? []).map(\.id)
-        // Chosen ones keep the order they were picked in; otherwise the days still ahead, soonest first.
+        // Chosen ones keep the order they were picked in; otherwise the days still ahead, soonest first,
+        // leaving out the ones already done or moved to Past.
         let chosen = chosenIDs.isEmpty
-            ? countdowns.map { CountdownSnapshot($0, at: date) }
+            ? countdowns.filter { !$0.isArchived }.map { CountdownSnapshot($0, at: date) }
                 .filter { $0.daysLeft >= 0 }
                 .sorted { $0.daysLeft < $1.daysLeft }
             : chosenIDs.compactMap { id in countdowns.first { $0.id == id } }.map { CountdownSnapshot($0, at: date) }
