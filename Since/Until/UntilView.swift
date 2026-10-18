@@ -110,7 +110,7 @@ struct UntilView: View {
         ScrollViewReader { scroller in
             ScrollView {
                 let shown = sections
-                let firstRows = Self.firstRows(of: shown)
+                let firstRows = CardGridLayout.firstRows(of: shown.map { ($0.title != nil, $0.items.map(\.size)) })
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(Array(shown.enumerated()), id: \.element.id) { index, section in
                         sectionView(section, index: index, firstRow: firstRows[index])
@@ -137,7 +137,8 @@ struct UntilView: View {
     @ViewBuilder
     private func sectionView(_ section: CardSection, index: Int, firstRow: Int) -> some View {
         if let title = section.title {
-            sectionHeading(title, id: section.id, count: section.items.count)
+            CardSectionHeading(title: title, id: section.id, count: section.items.count, collapsed: $collapsed,
+                               storageKey: "collapsedUntilSections")
                 .padding(.top, index == 0 ? 0 : 16)
                 .waveIn(cardsShown, delay: arrival.delay(for: CardSlot(row: firstRow - 1, column: 0)),
                         from: arrival.edge)
@@ -331,56 +332,6 @@ struct UntilView: View {
 
     private var cardsShown: Bool {
         revealed == arrival.id
-    }
-
-    /// A section's heading; tapping it folds the section away (showing how many it holds) and back.
-    private func sectionHeading(_ title: String, id: String, count: Int) -> some View {
-        let isCollapsed = collapsed.contains(id)
-        return Button {
-            withAnimation(.smooth(duration: 0.4)) {
-                if isCollapsed {
-                    collapsed.remove(id)
-                } else {
-                    collapsed.insert(id)
-                }
-            }
-            UserDefaults.standard.set(Array(collapsed), forKey: "collapsedUntilSections")
-        } label: {
-            HStack(spacing: 8) {
-                Text(title)
-                    .font(.title3.bold())
-                Image(systemName: "chevron.down")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-                    .rotationEffect(.degrees(isCollapsed ? -90 : 0))
-                Spacer(minLength: 0)
-                if isCollapsed {
-                    Text("\(count)")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .transition(.blurReplace)
-                }
-            }
-            .padding(.leading, 4)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .sensoryFeedback(.selection, trigger: isCollapsed)
-        .accessibilityHint(isCollapsed ? "Shows the \(title.lowercased())" : "Hides the \(title.lowercased())")
-    }
-
-    /// The row each section's first card lands on, counting the cards and headings above it, for the wave.
-    private static func firstRows(of sections: [CardSection]) -> [Int] {
-        var rows: [Int] = []
-        var next = 0
-        for section in sections {
-            if section.title != nil {
-                next += 1
-            }
-            rows.append(next)
-            next = (CardGridLayout.slots(for: section.items.map(\.size), firstRow: next).last?.row ?? next - 1) + 1
-        }
-        return rows
     }
 
     private func card(for countdown: Countdown, in items: [Countdown], firstRow: Int = 0,

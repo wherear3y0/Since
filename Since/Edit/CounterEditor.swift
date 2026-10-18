@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 import SwiftData
 
@@ -30,6 +31,12 @@ struct CounterEditor: View {
     /// Slips not in the history, edited as part of the total.
     @State private var extraSlips: Int
     @State private var numberStyle: DurationStyle
+    // An owned thing's picture, and reading one off a screenshot of its order or receipt.
+    @State private var photoData: Data?
+    @State private var photoItem: PhotosPickerItem?
+    @State private var screenshotItem: PhotosPickerItem?
+    @State private var isScanning = false
+    @State private var scanNote: String?
     @State private var isPickingSymbol = false
     @State private var savedEdits = 0
     @State private var isConfirmingDelete = false
@@ -42,6 +49,7 @@ struct CounterEditor: View {
     init(counter: Counter? = nil, onDelete: @escaping () -> Void = {}) {
         self.counter = counter
         self.onDelete = onDelete
+        _photoData = State(initialValue: counter?.photoData)
         _title = State(initialValue: counter?.title ?? "")
         _startDate = State(initialValue: counter?.startDate ?? .now)
         _symbol = State(initialValue: counter?.symbol ?? "star.fill")
@@ -131,8 +139,14 @@ struct CounterEditor: View {
                         .blurIn(isPreviewShown, delay: 0.2)
                 }
 
+                if kind == .owned {
+                    ownedSection
+                        .sectionReveal(isPreviewShown, delay: 0.23)
+                }
+
                 Section {
-                    DatePicker("Started", selection: $startDate, in: ...latestStartDate, displayedComponents: .date)
+                    DatePicker(kind == .owned ? "Got It" : "Started", selection: $startDate, in: ...latestStartDate,
+                               displayedComponents: .date)
                     Toggle("Milestone Reminders", isOn: $notifyMilestones)
                         .tint(color.color)
                 } footer: {
@@ -174,7 +188,8 @@ struct CounterEditor: View {
             .scrollContentBackground(.hidden)
             .background(Color.pageBackground)
             .scrollEdgeEffectStyle(.soft, for: .top)
-            .navigationTitle(counter == nil ? "New Counter" : "Edit Counter")
+            .navigationTitle(kind == .owned ? (counter == nil ? "New Thing" : "Edit Thing")
+                                            : (counter == nil ? "New Counter" : "Edit Counter"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -206,6 +221,83 @@ struct CounterEditor: View {
                 }
             }
         }
+    }
+
+    /// An owned thing's picture, and its name, the day it was got and a picture read off a screenshot.
+    private var ownedSection: some View {
+        Section {
+            HStack(spacing: 14) {
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    ItemPhoto(data: photoData, symbol: symbol, tint: color.color, side: 64)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Photo")
+                VStack(alignment: .leading, spacing: 4) {
+                    PhotosPicker(selection: $screenshotItem, matching: .images) {
+                        Label(isScanning ? "Reading…" : "Scan Screenshot", systemImage: "text.viewfinder")
+                            .font(.body.weight(.semibold))
+                    }
+                    .disabled(isScanning)
+                    Text(scanNote ?? "The name, the day you got it and a photo, read from a screenshot of the order or receipt.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .contentTransition(.opacity)
+                }
+            }
+            .padding(.vertical, 4)
+            if photoData != nil {
+                Button("Remove Photo", role: .destructive) {
+                    withAnimation(.smooth) { photoData = nil }
+                }
+            }
+        }
+        .onChange(of: photoItem) { _, item in
+            guard let item else { return }
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
+                    withAnimation(.smooth) { photoData = ParcelScanner.smallPhoto(image) }
+                }
+                photoItem = nil
+            }
+        }
+        .onChange(of: screenshotItem) { _, item in
+            guard let item else { return }
+            Task { await scan(item) }
+        }
+    }
+
+    /// Fills in what can be read off a screenshot, keeping what's already been typed.
+    private func scan(_ item: PhotosPickerItem) async {
+        isScanning = true
+        defer {
+            isScanning = false
+            screenshotItem = nil
+        }
+        guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else { return }
+        let result = await ParcelScanner.scan(image)
+        var found: [String] = []
+        withAnimation(.smooth) {
+            if let name = result.draft.title {
+                if trimmedTitle.isEmpty {
+                    title = name
+                }
+                found.append("name")
+            }
+            if let got = result.draft.got {
+                startDate = min(got, latestStartDate)
+                found.append("the day you got it")
+            }
+            if let photo = result.photo {
+                if photoData == nil {
+                    photoData = photo
+                }
+                found.append("photo")
+            }
+            scanNote = found.isEmpty
+                ? "Nothing could be read off that picture."
+                : "Filled in from the screenshot: \(found.joined(separator: ", "))."
+        }
+        savedEdits += found.isEmpty ? 0 : 1
     }
 
     /// The total number of slips, for slips that aren't in the history: from before tracking, or never logged.
@@ -358,8 +450,8 @@ struct CounterEditor: View {
         let tint = color.color.onCard(tinted: tinted)
         let now = Date.now
         let daysAgo = { (n: Int) in Calendar.app.date(byAdding: .day, value: -n, to: now)! }
-        // A new "last time" counter shows a few sample days it was done.
-        let grid = counter == nil
+        // A new "last time" counter shows a few sample days it was done; an owned thing, the days since it was got.
+        let grid = counter == nil && kind != .owned
             ? DayMath.heatmap(start: daysAgo(60), resets: kind == .lastTime ? [45, 31, 17, 6].map(daysAgo) : [],
                               logsEvents: kind == .lastTime, now: now, weeks: 16)
             : DayMath.heatmap(start: startDate, resets: counter?.resetDates ?? [], slips: counter?.slipDates ?? [],
@@ -367,8 +459,12 @@ struct CounterEditor: View {
 
         return VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 6) {
-                Image(systemName: symbol)
-                    .contentTransition(.symbolEffect(.replace))
+                if kind == .owned && photoData != nil {
+                    ItemPhoto(data: photoData, symbol: symbol, tint: tint, side: 22)
+                } else {
+                    Image(systemName: symbol)
+                        .contentTransition(.symbolEffect(.replace))
+                }
                 Text(trimmedTitle.isEmpty ? "Title" : trimmedTitle)
                     .lineLimit(1)
             }
@@ -402,6 +498,7 @@ struct CounterEditor: View {
             counter.kind = kind
             counter.note = finalNote
             counter.numberStyle = numberStyle
+            counter.photoData = kind == .owned ? photoData : counter.photoData
             applySavings(to: counter)
             savedEdits += 1
         } else {
@@ -411,6 +508,7 @@ struct CounterEditor: View {
             newCounter.tinted = tinted
             newCounter.notifyMilestones = notifyMilestones
             newCounter.numberStyle = numberStyle
+            newCounter.photoData = kind == .owned ? photoData : nil
             applySavings(to: newCounter)
             context.insert(newCounter)
         }

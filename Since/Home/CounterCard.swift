@@ -78,6 +78,41 @@ struct CounterCard: View {
             // Cells exactly as big as on an M card; the extra width holds more weeks instead.
             HeatmapView(days: counter.heatmap(weeks: CardSize.xl.weeksAcross(rowWidth: rowWidth)), tint: tint,
                         showsWeekdays: true, cellSize: CardSize.mCellSize(rowWidth: rowWidth), animated: false)
+            if counter.isOwned {
+                ownedFooter(tint: tint)
+            } else {
+                recordAndStats(target: target, best: best, average: average, tint: tint)
+            }
+        }
+    }
+
+    /// Toward its next whole year, then when it was got and when that year comes; or, once it's gone, why.
+    @ViewBuilder
+    private func ownedFooter(tint: Color) -> some View {
+        let got = counter.startDate.formatted(date: .abbreviated, time: .omitted)
+        if let next = counter.nextAnniversary() {
+            let target = DayMath.days(from: counter.startDate, to: next.date)
+            VStack(spacing: 8) {
+                RecordPills(current: counter.days(), target: target, targetLabel: "\(next.years)y", tint: tint)
+                RecordTrack(current: counter.days(), target: target, tint: tint, animated: false)
+            }
+            HStack(alignment: .top) {
+                stat("Got", value: got)
+                stat(next.years == 1 ? "A Year" : "\(next.years) Years",
+                     value: next.date.formatted(.dateTime.month(.abbreviated).day()))
+            }
+        } else {
+            HStack(alignment: .top) {
+                stat("Got", value: got)
+                stat(counter.goneReason?.title ?? "Gone",
+                     value: (counter.goneDate ?? .now).formatted(date: .abbreviated, time: .omitted))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func recordAndStats(target: Int, best: Int, average: Int, tint: Color) -> some View {
+        Group {
             if target > 0 {
                 VStack(spacing: 8) {
                     RecordPills(current: counter.days(), target: target,
@@ -103,7 +138,8 @@ struct CounterCard: View {
     // MARK: - Parts
 
     private func title(tint: Color) -> some View {
-        CardTitle(title: counter.title, symbol: counter.symbol, tint: tint)
+        PhotoCardTitle(title: counter.title, symbol: counter.symbol,
+                       photo: counter.isOwned ? counter.photoData : nil, tint: tint)
     }
 
     @ViewBuilder
@@ -128,8 +164,9 @@ struct CounterCard: View {
         .lineLimit(1)
     }
 
+    /// "since Sep 2", or for an owned thing that's gone, "Sold · Oct 18, 2026".
     private var since: some View {
-        Text("since \(counter.currentStreakStart.sinceFormat)")
+        Text(counter.goneLine ?? "since \(counter.currentStreakStart.sinceFormat)")
             .font(.footnote)
             .foregroundStyle(.secondary)
             // A reset swaps the date through a blur.
@@ -166,10 +203,19 @@ struct CounterMenuPreview: View {
         let week = counter.recentDays(7)
 
         VStack(alignment: .leading, spacing: 0) {
-            Label(counter.title, systemImage: counter.symbol)
-                .font(.subheadline.weight(.semibold))
-                .lineLimit(1)
-                .foregroundStyle(tint)
+            Group {
+                if counter.isOwned && counter.photoData != nil {
+                    HStack(spacing: 6) {
+                        ItemPhoto(data: counter.photoData, symbol: counter.symbol, tint: tint, side: 18)
+                        Text(counter.title)
+                    }
+                } else {
+                    Label(counter.title, systemImage: counter.symbol)
+                }
+            }
+            .font(.subheadline.weight(.semibold))
+            .lineLimit(1)
+            .foregroundStyle(tint)
             Spacer(minLength: 4)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(days, format: .number)
@@ -180,7 +226,7 @@ struct CounterMenuPreview: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
-            Text("since \(counter.currentStreakStart.sinceFormat)")
+            Text(counter.goneLine ?? "since \(counter.currentStreakStart.sinceFormat)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer(minLength: 8)

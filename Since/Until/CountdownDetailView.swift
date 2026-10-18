@@ -44,7 +44,7 @@ struct CountdownDetailView: View {
                         .blurIn(contentShown, delay: 0.05)
                 }
 
-                if !isLateParcel {
+                if showsTimeCard {
                     Group {
                         if countdown.hasPassed() {
                             passedCard(tint: tint)
@@ -166,9 +166,10 @@ struct CountdownDetailView: View {
     }
 
     /// A parcel past its window is still on its way: it's waited for, not counted since.
-    private var isLateParcel: Bool {
-        countdown.isParcel && !countdown.isArchived && countdown.hasPassed()
+    private var showsTimeCard: Bool {
+        !(countdown.isParcel && !countdown.isArchived && countdown.hasPassed())
     }
+
 
     private var doneTitle: String {
         if countdown.isInWindow() { return "Any Day Now" }

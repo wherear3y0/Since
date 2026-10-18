@@ -117,16 +117,17 @@ final class Counter {
         resets.filter(\.isSlip).map(\.date).sorted()
     }
 
-    /// The last weeks of days, drawn the way this counter's kind draws them.
+    /// The last weeks of days, drawn the way this counter's kind draws them; for an owned thing that's gone,
+    /// the weeks up to its last day.
     func heatmap(weeks: Int, now: Date = .now) -> [[HeatmapDay]] {
         DayMath.heatmap(start: startDate, resets: resetDates, slips: slipDates, logsEvents: kind == .lastTime,
-                        now: now, weeks: weeks)
+                        now: countEnd(now), weeks: weeks)
     }
 
     /// The last `count` days, oldest first.
     func recentDays(_ count: Int, now: Date = .now) -> [HeatmapDay] {
         DayMath.recentDays(count, start: startDate, resets: resetDates, slips: slipDates,
-                           logsEvents: kind == .lastTime, now: now)
+                           logsEvents: kind == .lastTime, now: countEnd(now))
     }
 
     /// Whether savings are set up: something a day and what it costs or takes.

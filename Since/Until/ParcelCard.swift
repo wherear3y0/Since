@@ -1,33 +1,6 @@
 import SwiftUI
 import UIKit
 
-/// A parcel's picture, or its icon when there isn't one, in a rounded square.
-struct ParcelPhoto: View {
-    let data: Data?
-    let symbol: String
-    let tint: Color
-    var side: CGFloat = 22
-
-    var body: some View {
-        let shape = RoundedRectangle(cornerRadius: side * 0.24, style: .continuous)
-        Group {
-            if let data, let image = UIImage(data: data) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                Image(systemName: side > 40 ? "photo.badge.plus" : symbol)
-                    .font(.system(size: side * 0.42, weight: .semibold))
-                    .foregroundStyle(tint)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(tint.opacity(0.18))
-            }
-        }
-        .frame(width: side, height: side)
-        .clipShape(shape)
-    }
-}
-
 /// A parcel on its page: its picture, the shop, the tracking number to copy, and Track and Order.
 struct ParcelCard: View {
     let countdown: Countdown

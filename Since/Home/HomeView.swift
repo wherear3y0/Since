@@ -21,6 +21,7 @@ struct HomeView: View {
     @State private var editingCounter: Counter?
     @State private var pastResetCounter: Counter?
     @State private var deletingCounter: Counter?
+    @State private var lettingGo: Counter?
     @State private var undoable: UndoableReset?
     /// Restarts the toast's timer on every new action, even one on the same slip.
     @State private var toastTick = 0
@@ -35,6 +36,33 @@ struct HomeView: View {
     @State private var reshaping: Set<UUID> = []
     /// The grid's width, for laying out XL cards.
     @State private var gridWidth: CGFloat = 0
+    /// Sections folded under their heading, remembered between launches. A @State, since stored changes
+    /// don't animate; it's written back on every change.
+    @State private var collapsed = Set(UserDefaults.standard.stringArray(forKey: "collapsedSinceSections") ?? [])
+
+    /// A group of cards under its own heading.
+    private struct CardSection: Identifiable {
+        let id: String
+        /// Nil for the counters when they're the only cards: no heading is needed then.
+        let title: String?
+        let items: [Counter]
+        /// Cards can be dragged into a new order; Past keeps its own, the latest gone first.
+        let reorders: Bool
+    }
+
+    /// The counters, then the things owned, then the owned things that are gone.
+    private var sections: [CardSection] {
+        let had = counters.filter { !$0.isGone }
+        let owned = had.filter(\.isOwned)
+        let past = counters.filter(\.isGone).sorted { ($0.goneDate ?? .distantPast) > ($1.goneDate ?? .distantPast) }
+        return [
+            CardSection(id: "counters", title: owned.isEmpty && past.isEmpty ? nil : "Counters",
+                        items: had.filter { !$0.isOwned }, reorders: true),
+            CardSection(id: "owned", title: "Owned", items: owned, reorders: true),
+            CardSection(id: "past", title: "Past", items: past, reorders: false),
+        ]
+        .filter { !$0.items.isEmpty }
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -82,8 +110,16 @@ struct HomeView: View {
             }
             .navigationDestination(for: UUID.self) { id in
                 if let counter = counters.first(where: { $0.id == id }) {
-                    CounterDetailView(counter: counter) {
-                        path.removeAll()
+                    Group {
+                        if counter.isOwned {
+                            OwnedDetailView(counter: counter) {
+                                path.removeAll()
+                            }
+                        } else {
+                            CounterDetailView(counter: counter) {
+                                path.removeAll()
+                            }
+                        }
                     }
                     .navigationTransition(.zoom(sourceID: id, in: zoom))
                 }
@@ -96,6 +132,9 @@ struct HomeView: View {
             }
             .sheet(item: $editingCounter) { counter in
                 CounterEditor(counter: counter)
+            }
+            .sheet(item: $lettingGo) { counter in
+                LetGoSheet(counter: counter)
             }
             .sheet(item: $pastResetCounter) { counter in
                 ResetEditor(counter: counter, reset: nil) { entry in
@@ -119,7 +158,8 @@ struct HomeView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("The counter and its whole reset history will be deleted.")
+                Text(deletingCounter?.isOwned == true ? "It will be deleted, with its photo."
+                                                      : "The counter and its whole reset history will be deleted.")
             }
             .overlay(alignment: .bottom) {
                 if let undoable {
@@ -152,10 +192,11 @@ struct HomeView: View {
 
     private func cardGrid(scroller: ScrollViewProxy) -> some View {
         ScrollView {
-            CardGridLayout {
-                ForEach(counters) { counter in
-                    card(for: counter)
-                        .cardSize(counter.size)
+            let shown = sections
+            let firstRows = CardGridLayout.firstRows(of: shown.map { ($0.title != nil, $0.items.map(\.size)) })
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(Array(shown.enumerated()), id: \.element.id) { index, section in
+                    sectionView(section, index: index, firstRow: firstRows[index])
                 }
             }
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { gridWidth = $0 }
@@ -177,9 +218,30 @@ struct HomeView: View {
         revealed == arrival.id
     }
 
-    private func card(for counter: Counter) -> some View {
-        let index = counters.firstIndex(of: counter) ?? 0
-        let slot = CardGridLayout.slots(for: counters.map(\.size))[index]
+    /// A section's heading, and its cards unless it's folded away.
+    @ViewBuilder
+    private func sectionView(_ section: CardSection, index: Int, firstRow: Int) -> some View {
+        if let title = section.title {
+            CardSectionHeading(title: title, id: section.id, count: section.items.count, collapsed: $collapsed,
+                               storageKey: "collapsedSinceSections")
+                .padding(.top, index == 0 ? 0 : 16)
+                .waveIn(cardsShown, delay: arrival.delay(for: CardSlot(row: firstRow - 1, column: 0)),
+                        from: arrival.edge)
+        }
+        if section.title == nil || !collapsed.contains(section.id) {
+            CardGridLayout {
+                ForEach(section.items) { counter in
+                    card(for: counter, in: section.items, firstRow: firstRow, reorders: section.reorders)
+                        .cardSize(counter.size)
+                }
+            }
+            .transition(.blurReplace)
+        }
+    }
+
+    private func card(for counter: Counter, in items: [Counter], firstRow: Int, reorders: Bool) -> some View {
+        let index = items.firstIndex(of: counter) ?? 0
+        let slot = CardGridLayout.slots(for: items.map(\.size), firstRow: firstRow)[index]
         // A just-added counter blurs in on its own, without the wave.
         let isNew = !unrevealed.isEmpty
         return CounterCard(counter: counter, gridWidth: gridWidth, isReshaping: reshaping.contains(counter.id)) {
@@ -209,8 +271,9 @@ struct HomeView: View {
             dragged = counter
             return NSItemProvider(object: counter.id.uuidString as NSString)
         }
-        .onDrop(of: [.text], delegate: ReorderDropDelegate(target: counter, items: counters, dragged: $dragged,
-                                                     onMove: { reorderTick += 1 }) {
+        // Dropping onto a card of another section, or of Past, moves nothing.
+        .onDrop(of: [.text], delegate: ReorderDropDelegate(target: counter, items: reorders ? items : [],
+                                                           dragged: $dragged, onMove: { reorderTick += 1 }) {
             saveChanges(context)
         })
     }
@@ -266,6 +329,36 @@ extension HomeView {
             Button("Open", systemImage: "arrow.up.forward") {
                 path.append(counter.id)
             }
+            if kind == .owned {
+                if counter.isGone {
+                    Button("Still Have It", systemImage: "arrow.uturn.backward") {
+                        withAnimation(.smooth) { counter.keep() }
+                        saveChanges(context)
+                    }
+                } else {
+                    Button("Let Go…", systemImage: "hand.wave") {
+                        lettingGo = counter
+                    }
+                }
+            }
+        }
+
+        if kind != .owned {
+            resetActions(for: counter)
+        }
+
+        Section {
+            Button(kind == .owned ? "Delete" : "Delete Counter", systemImage: "trash", role: .destructive) {
+                deletingCounter = counter
+            }
+        }
+    }
+
+    /// Resetting, slipping or logging a day, for the counters that have them.
+    @ViewBuilder
+    private func resetActions(for counter: Counter) -> some View {
+        let kind = counter.kind
+        Section {
             if kind == .quit {
                 Button(counter.slipToday() == nil ? "Log a Slip" : "One More Slip Today",
                        systemImage: "arrow.uturn.backward") {
@@ -282,12 +375,6 @@ extension HomeView {
                 pastResetCounter = counter
             }
         }
-
-        Section {
-            Button("Delete Counter", systemImage: "trash", role: .destructive) {
-                deletingCounter = counter
-            }
-        }
     }
 
     private func closeSheets() {
@@ -296,6 +383,7 @@ extension HomeView {
         editingCounter = nil
         pastResetCounter = nil
         deletingCounter = nil
+        lettingGo = nil
     }
 
     /// The menu closes first. Then the card's content fades out, the card takes its new shape while the grid

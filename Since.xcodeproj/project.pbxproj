@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00EAA4BED439FD97070E65EC /* ParcelScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B2F836D6AFE1B6B48E87CAE /* ParcelScanner.swift */; };
+		05F8289EC6455FBD22097965 /* LetGoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA3D87A3AEDC97BB4EDE1EC /* LetGoSheet.swift */; };
 		061280D978346653E37F625A /* CounterKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC1C1E5DB9F0A4985B444B83 /* CounterKind.swift */; };
 		06CB2FA6E295DF7AF5B81733 /* ContactBirthdays.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9BA6312DB34532977870594 /* ContactBirthdays.swift */; };
 		0796D178DF3AA9BD09B4AB5D /* CounterEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7EE177525F8A6376A3436D /* CounterEntity.swift */; };
@@ -31,6 +32,7 @@
 		384212ABF00E00FFA5C3C064 /* UntilTimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3FA6A1A786A25370602156 /* UntilTimeTests.swift */; };
 		38CC2A583B6B20D2CF308542 /* Countdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B62B5F2666897694E16D181 /* Countdown.swift */; };
 		39AD74E60F7A8200A9CC5A41 /* CountdownCalendarCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72A3EEC696BFE2D4E3CA69 /* CountdownCalendarCard.swift */; };
+		39E9399706F45F286458ED53 /* OwnedDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C42245F682DA73D34E21E3AF /* OwnedDetailView.swift */; };
 		3CEB95FA89F3C9691AC73435 /* CountdownLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00BBB616E5F9E7CB37FDDFBC /* CountdownLiveActivity.swift */; };
 		41D80532235FE60CC9307852 /* CountdownVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCD800830BF60E85F25812C6 /* CountdownVisuals.swift */; };
 		45A6B0874C7247CFDE3BC843 /* CardGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801BCF82830FA7B3275D5DAF /* CardGrid.swift */; };
@@ -83,6 +85,7 @@
 		AE2A7F046FB8D110AF2810FB /* CounterEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8EB1A79952DEF98963DD44 /* CounterEditor.swift */; };
 		AED476CEA77974D5B01F582F /* ParcelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F893FCB6E46E3C8CA5289DC /* ParcelTests.swift */; };
 		AFD77AEEFF37650602516D3E /* UntilMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F59E11FC4F1BD810B383204 /* UntilMath.swift */; };
+		B1B1B3169AE3CEEEE1B6ACBA /* CardSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8570C0F737AA5B8990EFDD9 /* CardSections.swift */; };
 		B40CBAC1D485AE48614CC63D /* SinceWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989198991BFA00080193D971 /* SinceWidgetsBundle.swift */; };
 		B54C5A91BC456705C1D4EF34 /* UntilTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67E5389C7BA2F8F719230640 /* UntilTests.swift */; };
 		B57D525A5C1BA43D8F71E1F9 /* DetailCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 612005A3760F00AB39ED0AA1 /* DetailCards.swift */; };
@@ -230,8 +233,10 @@
 		B2E320EE5DD27FD9580E4F23 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B608E953A0589558D3CF8882 /* LiveActivities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivities.swift; sourceTree = "<group>"; };
 		B8487E6968B8B9CED3CF2C9F /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		B8570C0F737AA5B8990EFDD9 /* CardSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSections.swift; sourceTree = "<group>"; };
 		BCD800830BF60E85F25812C6 /* CountdownVisuals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownVisuals.swift; sourceTree = "<group>"; };
 		BD1EBC98E2F5B1DB7553FF51 /* Parcel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parcel.swift; sourceTree = "<group>"; };
+		C42245F682DA73D34E21E3AF /* OwnedDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnedDetailView.swift; sourceTree = "<group>"; };
 		C8D7FC76FBE774E64C654F12 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C8F575A322A38EC5C5E7F091 /* Providers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Providers.swift; sourceTree = "<group>"; };
 		D873BD1E9FE11B4C85AA1DDF /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
@@ -244,6 +249,7 @@
 		F030BE4AB9523B2A082FF796 /* PlaceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceCard.swift; sourceTree = "<group>"; };
 		F7284C1015E85D2703EE249F /* ImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportTests.swift; sourceTree = "<group>"; };
 		FB8EB1A79952DEF98963DD44 /* CounterEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterEditor.swift; sourceTree = "<group>"; };
+		FBA3D87A3AEDC97BB4EDE1EC /* LetGoSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetGoSheet.swift; sourceTree = "<group>"; };
 		FC1C1E5DB9F0A4985B444B83 /* CounterKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterKind.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -383,6 +389,7 @@
 			children = (
 				9EDA996518D5E001153B2F41 /* BlurIn.swift */,
 				801BCF82830FA7B3275D5DAF /* CardGrid.swift */,
+				B8570C0F737AA5B8990EFDD9 /* CardSections.swift */,
 				2B227F4C6280C3677387458E /* CounterCard.swift */,
 				7D2AD3EEDB36F1A2B314BC53 /* HeatmapView.swift */,
 				48F780858E40DE674183F78D /* HomeView.swift */,
@@ -430,6 +437,8 @@
 				231EC4EFF6533FFB35FB3839 /* CounterDetailView.swift */,
 				612005A3760F00AB39ED0AA1 /* DetailCards.swift */,
 				333EC300B5F3E037313E1699 /* HoldToResetButton.swift */,
+				FBA3D87A3AEDC97BB4EDE1EC /* LetGoSheet.swift */,
+				C42245F682DA73D34E21E3AF /* OwnedDetailView.swift */,
 				7D07D1CB121C53EECF41F6F0 /* ResetEditor.swift */,
 				7E3A5464C2BA6CD190ED2A51 /* StreakChart.swift */,
 			);
@@ -563,6 +572,7 @@
 				5BDE997EE0698B2C426D52C4 /* CalendarSync.swift in Sources */,
 				EAAD6B415E3E7E249F8FD894 /* CalendarSyncRunner.swift in Sources */,
 				45A6B0874C7247CFDE3BC843 /* CardGrid.swift in Sources */,
+				B1B1B3169AE3CEEEE1B6ACBA /* CardSections.swift in Sources */,
 				1B5B24DEA26EAD94F27C2880 /* CardSize.swift in Sources */,
 				C67DE2A5029342F21CAE2153 /* CardStyle.swift in Sources */,
 				821DC2C4E45B6A26FEDF8703 /* CompletionBurst.swift in Sources */,
@@ -587,11 +597,13 @@
 				2FC7D75DCA7C6EE02A8A2A44 /* HeatmapView.swift in Sources */,
 				9E4D3D696268C38C22285110 /* HoldToResetButton.swift in Sources */,
 				C29CA59CEB10E719E9692293 /* HomeView.swift in Sources */,
+				05F8289EC6455FBD22097965 /* LetGoSheet.swift in Sources */,
 				23E5DBA9412F0432AF447263 /* LiveActivities.swift in Sources */,
 				D435274BDC6D00A829746765 /* MapSnapshot.swift in Sources */,
 				D47EFE6E3CE819D6F52C0FC1 /* Milestones.swift in Sources */,
 				D51CAF2CC76123C2E305E532 /* Models.swift in Sources */,
 				49078BB725D7CB1CA531C6CA /* Owned.swift in Sources */,
+				39E9399706F45F286458ED53 /* OwnedDetailView.swift in Sources */,
 				27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */,
 				33D7D08CC62863EF1E2DE442 /* Parcel.swift in Sources */,
 				7ADAFA2F628ABE421C06A645 /* ParcelCard.swift in Sources */,

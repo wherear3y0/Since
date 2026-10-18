@@ -329,7 +329,7 @@ struct CountdownEditor: View {
             HStack(alignment: .firstTextBaseline) {
                 HStack(spacing: 6) {
                     if isParcel && photoData != nil {
-                        ParcelPhoto(data: photoData, symbol: symbol, tint: tint, side: 22)
+                        ItemPhoto(data: photoData, symbol: symbol, tint: tint, side: 22)
                     } else {
                         Image(systemName: symbol)
                             .contentTransition(.symbolEffect(.replace))
@@ -386,7 +386,7 @@ struct CountdownEditor: View {
         Section {
             HStack(spacing: 14) {
                 PhotosPicker(selection: $photoItem, matching: .images) {
-                    ParcelPhoto(data: photoData, symbol: symbol, tint: color.color, side: 64)
+                    ItemPhoto(data: photoData, symbol: symbol, tint: color.color, side: 64)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Photo")

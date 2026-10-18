@@ -18,9 +18,13 @@ struct HeatmapCard: View {
         let tint = counter.color.color.onCard(tinted: counter.tinted)
         let grid = counter.heatmap(weeks: weeks)
         let streaks = counter.streaks()
-        let target = counter.kind == .quit
-            ? streaks.map(\.days).max() ?? 0
-            : Int(counter.kind.average(of: streaks).rounded())
+        // An owned thing counts toward its next whole year; once it's gone, toward nothing.
+        let nextYear = counter.nextAnniversary()
+        let target = switch counter.kind {
+        case .quit: streaks.map(\.days).max() ?? 0
+        case .lastTime: Int(counter.kind.average(of: streaks).rounded())
+        case .owned: nextYear.map { DayMath.days(from: counter.startDate, to: $0.date) } ?? 0
+        }
         let showsSlips = grid.joined().contains { $0.state == .slip }
 
         VStack(alignment: .leading, spacing: 18) {
@@ -34,13 +38,17 @@ struct HeatmapCard: View {
 
             // Two rows, so each side lines up with the other: the pills sit on the "since" line,
             // the bar sits on the baseline of the big number.
-            let targetLabel = counter.kind == .quit ? "Best" : "Avg"
+            let targetLabel = switch counter.kind {
+            case .quit: "Best"
+            case .lastTime: "Avg"
+            case .owned: "\(nextYear?.years ?? 1)y"
+            }
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline, spacing: 16) {
                     // "since Sep 8, 2025" doesn't fit beside the pills; "since 9/8/25" does.
                     ViewThatFits(in: .horizontal) {
-                        Text("since \(counter.currentStreakStart.sinceFormat)")
-                        Text("since \(counter.currentStreakStart.formatted(date: .numeric, time: .omitted))")
+                        Text(counter.goneLine ?? "since \(counter.currentStreakStart.sinceFormat)")
+                        Text(counter.goneLine ?? "since \(counter.currentStreakStart.formatted(date: .numeric, time: .omitted))")
                     }
                     .lineLimit(1)
                     .font(.subheadline.weight(.semibold))
@@ -55,7 +63,7 @@ struct HeatmapCard: View {
                     }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 16) {
-                    DurationButton(from: counter.currentStreakStart, to: .now, style: counter.numberStyle) { style in
+                    DurationButton(from: counter.currentStreakStart, to: counter.countEnd(.now), style: counter.numberStyle) { style in
                         counter.numberStyle = style
                         saveChanges(context)
                     }

@@ -62,6 +62,13 @@ extension Counter {
         return calendar.date(byAdding: .year, value: years, to: start).map { (years, $0) }
     }
 
+    /// How long it's been had, spelled out: "2 years 3 months 5 days".
+    func hadFor(until end: Date? = nil, now: Date = .now, calendar: Calendar = .app) -> String {
+        DayMath.parts(from: startDate, to: end ?? countEnd(now), style: .months, calendar: calendar)
+            .map { "\($0.value) \($0.longUnit)" }
+            .joined(separator: " ")
+    }
+
     /// "Sold · Oct 18, 2026", or just the day when no reason was given.
     var goneLine: String? {
         guard let goneDate else { return nil }

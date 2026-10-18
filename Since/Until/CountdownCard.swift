@@ -221,19 +221,9 @@ struct CountdownCard: View {
     // MARK: - Parts
 
     /// The title with the icon, or a parcel's picture in its place.
-    @ViewBuilder
     private func cardTitle(tint: Color) -> some View {
-        if countdown.isParcel && countdown.photoData != nil {
-            HStack(spacing: 7) {
-                ParcelPhoto(data: countdown.photoData, symbol: countdown.symbol, tint: tint, side: 22)
-                Text(countdown.title)
-                    .font(.headline)
-                    .foregroundStyle(tint)
-                    .lineLimit(1)
-            }
-        } else {
-            CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
-        }
+        PhotoCardTitle(title: countdown.title, symbol: countdown.symbol,
+                       photo: countdown.isParcel ? countdown.photoData : nil, tint: tint)
     }
 
     /// "📍 Bolshoi Theatre", when it has a place, and a parcel's shop and number.
@@ -444,7 +434,7 @@ struct CountdownMenuPreview: View {
             Group {
                 if countdown.isParcel && countdown.photoData != nil {
                     HStack(spacing: 6) {
-                        ParcelPhoto(data: countdown.photoData, symbol: countdown.symbol, tint: tint, side: 18)
+                        ItemPhoto(data: countdown.photoData, symbol: countdown.symbol, tint: tint, side: 18)
                         Text(countdown.title)
                     }
                 } else {
