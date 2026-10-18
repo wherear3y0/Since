@@ -105,6 +105,7 @@ struct CountdownCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 DaysLeftText(countdown, size: 40)
                 dateLine
+                placeLine
             }
             if needsDecision {
                 Spacer(minLength: 0)
@@ -142,6 +143,7 @@ struct CountdownCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
                     dateLine
+                    placeLine
                 }
                 Spacer(minLength: 8)
                 DaysLeftText(countdown, size: 40)
@@ -163,6 +165,7 @@ struct CountdownCard: View {
                         .padding(.top, 4)
                 }
             }
+            map(tint: tint, height: 90)
         }
     }
 
@@ -179,6 +182,7 @@ struct CountdownCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 DaysLeftText(countdown, size: 56)
                 dateLine
+                placeLine
             }
             if needsDecision {
                 decision(tint: tint, vertical: false)
@@ -210,10 +214,31 @@ struct CountdownCard: View {
                     }
                 }
             }
+            map(tint: tint, height: 120)
         }
     }
 
     // MARK: - Parts
+
+    /// "📍 Bolshoi Theatre", when it has a place.
+    @ViewBuilder
+    private var placeLine: some View {
+        if let name = countdown.placeName, !name.isEmpty {
+            Label(name, systemImage: "mappin")
+                .labelStyle(PlaceLabelStyle())
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+    }
+
+    /// The place on a small still map, on the bigger cards.
+    @ViewBuilder
+    private func map(tint: Color, height: CGFloat) -> some View {
+        if let coordinate = countdown.coordinate {
+            MapSnapshot(coordinate: coordinate, symbol: countdown.symbol, tint: countdown.color.color, height: height)
+        }
+    }
 
     private var dateLine: some View {
         let target = countdown.target()
@@ -453,4 +478,15 @@ struct CountdownMenuPreview: View {
         .padding()
     }
     .background(Color.pageBackground)
+}
+
+/// An icon tight against its text, smaller than a regular label's.
+private struct PlaceLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 3) {
+            configuration.icon
+                .imageScale(.small)
+            configuration.title
+        }
+    }
 }
