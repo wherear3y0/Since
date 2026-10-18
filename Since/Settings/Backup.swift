@@ -83,6 +83,14 @@ struct Backup: Codable {
         var postponedFrom: [Date]?
         var liveActivityLead: Int?
         var liveActivityForced: Bool?
+        /// Missing in backups made before places.
+        var placeName: String?
+        var placeAddress: String?
+        var placeLatitude: Double?
+        var placeLongitude: Double?
+        var travelMinutes: Int?
+        var travelMode: String?
+        var remindsToLeave: Bool?
     }
 
     var version = 1
@@ -105,7 +113,11 @@ struct Backup: Codable {
                           contactID: countdown.contactID, doneDay: countdown.doneDay,
                           hasTime: countdown.hasTime, windowEnd: countdown.windowEnd,
                           postponedFrom: countdown.postponedFrom, liveActivityLead: countdown.liveActivityLead,
-                          liveActivityForced: countdown.liveActivityForced)
+                          liveActivityForced: countdown.liveActivityForced,
+                          placeName: countdown.placeName, placeAddress: countdown.placeAddress,
+                          placeLatitude: countdown.placeLatitude, placeLongitude: countdown.placeLongitude,
+                          travelMinutes: countdown.travelMinutes, travelMode: countdown.travelModeRaw,
+                          remindsToLeave: countdown.remindsToLeave)
         }
         self.counters = counters.map { counter in
             CounterData(id: counter.id, title: counter.title, symbol: counter.symbol, color: counter.colorName,
@@ -201,6 +213,13 @@ struct Backup: Codable {
             countdown.postponedFrom = data.postponedFrom ?? []
             countdown.liveActivityLead = data.liveActivityLead ?? 0
             countdown.liveActivityForced = data.liveActivityForced ?? false
+            countdown.placeName = data.placeName
+            countdown.placeAddress = data.placeAddress
+            countdown.placeLatitude = data.placeLatitude
+            countdown.placeLongitude = data.placeLongitude
+            countdown.travelMinutes = data.travelMinutes
+            countdown.travelModeRaw = data.travelMode ?? TravelMode.car.rawValue
+            countdown.remindsToLeave = data.remindsToLeave ?? false
             context.insert(countdown)
         }
     }

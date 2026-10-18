@@ -122,6 +122,11 @@ struct MilestonesAndBackupTests {
         countdown.postponedFrom = [date(1968, 10, 20)]
         countdown.liveActivityLead = 3
         countdown.liveActivityForced = true
+        countdown.placeName = "Café Pushkin"
+        countdown.coordinate = .init(latitude: 55.76, longitude: 37.6)
+        countdown.travelMinutes = 25
+        countdown.travelMode = .transit
+        countdown.remindsToLeave = true
         context.insert(countdown)
         // A timer isn't kept.
         let timer = Countdown(title: "Tea", symbol: "timer", color: .orange, date: date(2026, 10, 1))
@@ -160,6 +165,11 @@ struct MilestonesAndBackupTests {
         #expect(restoredCountdowns[0].postponedFrom == [date(1968, 10, 20)])
         #expect(restoredCountdowns[0].liveActivityLead == 3)
         #expect(restoredCountdowns[0].liveActivityForced)
+        #expect(restoredCountdowns[0].placeName == "Café Pushkin")
+        #expect(restoredCountdowns[0].coordinate?.latitude == 55.76)
+        #expect(restoredCountdowns[0].travelMinutes == 25)
+        #expect(restoredCountdowns[0].travelMode == .transit)
+        #expect(restoredCountdowns[0].remindsToLeave)
     }
 
     @Test func backupsFromBeforeSlipsStillRestore() throws {

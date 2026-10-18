@@ -36,8 +36,12 @@ enum Milestones {
             }
         }
         // A timer always says when it's up; that's what it's for.
-        for countdown in countdowns where (countdown.notifyBefore || countdown.isTimer) && !countdown.isArchived {
-            for reminder in reminders(for: countdown) {
+        for countdown in countdowns where !countdown.isArchived {
+            var due = countdown.notifyBefore || countdown.isTimer ? reminders(for: countdown) : []
+            if let leave = leaveReminder(for: countdown) {
+                due.append(leave)
+            }
+            for reminder in due {
                 schedule(title: countdown.title, body: reminder.name, on: reminder.date, exactly: reminder.isExact,
                          id: countdown.id, url: "since://countdown/\(countdown.id.uuidString)")
             }
@@ -63,6 +67,15 @@ enum Milestones {
         let request = UNNotificationRequest(identifier: "\(id.uuidString)-\(date.timeIntervalSince1970)",
                                             content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(request)
+    }
+
+    /// "Time to leave": when to set off, from the travel time, if it's turned on and still ahead.
+    static func leaveReminder(for countdown: Countdown, now: Date = .now, calendar: Calendar = .app) -> Milestone? {
+        guard countdown.remindsToLeave, let leave = countdown.leaveTime(now: now, calendar: calendar), leave > now,
+              let minutes = countdown.travelMinutes else { return nil }
+        let place = countdown.placeName.map { " to \($0)" } ?? ""
+        return Milestone(name: "Time to leave: \(minutes) min\(place) \(countdown.travelMode.phrase).", date: leave,
+                         isExact: true)
     }
 
     struct Milestone {

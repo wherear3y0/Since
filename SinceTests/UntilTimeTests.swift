@@ -120,4 +120,21 @@ struct UntilTimeTests {
         #expect(Milestones.reminders(for: timer, now: date(2026, 10, 15, hour: 15), calendar: calendar).map(\.isExact) == [true])
         #expect(Milestones.reminders(for: timer, now: date(2026, 10, 15, hour: 17), calendar: calendar).isEmpty)
     }
+
+    @Test func timeToLeaveComesBeforeTheTime() {
+        let dinner = countdown(on: date(2026, 10, 20, hour: 19))
+        dinner.hasTime = true
+        dinner.placeName = "Café Pushkin"
+        dinner.travelMinutes = 25
+        // 19:00, less 25 minutes on the way and 10 to spare.
+        #expect(dinner.leaveTime(now: date(2026, 10, 15), calendar: calendar) == date(2026, 10, 20, hour: 18, minute: 25))
+        #expect(Milestones.leaveReminder(for: dinner, now: date(2026, 10, 15), calendar: calendar) == nil)
+        dinner.remindsToLeave = true
+        let leave = Milestones.leaveReminder(for: dinner, now: date(2026, 10, 15), calendar: calendar)
+        #expect(leave?.date == date(2026, 10, 20, hour: 18, minute: 25))
+        #expect(leave?.isExact == true)
+        // Without a time there's nothing to be on time for.
+        dinner.hasTime = false
+        #expect(dinner.leaveTime(now: date(2026, 10, 15), calendar: calendar) == nil)
+    }
 }

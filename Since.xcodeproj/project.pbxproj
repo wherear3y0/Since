@@ -57,10 +57,12 @@
 		912D29B3020F9BD6D88981C2 /* SiriTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DE2BC76DE0105DE23534DA2 /* SiriTests.swift */; };
 		914EA344DE490505B7DF8DA5 /* MilestonesAndBackupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7621BD2DEA526CE7145BBE29 /* MilestonesAndBackupTests.swift */; };
 		951FE945FB44833CFD6A4609 /* Savings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD372845F590F1787E38C7A /* Savings.swift */; };
+		966F1D6D997AC10136ABA21C /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD250AC40DF1EFF46C4F3AF /* Place.swift */; };
 		96B137A27560CFEC0490FDA2 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487E6968B8B9CED3CF2C9F /* Palette.swift */; };
 		9CC37FA2FE93FF996992F959 /* DayMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95F25134630F58C11830184E /* DayMathTests.swift */; };
 		9E186E80DF0438ECC2AE4C7D /* BlurIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EDA996518D5E001153B2F41 /* BlurIn.swift */; };
 		9E4D3D696268C38C22285110 /* HoldToResetButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 333EC300B5F3E037313E1699 /* HoldToResetButton.swift */; };
+		9E997942110AD99EE273DE6F /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD250AC40DF1EFF46C4F3AF /* Place.swift */; };
 		A0241D721EC0704EA82C2004 /* WidgetParts.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63FB79DD78124E11E74E861 /* WidgetParts.swift */; };
 		AA211858534DA118E6E5E81F /* CounterGroupWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DA943B7AEDE64523FF393F /* CounterGroupWidgets.swift */; };
 		AA8002E4621AAC288E2E50BB /* Countdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B62B5F2666897694E16D181 /* Countdown.swift */; };
@@ -170,6 +172,7 @@
 		612005A3760F00AB39ED0AA1 /* DetailCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailCards.swift; sourceTree = "<group>"; };
 		65B56F468EE7FBEC2E646268 /* RepeatPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatPicker.swift; sourceTree = "<group>"; };
 		67E5389C7BA2F8F719230640 /* UntilTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilTests.swift; sourceTree = "<group>"; };
+		6BD250AC40DF1EFF46C4F3AF /* Place.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Place.swift; sourceTree = "<group>"; };
 		6DE2BC76DE0105DE23534DA2 /* SiriTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriTests.swift; sourceTree = "<group>"; };
 		719EE01F1CF9966F0BB4AFA2 /* EditorParts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorParts.swift; sourceTree = "<group>"; };
 		74743AFF433DB4CE578B19C2 /* HabitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTests.swift; sourceTree = "<group>"; };
@@ -328,6 +331,7 @@
 				57F4826166E5D9C411E574AE /* Habit.swift */,
 				0C164DCB4A53E54B334D5D41 /* Models.swift */,
 				B8487E6968B8B9CED3CF2C9F /* Palette.swift */,
+				6BD250AC40DF1EFF46C4F3AF /* Place.swift */,
 				D873BD1E9FE11B4C85AA1DDF /* PreviewData.swift */,
 				2B55588456FF7AF0BF2F9A17 /* RepeatRule.swift */,
 				DBD372845F590F1787E38C7A /* Savings.swift */,
@@ -543,6 +547,7 @@
 				D47EFE6E3CE819D6F52C0FC1 /* Milestones.swift in Sources */,
 				D51CAF2CC76123C2E305E532 /* Models.swift in Sources */,
 				27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */,
+				966F1D6D997AC10136ABA21C /* Place.swift in Sources */,
 				CAC141493347C3642B949E27 /* PostponeSheet.swift in Sources */,
 				80E008887769E725375324D6 /* PressEffect.swift in Sources */,
 				FB8D75FCFCF829DBDBA8FF2A /* PreviewData.swift in Sources */,
@@ -589,6 +594,7 @@
 				6C86446898F6AB7A371084CB /* Habit.swift in Sources */,
 				5BE4FE26CE492BA16B94A7A7 /* Models.swift in Sources */,
 				96B137A27560CFEC0490FDA2 /* Palette.swift in Sources */,
+				9E997942110AD99EE273DE6F /* Place.swift in Sources */,
 				AC79EE0E422B2B79E6C1FBD6 /* PreviewData.swift in Sources */,
 				AB6E79EDDF2535B734E7D891 /* Providers.swift in Sources */,
 				FA133239286AAF1A83FE6C1E /* RepeatRule.swift in Sources */,

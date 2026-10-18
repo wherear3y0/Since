@@ -60,6 +60,16 @@ final class Countdown {
     var liveActivityLead: Int = 0
     /// Its Live Activity shows now, whatever the day, until it's turned off or the day has passed.
     var liveActivityForced: Bool = false
+    /// Where it happens: a name like "Café Pushkin", and the address and the point on the map when they're known.
+    var placeName: String? = nil
+    var placeAddress: String? = nil
+    var placeLatitude: Double? = nil
+    var placeLongitude: Double? = nil
+    /// How long it takes to get there, in minutes, the last time it was worked out, and how (a `TravelMode`).
+    var travelMinutes: Int? = nil
+    var travelModeRaw: String = "car"
+    /// A notification when it's time to set off, worked out from the travel time.
+    var remindsToLeave: Bool = false
 
     init(title: String, symbol: String, color: CounterColor, date: Date, rule: RepeatRule = .never,
          note: String? = nil, sortOrder: Int = 0) {
