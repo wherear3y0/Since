@@ -63,7 +63,7 @@ struct CountdownCard: View {
 
     private func doneButton(tint: Color) -> some View {
         Button(action: onDone) {
-            Label("Done", systemImage: "checkmark")
+            Label(countdown.isParcel ? "Received" : "Done", systemImage: "checkmark")
                 .frame(maxWidth: .infinity)
                 .foregroundStyle(.black.opacity(0.8))
         }
@@ -78,7 +78,7 @@ struct CountdownCard: View {
     /// A timer: the time left ticking down, when it ends, and a bar that fills as it runs.
     private func timer(tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
+            cardTitle(tint: tint)
             VStack(alignment: .leading, spacing: 2) {
                 MomentCountdown(moment: countdown.date, size: 40)
                 Text(isFinishing ? "Time’s up" : "ends at \(countdown.date.formatted(date: .omitted, time: .shortened))")
@@ -101,7 +101,7 @@ struct CountdownCard: View {
     /// M: title, days to go, the date, and the wait in the countdown's style.
     private func compact(tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
+            cardTitle(tint: tint)
             VStack(alignment: .leading, spacing: 2) {
                 DaysLeftText(countdown, size: 40)
                 dateLine
@@ -141,7 +141,7 @@ struct CountdownCard: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
+                    cardTitle(tint: tint)
                     dateLine
                     placeLine
                 }
@@ -178,7 +178,7 @@ struct CountdownCard: View {
         let left = DayMath.timeLeft(until: target, from: .now)
 
         return VStack(alignment: .leading, spacing: 14) {
-            CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
+            cardTitle(tint: tint)
             VStack(alignment: .leading, spacing: 2) {
                 DaysLeftText(countdown, size: 56)
                 dateLine
@@ -220,9 +220,32 @@ struct CountdownCard: View {
 
     // MARK: - Parts
 
-    /// "📍 Bolshoi Theatre", when it has a place.
+    /// The title with the icon, or a parcel's picture in its place.
+    @ViewBuilder
+    private func cardTitle(tint: Color) -> some View {
+        if countdown.isParcel && countdown.photoData != nil {
+            HStack(spacing: 7) {
+                ParcelPhoto(data: countdown.photoData, symbol: countdown.symbol, tint: tint, side: 22)
+                Text(countdown.title)
+                    .font(.headline)
+                    .foregroundStyle(tint)
+                    .lineLimit(1)
+            }
+        } else {
+            CardTitle(title: countdown.title, symbol: countdown.symbol, tint: tint)
+        }
+    }
+
+    /// "📍 Bolshoi Theatre", when it has a place, and a parcel's shop and number.
     @ViewBuilder
     private var placeLine: some View {
+        if countdown.isParcel, let line = countdown.parcelLine {
+            Label(line, systemImage: "shippingbox")
+                .labelStyle(PlaceLabelStyle())
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
         if let name = countdown.placeName, !name.isEmpty {
             Label(name, systemImage: "mappin")
                 .labelStyle(PlaceLabelStyle())
@@ -418,10 +441,19 @@ struct CountdownMenuPreview: View {
         let target = countdown.target()
 
         VStack(alignment: .leading, spacing: 0) {
-            Label(countdown.title, systemImage: countdown.symbol)
-                .font(.subheadline.weight(.semibold))
-                .lineLimit(1)
-                .foregroundStyle(tint)
+            Group {
+                if countdown.isParcel && countdown.photoData != nil {
+                    HStack(spacing: 6) {
+                        ParcelPhoto(data: countdown.photoData, symbol: countdown.symbol, tint: tint, side: 18)
+                        Text(countdown.title)
+                    }
+                } else {
+                    Label(countdown.title, systemImage: countdown.symbol)
+                }
+            }
+            .font(.subheadline.weight(.semibold))
+            .lineLimit(1)
+            .foregroundStyle(tint)
             Spacer(minLength: 4)
             DaysLeftText(countdown, size: 40)
                 .minimumScaleFactor(0.5)

@@ -37,21 +37,30 @@ struct CountdownDetailView: View {
                         }
                     }
 
-                if countdown.isTheDay() && !countdown.isArchived {
+                // A parcel can come any day, early or late: it's received whenever it's here.
+                if (countdown.isTheDay() || countdown.isParcel) && !countdown.isArchived {
                     doneCard(tint: tint)
                         .detailCard()
                         .blurIn(contentShown, delay: 0.05)
                 }
 
-                Group {
-                    if countdown.hasPassed() {
-                        passedCard(tint: tint)
-                    } else {
-                        TimeLeftCard(countdown: countdown)
+                if !isLateParcel {
+                    Group {
+                        if countdown.hasPassed() {
+                            passedCard(tint: tint)
+                        } else {
+                            TimeLeftCard(countdown: countdown)
+                        }
                     }
+                    .detailCard()
+                    .blurIn(contentShown, delay: 0.1)
                 }
-                .detailCard()
-                .blurIn(contentShown, delay: 0.1)
+
+                if countdown.isParcel {
+                    ParcelCard(countdown: countdown)
+                        .detailCard()
+                        .blurIn(contentShown, delay: 0.08)
+                }
 
                 if countdown.hasPlace {
                     PlaceCard(countdown: countdown)
@@ -156,11 +165,23 @@ struct CountdownDetailView: View {
         }
     }
 
+    /// A parcel past its window is still on its way: it's waited for, not counted since.
+    private var isLateParcel: Bool {
+        countdown.isParcel && !countdown.isArchived && countdown.hasPassed()
+    }
+
+    private var doneTitle: String {
+        if countdown.isInWindow() { return "Any Day Now" }
+        if countdown.isTheDay() { return "It’s Today" }
+        return countdown.hasPassed() ? "Running Late" : "On Its Way"
+    }
+
     /// On the day: mark it done. A repeating one moves on to its next time, a one-off one goes to Past.
     private func doneCard(tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            CardHeader(title: countdown.isInWindow() ? "Any Day Now" : "It’s Today", symbol: "party.popper.fill", tint: tint,
-                       text: countdown.rule.repeats
+            CardHeader(title: doneTitle, symbol: countdown.isTheDay() ? "party.popper.fill" : "box.truck.fill", tint: tint,
+                       text: countdown.isParcel ? "Once it’s here, mark it received, and it moves to Past."
+                           : countdown.rule.repeats
                            ? "Once it’s done, mark it, and it counts down to the next time."
                            : "Once it’s done, mark it, and it moves to Past.")
             Button {
@@ -168,7 +189,7 @@ struct CountdownDetailView: View {
                 RemindersBridge.setCompleted(true, for: countdown)
                 saveChanges(context)
             } label: {
-                Label("Done", systemImage: "checkmark")
+                Label(countdown.isParcel ? "Received" : "Done", systemImage: "checkmark")
                     .frame(maxWidth: .infinity)
                     .foregroundStyle(.black.opacity(0.8))
             }

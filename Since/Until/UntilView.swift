@@ -21,6 +21,7 @@ struct UntilView: View {
     @State private var dragged: Countdown?
     @State private var isAdding = false
     @State private var isAddingTimer = false
+    @State private var isAddingParcel = false
     /// Timers that have just ended, playing their ending before they go.
     @State private var finishing: Set<UUID> = []
     @State private var isPickingContacts = false
@@ -67,7 +68,10 @@ struct UntilView: View {
         let timers = countdowns.filter(\.isTimer).sorted { $0.date < $1.date }
         let upcoming = countdowns.filter { !$0.isArchived && !$0.isTimer }
         let pinned = upcoming.filter(\.isPinned)
-        let events = upcoming.filter { !$0.isPinned && !$0.isBirthday && !$0.isSynced }
+        let events = upcoming.filter { !$0.isPinned && !$0.isBirthday && !$0.isSynced && !$0.isParcel }
+        // On their way: soonest first.
+        let parcels = upcoming.filter { !$0.isPinned && $0.isParcel && !$0.isSynced }
+            .sorted { $0.target() < $1.target() }
         // Kept in step with Calendar and Reminders: soonest first, in sections of their own under Events.
         let fromCalendar = upcoming.filter { !$0.isPinned && !$0.isBirthday && $0.syncSource == .calendar }
             .sorted { $0.target() < $1.target() }
@@ -78,11 +82,13 @@ struct UntilView: View {
         // Kept after their day, latest first.
         let past = countdowns.filter { $0.isArchived && !$0.isTimer }.sorted { $0.target() > $1.target() }
         let needsHeadings = !pinned.isEmpty || !birthdays.isEmpty || !timers.isEmpty || !fromCalendar.isEmpty
+            || !parcels.isEmpty
             || !fromReminders.isEmpty
         return [
             CardSection(id: "timers", title: "Timers", items: timers, reorders: false),
             CardSection(id: "pinned", title: "Pinned", items: pinned, reorders: true),
             CardSection(id: "events", title: needsHeadings ? "Events" : nil, items: events, reorders: true),
+            CardSection(id: "parcels", title: "Parcels", items: parcels, reorders: false),
             CardSection(id: "calendar", title: "Calendar", items: fromCalendar, reorders: false),
             CardSection(id: "reminders", title: "Reminders", items: fromReminders, reorders: false),
             CardSection(id: "birthdays", title: "Birthdays", items: birthdays, reorders: false),
@@ -186,6 +192,9 @@ struct UntilView: View {
                 Button("Timer", systemImage: "timer") {
                     isAddingTimer = true
                 }
+                Button("Parcel", systemImage: "shippingbox") {
+                    isAddingParcel = true
+                }
                 Button("Birthdays…", systemImage: "birthday.cake") {
                     isPickingContacts = true
                 }
@@ -257,6 +266,9 @@ struct UntilView: View {
             .sheet(isPresented: $isAddingTimer) {
                 TimerSheet()
             }
+            .sheet(isPresented: $isAddingParcel) {
+                CountdownEditor(isParcel: true)
+            }
             .sheet(item: $postponing) { countdown in
                 PostponeSheet(countdown: countdown)
             }
@@ -306,7 +318,7 @@ struct UntilView: View {
     @ViewBuilder
     private var toast: some View {
         if let id = archivedRecentlyID, let countdown = countdowns.first(where: { $0.id == id }) {
-            UndoToast(text: toastIsDone ? "Done" : "Moved to Past", tint: countdown.color.color) {
+            UndoToast(text: toastIsDone ? (countdown.isParcel ? "Received" : "Done") : "Moved to Past", tint: countdown.color.color) {
                 if toastIsDone {
                     undoDone(countdown)
                 } else {
@@ -507,11 +519,11 @@ extension UntilView {
                 path.append(countdown.id)
             }
             if countdown.isDone() {
-                Button("Not Done", systemImage: "arrow.uturn.backward") {
+                Button(countdown.isParcel ? "Not Received" : "Not Done", systemImage: "arrow.uturn.backward") {
                     undoDone(countdown)
                 }
-            } else if countdown.isTheDay() && !countdown.isArchived {
-                Button("Mark as Done", systemImage: "checkmark.circle") {
+            } else if (countdown.isTheDay() || countdown.isParcel) && !countdown.isArchived {
+                Button(countdown.isParcel ? "Received" : "Mark as Done", systemImage: "checkmark.circle") {
                     markDone(countdown)
                 }
             }
