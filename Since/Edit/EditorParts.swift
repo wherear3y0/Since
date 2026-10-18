@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 
 /// Icon button (opens the symbol picker) next to the title field. Shared by both editors.
@@ -127,5 +128,89 @@ struct OptionChip: View {
         .buttonStyle(.borderless)
         .accessibilityLabel(title)
         .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+}
+
+/// Picks a screenshot of an order or a receipt; the form fills in from it as soon as it's picked.
+struct ScreenshotFillRow: View {
+    @Binding var selection: PhotosPickerItem?
+    let isScanning: Bool
+    let note: String
+    let tint: Color
+
+    var body: some View {
+        PhotosPicker(selection: $selection, matching: .images) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(tint.opacity(0.18))
+                    if isScanning {
+                        ProgressView()
+                            .tint(tint)
+                    } else {
+                        Image(systemName: "text.viewfinder")
+                            .font(.title2.weight(.semibold))
+                            .foregroundStyle(tint)
+                    }
+                }
+                .frame(width: 52, height: 52)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(isScanning ? "Reading…" : "Fill In from Screenshot")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.primary)
+                    Text(note)
+                        .font(.footnote)
+                        .foregroundStyle(Color.secondary)
+                        .multilineTextAlignment(.leading)
+                        .contentTransition(.opacity)
+                }
+                Spacer(minLength: 0)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isScanning)
+        .padding(.vertical, 4)
+    }
+}
+
+/// A thing's own picture, picked by hand apart from any screenshot: Choose or Change, and Remove.
+struct ItemPhotoRow: View {
+    let title: String
+    @Binding var photoData: Data?
+    let symbol: String
+    let tint: Color
+
+    @State private var item: PhotosPickerItem?
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ItemPhoto(data: photoData, symbol: symbol, tint: tint, side: 52)
+            Text(title)
+            Spacer(minLength: 8)
+            if photoData != nil {
+                Button("Remove Photo", systemImage: "trash", role: .destructive) {
+                    withAnimation(.smooth) { photoData = nil }
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.borderless)
+            }
+            PhotosPicker(selection: $item, matching: .images) {
+                Text(photoData == nil ? "Choose" : "Change")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .buttonStyle(.bordered)
+            .tint(tint)
+        }
+        .padding(.vertical, 4)
+        .onChange(of: item) { _, picked in
+            guard let picked else { return }
+            Task {
+                if let data = try? await picked.loadTransferable(type: Data.self), let image = UIImage(data: data) {
+                    withAnimation(.smooth) { photoData = ParcelScanner.smallPhoto(image) }
+                }
+                item = nil
+            }
+        }
     }
 }

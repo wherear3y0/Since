@@ -33,7 +33,6 @@ struct CounterEditor: View {
     @State private var numberStyle: DurationStyle
     // An owned thing's picture, and reading one off a screenshot of its order or receipt.
     @State private var photoData: Data?
-    @State private var photoItem: PhotosPickerItem?
     @State private var screenshotItem: PhotosPickerItem?
     @State private var isScanning = false
     @State private var scanNote: String?
@@ -226,39 +225,10 @@ struct CounterEditor: View {
     /// An owned thing's picture, and its name, the day it was got and a picture read off a screenshot.
     private var ownedSection: some View {
         Section {
-            HStack(spacing: 14) {
-                PhotosPicker(selection: $photoItem, matching: .images) {
-                    ItemPhoto(data: photoData, symbol: symbol, tint: color.color, side: 64)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Photo")
-                VStack(alignment: .leading, spacing: 4) {
-                    PhotosPicker(selection: $screenshotItem, matching: .images) {
-                        Label(isScanning ? "Reading…" : "Scan Screenshot", systemImage: "text.viewfinder")
-                            .font(.body.weight(.semibold))
-                    }
-                    .disabled(isScanning)
-                    Text(scanNote ?? "The name, the day you got it and a photo, read from a screenshot of the order or receipt.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .contentTransition(.opacity)
-                }
-            }
-            .padding(.vertical, 4)
-            if photoData != nil {
-                Button("Remove Photo", role: .destructive) {
-                    withAnimation(.smooth) { photoData = nil }
-                }
-            }
-        }
-        .onChange(of: photoItem) { _, item in
-            guard let item else { return }
-            Task {
-                if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
-                    withAnimation(.smooth) { photoData = ParcelScanner.smallPhoto(image) }
-                }
-                photoItem = nil
-            }
+            ScreenshotFillRow(selection: $screenshotItem, isScanning: isScanning,
+                              note: scanNote ?? "Pick a screenshot of the order or receipt: the name, the day you got it and a photo fill in from it.",
+                              tint: color.color)
+            ItemPhotoRow(title: "Photo", photoData: $photoData, symbol: symbol, tint: color.color)
         }
         .onChange(of: screenshotItem) { _, item in
             guard let item else { return }

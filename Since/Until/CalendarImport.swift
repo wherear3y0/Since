@@ -399,6 +399,15 @@ enum SampleCalendarEvents {
             }
             try? store.save(event, span: .futureEvents)
         }
+        // Two with a time, on one day, for taking a countdown's time from Calendar.
+        for (title, hour, minute) in [("Haircut", 15, 30), ("Lunch with Anna", 13, 0)] where !existing.contains(title) {
+            let event = EKEvent(eventStore: store)
+            event.title = title
+            event.startDate = Calendar.app.date(bySettingHour: hour, minute: minute, second: 0, of: day(3))!
+            event.endDate = event.startDate.addingTimeInterval(3600)
+            event.calendar = calendar
+            try? store.save(event, span: .thisEvent)
+        }
         insertReminders(into: store)
     }
 
@@ -422,3 +431,37 @@ enum SampleCalendarEvents {
     }
 }
 #endif
+
+/// A timed event on one day in Calendar, for setting a countdown's time from it.
+struct CalendarTime: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let start: Date
+
+    /// The day's timed events: the one the countdown came from and the ones named like it first, then by time.
+    /// None without full access to Calendar; it isn't asked for here.
+    @MainActor
+    static func on(_ day: Date, title: String, linkedID: String?, calendar: Calendar = .app) -> [CalendarTime] {
+        guard EKEventStore.authorizationStatus(for: .event) == .fullAccess else { return [] }
+        let store = EKEventStore.shared
+        let start = calendar.startOfDay(for: day)
+        let end = calendar.date(byAdding: .day, value: 1, to: start)!
+        let times = store.events(matching: store.predicateForEvents(withStart: start, end: end, calendars: nil))
+            .filter { !$0.isAllDay && $0.startDate >= start && $0.startDate < end }
+            .map { CalendarTime(id: $0.calendarItemIdentifier, title: $0.title ?? "", start: $0.startDate) }
+        return times.sorted { a, b in
+            let (aMatches, bMatches) = (a.matches(title, linkedID: linkedID), b.matches(title, linkedID: linkedID))
+            return aMatches != bMatches ? aMatches : a.start < b.start
+        }
+    }
+
+    /// The event the countdown came from, or one named like it: either title contains the other.
+    func matches(_ countdownTitle: String, linkedID: String?) -> Bool {
+        if id == linkedID {
+            return true
+        }
+        let mine = title.lowercased()
+        let theirs = countdownTitle.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return !mine.isEmpty && !theirs.isEmpty && (mine.contains(theirs) || theirs.contains(mine))
+    }
+}

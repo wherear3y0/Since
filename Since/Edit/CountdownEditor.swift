@@ -26,6 +26,8 @@ struct CountdownEditor: View {
     @State private var showsLiveActivity: Bool
     @State private var numberStyle: DurationStyle
     @State private var hasTime: Bool
+    /// Timed events in Calendar on the chosen day, to take the time from.
+    @State private var calendarTimes: [CalendarTime] = []
     @State private var hasWindow: Bool
     @State private var windowEnd: Date
     /// The start of the wait shows up for editing only once its chip is turned on.
@@ -38,7 +40,6 @@ struct CountdownEditor: View {
     @State private var shopName: String
     @State private var orderURL: String
     @State private var photoData: Data?
-    @State private var photoItem: PhotosPickerItem?
     @State private var screenshotItem: PhotosPickerItem?
     @State private var isScanning = false
     /// What the last screenshot filled in.
@@ -160,19 +161,22 @@ struct CountdownEditor: View {
                 }
                 .sectionReveal(isPreviewShown, delay: 0.14)
 
-                Section {
-                    Picker("Style", selection: $style.animation(.smooth(duration: 0.45))) {
-                        ForEach(CountdownStyle.allCases) { option in
-                            Text(option.title).tag(option)
+                // A parcel's card is its picture: it has no style to choose.
+                if !isParcel {
+                    Section {
+                        Picker("Style", selection: $style.animation(.smooth(duration: 0.45))) {
+                            ForEach(CountdownStyle.allCases) { option in
+                                Text(option.title).tag(option)
+                            }
                         }
+                        .pickerStyle(.segmented)
+                        .listRowInsets(EdgeInsets())
+                        .sectionReveal(isPreviewShown, delay: 0.17, background: .clear)
+                    } footer: {
+                        Text(style.explanation)
+                            .contentTransition(.opacity)
+                            .blurIn(isPreviewShown, delay: 0.17)
                     }
-                    .pickerStyle(.segmented)
-                    .listRowInsets(EdgeInsets())
-                    .sectionReveal(isPreviewShown, delay: 0.17, background: .clear)
-                } footer: {
-                    Text(style.explanation)
-                        .contentTransition(.opacity)
-                        .blurIn(isPreviewShown, delay: 0.17)
                 }
 
                 Section {
@@ -280,6 +284,11 @@ struct CountdownEditor: View {
             .sensoryFeedback(.selection, trigger: tinted)
             .sensoryFeedback(.selection, trigger: numberStyle)
             .sensoryFeedback(.selection, trigger: style)
+            // The day's events in Calendar, looked up again when the day or the title changes.
+            .task(id: "\(Calendar.app.startOfDay(for: date).timeIntervalSince1970) \(trimmedTitle)") {
+                calendarTimes = isBirthday || isParcel ? []
+                    : CalendarTime.on(date, title: trimmedTitle, linkedID: countdown?.calendarItemID)
+            }
             .sensoryFeedback(.selection, trigger: rule)
             .sensoryFeedback(.selection, trigger: date)
             .sensoryFeedback(.selection, trigger: [hasTime, hasWindow, editsWaitStart, notifyBefore, showsLiveActivity,
@@ -326,47 +335,15 @@ struct CountdownEditor: View {
         let progress = days > 0 ? Double(waited) / Double(waited + days) : 1
 
         return VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline) {
-                HStack(spacing: 6) {
-                    if isParcel && photoData != nil {
-                        ItemPhoto(data: photoData, symbol: symbol, tint: tint, side: 22)
-                    } else {
-                        Image(systemName: symbol)
-                            .contentTransition(.symbolEffect(.replace))
-                    }
-                    Text(trimmedTitle.isEmpty ? "Title" : trimmedTitle)
-                        .lineLimit(1)
-                }
-                .font(.headline)
-                .foregroundStyle(tint)
-                Spacer()
-                DaysLeftText(days: days, size: 22, isApproximate: draft.isApproximate())
+            if isParcel {
+                parcelPreview(tint: tint, days: days)
+            } else {
+                stylePreview(tint: tint, days: days, waited: waited, progress: progress)
             }
-
-            Group {
-                switch style {
-                case .calendar:
-                    HStack(spacing: 16) {
-                        ForEach(Calendar.app.monthsShown(now: .now, target: target), id: \.self) { month in
-                            MonthGrid(month: month, target: target, tint: tint, showsTitle: true, window: draft.window())
-                        }
-                    }
-                    .frame(height: 150)
-                case .fill:
-                    CountdownFillFooter(waited: waited, daysLeft: days, progress: progress)
-                        .padding(.top, 90)
-                case .timeline:
-                    CountdownTimeline(start: Calendar.app.date(byAdding: .day, value: -waited, to: .now)!,
-                                      target: target, waited: waited, daysLeft: days, tint: tint)
-                        .padding(.vertical, 22)
-                }
-            }
-            .id(style)
-            .transition(.blurReplace)
         }
         .padding(16)
         .background {
-            if style == .fill {
+            if style == .fill && !isParcel {
                 FillLevel(level: progress, tint: tint)
                     .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
             }
@@ -380,29 +357,77 @@ struct CountdownEditor: View {
         }
     }
 
+    /// A parcel as on its card: the product big beside its name, days to go and dates.
+    private func parcelPreview(tint: Color, days: Int) -> some View {
+        let side: CGFloat = 104
+        return HStack(alignment: .top, spacing: 14) {
+            ParcelPicture(photo: photoData, symbol: symbol, tint: tint)
+                .frame(width: side, height: side)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(trimmedTitle.isEmpty ? "Title" : trimmedTitle)
+                    .font(.headline)
+                    .foregroundStyle(tint)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 4)
+                DaysLeftText(days: days, size: 30, isApproximate: draft.isApproximate())
+                Text(draft.dateLine())
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: side)
+        }
+    }
+
+    /// The other countdowns: days to go in the header, the wait in the chosen style under it.
+    @ViewBuilder
+    private func stylePreview(tint: Color, days: Int, waited: Int, progress: Double) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            HStack(spacing: 6) {
+                Image(systemName: symbol)
+                    .contentTransition(.symbolEffect(.replace))
+                Text(trimmedTitle.isEmpty ? "Title" : trimmedTitle)
+                    .lineLimit(1)
+            }
+            .font(.headline)
+            .foregroundStyle(tint)
+            Spacer()
+            DaysLeftText(days: days, size: 22, isApproximate: draft.isApproximate())
+        }
+
+        Group {
+            switch style {
+            case .calendar:
+                HStack(spacing: 16) {
+                    ForEach(Calendar.app.monthsShown(now: .now, target: target), id: \.self) { month in
+                        MonthGrid(month: month, target: target, tint: tint, showsTitle: true, window: draft.window())
+                    }
+                }
+                .frame(height: 150)
+            case .fill:
+                CountdownFillFooter(waited: waited, daysLeft: days, progress: progress)
+                    .padding(.top, 90)
+            case .timeline:
+                CountdownTimeline(start: Calendar.app.date(byAdding: .day, value: -waited, to: .now)!,
+                                  target: target, waited: waited, daysLeft: days, tint: tint)
+                    .padding(.vertical, 22)
+            }
+        }
+        .id(style)
+        .transition(.blurReplace)
+    }
+
     // MARK: - Parcel
 
     private var parcelSection: some View {
         Section {
-            HStack(spacing: 14) {
-                PhotosPicker(selection: $photoItem, matching: .images) {
-                    ItemPhoto(data: photoData, symbol: symbol, tint: color.color, side: 64)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Photo")
-                VStack(alignment: .leading, spacing: 4) {
-                    PhotosPicker(selection: $screenshotItem, matching: .images) {
-                        Label(isScanning ? "Reading…" : "Scan Order Screenshot", systemImage: "text.viewfinder")
-                            .font(.body.weight(.semibold))
-                    }
-                    .disabled(isScanning)
-                    Text(scanNote ?? "The dates, tracking number, shop and photo, read from a screenshot of the order.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .contentTransition(.opacity)
-                }
-            }
-            .padding(.vertical, 4)
+            ScreenshotFillRow(selection: $screenshotItem, isScanning: isScanning,
+                              note: scanNote ?? "Pick a screenshot of the order: the dates, tracking number, shop, name and photo fill in from it.",
+                              tint: color.color)
+            ItemPhotoRow(title: "Product Photo", photoData: $photoData, symbol: symbol, tint: color.color)
             TextField("Shop", text: $shopName)
             TextField("Tracking Number", text: $trackingNumber)
                 .textInputAutocapitalization(.characters)
@@ -420,15 +445,6 @@ struct CountdownEditor: View {
                 .autocorrectionDisabled()
         } header: {
             Text("Parcel")
-        }
-        .onChange(of: photoItem) { _, item in
-            guard let item else { return }
-            Task {
-                if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
-                    withAnimation(.smooth) { photoData = ParcelScanner.smallPhoto(image) }
-                }
-                photoItem = nil
-            }
         }
         .onChange(of: screenshotItem) { _, item in
             guard let item else { return }
@@ -568,6 +584,10 @@ struct CountdownEditor: View {
         if hasTime && !isBirthday {
             DatePicker("Time", selection: $date, displayedComponents: .hourAndMinute)
                 .transition(.blurReplace)
+            if !calendarTimes.isEmpty {
+                calendarTimesRow
+                    .transition(.blurReplace)
+            }
         }
         if editsWaitStart && !rule.repeats {
             DatePicker("Waiting Since", selection: $waitStart.animation(.smooth), in: ...Date.now,
@@ -613,15 +633,62 @@ struct CountdownEditor: View {
         }
     }
 
-    /// Turning the time on starts it at the next full hour.
+    /// The day's events in Calendar, each a button that sets the time to when it starts.
+    private var calendarTimesRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("From Calendar")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ForEach(calendarTimes.prefix(6)) { event in
+                        let isSet = Calendar.app.isDate(event.start, equalTo: date, toGranularity: .minute)
+                        Button {
+                            withAnimation(.smooth) { setTime(from: event) }
+                        } label: {
+                            HStack(spacing: 5) {
+                                Text(event.start.formatted(date: .omitted, time: .shortened))
+                                    .fontWeight(.semibold)
+                                    .monospacedDigit()
+                                Text(event.title)
+                                    .lineLimit(1)
+                            }
+                            .font(.subheadline)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .foregroundStyle(isSet ? color.color : Color.primary)
+                            .background(isSet ? color.color.opacity(0.22) : Color.primary.opacity(0.08), in: Capsule())
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+            }
+            .scrollIndicators(.hidden)
+            .scrollClipDisabled()
+        }
+        .padding(.vertical, 2)
+    }
+
+    /// Turning the time on takes it from the Calendar event the countdown came from, or one named like it
+    /// that day; otherwise it starts at the next full hour.
     private func setTime(_ isOn: Bool) {
         hasTime = isOn
         guard isOn else { return }
         hasWindow = false
         if countdown?.hasTime != true {
-            let hour = (Calendar.app.component(.hour, from: .now) + 1) % 24
-            date = Calendar.app.date(bySettingHour: hour, minute: 0, second: 0, of: date) ?? date
+            if let event = calendarTimes.first(where: { $0.matches(trimmedTitle, linkedID: countdown?.calendarItemID) }) {
+                setTime(from: event)
+            } else {
+                let hour = (Calendar.app.component(.hour, from: .now) + 1) % 24
+                date = Calendar.app.date(bySettingHour: hour, minute: 0, second: 0, of: date) ?? date
+            }
         }
+    }
+
+    /// The chosen day at the event's hour and minute.
+    private func setTime(from event: CalendarTime) {
+        let time = Calendar.app.dateComponents([.hour, .minute], from: event.start)
+        date = Calendar.app.date(bySettingHour: time.hour ?? 12, minute: time.minute ?? 0, second: 0, of: date) ?? date
     }
 
     private func save() {
