@@ -460,7 +460,6 @@ struct RectangularCountdownView: View {
     let countdown: CountdownSnapshot
 
     var body: some View {
-        let days = countdown.daysLeft
         VStack(alignment: .leading, spacing: 0) {
             Label(countdown.title, systemImage: countdown.symbol)
                 .font(.footnote.weight(.semibold))

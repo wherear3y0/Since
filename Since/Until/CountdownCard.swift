@@ -574,7 +574,6 @@ struct CountdownMenuPreview: View {
 
     var body: some View {
         let tint = countdown.color.color.onCard(tinted: countdown.tinted)
-        let target = countdown.target()
 
         VStack(alignment: .leading, spacing: 0) {
             if countdown.isParcel {

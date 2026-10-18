@@ -184,6 +184,7 @@ struct ItemPhotoRow: View {
     @State private var item: PhotosPickerItem?
 
     var body: some View {
+        let pick = photoData == nil ? "Choose" : "Change"
         HStack(spacing: 14) {
             ItemPhoto(data: photoData, symbol: symbol, tint: tint, side: 52)
             Text(title)
@@ -196,7 +197,7 @@ struct ItemPhotoRow: View {
                 .buttonStyle(.borderless)
             }
             PhotosPicker(selection: $item, matching: .images) {
-                Text(photoData == nil ? "Choose" : "Change")
+                Text(pick)
                     .font(.subheadline.weight(.semibold))
             }
             .buttonStyle(.bordered)
