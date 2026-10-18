@@ -471,6 +471,9 @@ extension UntilView {
                     postponing = countdown
                 }
             }
+            if !countdown.isArchived && !countdown.hasPassed() {
+                LockScreenButton(countdown: countdown)
+            }
             if !countdown.isArchived {
                 Button(countdown.isPinned ? "Unpin" : "Pin to Top", systemImage: countdown.isPinned ? "pin.slash" : "pin") {
                     setPinned(!countdown.isPinned, countdown)

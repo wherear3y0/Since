@@ -111,10 +111,21 @@ struct CountdownDetailView: View {
             if !countdown.isArchived {
                 ToolbarSpacer(.fixed, placement: .topBarTrailing)
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(countdown.isPinned ? "Unpin" : "Pin to Top",
-                           systemImage: countdown.isPinned ? "pin.fill" : "pin") {
-                        countdown.isPinned.toggle()
-                        saveChanges(context)
+                    // Pinning and the Lock Screen in one menu, so the title keeps its room.
+                    Menu("More", systemImage: countdown.isPinned ? "pin.fill" : "ellipsis") {
+                        Button(countdown.isPinned ? "Unpin" : "Pin to Top",
+                               systemImage: countdown.isPinned ? "pin.slash" : "pin") {
+                            countdown.isPinned.toggle()
+                            saveChanges(context)
+                        }
+                        if !countdown.hasPassed() {
+                            LockScreenButton(countdown: countdown)
+                        }
+                        if !countdown.rule.repeats {
+                            Button("Postpone…", systemImage: "calendar.badge.clock") {
+                                isPostponing = true
+                            }
+                        }
                     }
                 }
             }
@@ -321,6 +332,7 @@ struct CountdownHeroCard: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                         .id(target)
                         .transition(.blurReplace)
                     Spacer(minLength: 0)
@@ -550,5 +562,24 @@ private struct FlowingDays: View {
             .font(.subheadline.weight(.semibold))
             .strikethrough()
             .foregroundStyle(.secondary)
+    }
+}
+
+/// Puts a countdown on the Lock Screen right now, whatever the day, or takes it off.
+struct LockScreenButton: View {
+    @Environment(\.modelContext) private var context
+    let countdown: Countdown
+
+    var body: some View {
+        let isShown = countdown.wantsLiveActivity()
+        Button(isShown ? "Remove from Lock Screen" : "Show on Lock Screen",
+               systemImage: isShown ? "iphone.slash" : "platter.filled.bottom.iphone") {
+            if !isShown {
+                LiveActivities.allowRestart(of: countdown.id)
+            }
+            countdown.showLiveActivityNow(!isShown)
+            saveChanges(context)
+        }
+        .sensoryFeedback(.selection, trigger: isShown)
     }
 }

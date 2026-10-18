@@ -257,6 +257,17 @@ final class Countdown {
         return DayMath.daysUntil(start, from: now, calendar: calendar) <= max(0, liveActivityLead)
     }
 
+    /// Puts its Live Activity on the Lock Screen right away, or takes it off: off for good until it's turned
+    /// back on, so it doesn't come straight back for being due.
+    func showLiveActivityNow(_ isShown: Bool) {
+        liveActivityForced = isShown
+        if isShown {
+            showsLiveActivity = true
+        } else if wantsLiveActivity() {
+            showsLiveActivity = false
+        }
+    }
+
     /// Where the wait starts: the last time a repeating day came round, or when the countdown was added.
     func waitStart(now: Date = .now, calendar: Calendar = .app) -> Date {
         if let previous = previousTime(now: now, calendar: calendar) {

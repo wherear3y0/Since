@@ -1,10 +1,10 @@
 import ActivityKit
 import Foundation
 
-/// Live Activities for the countdowns that have one turned on, on their day. An app can only start one
-/// while it's open, so this runs whenever Since comes to the foreground and after every change.
-/// Each countdown gets one a day: once it's ended or swiped away, it isn't brought back that day
-/// unless its switch is turned on again.
+/// Live Activities for the countdowns that have one turned on: on their day, from some days before it,
+/// or right away when asked for, and for a running timer. An app can only start one while it's open, so this
+/// runs whenever Since comes to the foreground and after every change. Each countdown gets one a day: once
+/// it's ended or swiped away, it isn't brought back that day unless it's turned on again.
 enum LiveActivities {
     /// Countdown IDs and the day their activity was last started, so it starts only once a day.
     private static let startedKey = "liveActivityStarted"
@@ -15,11 +15,19 @@ enum LiveActivities {
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: today)!
 
         var wanted: [UUID: CountdownActivityAttributes.ContentState] = [:]
+        var ends: [UUID: Date] = [:]
         for countdown in countdowns where countdown.wantsLiveActivity(now: now, calendar: calendar) {
+            let moment = countdown.moment(now: now, calendar: calendar)
             wanted[countdown.id] = CountdownActivityAttributes.ContentState(
                 title: countdown.title, symbol: countdown.symbol, colorName: countdown.colorName,
                 day: countdown.target(now: now, calendar: calendar), turns: countdown.turns(now: now, calendar: calendar),
-                isBirthday: countdown.isBirthday, waited: countdown.waited(now: now, calendar: calendar))
+                isBirthday: countdown.isBirthday, waited: countdown.waited(now: now, calendar: calendar),
+                daysLeft: countdown.isInWindow(now: now, calendar: calendar) ? 0 : max(0, countdown.daysLeft(now: now, calendar: calendar)),
+                moment: moment, isTimer: countdown.isTimer, start: countdown.isTimer ? countdown.createdAt : nil)
+            // A timer's activity goes stale when it's up, and shows that it is.
+            if countdown.isTimer, let moment {
+                ends[countdown.id] = moment
+            }
         }
         // One sync at a time: two saves a moment apart would otherwise both see no activity yet and start two.
         // Each one waits for the one before and reads what it started.
@@ -28,7 +36,8 @@ enum LiveActivities {
             await previous?.value
             let started = startedDays()
             let mayStart = Set(wanted.keys.filter { started[$0.uuidString] != today.timeIntervalSince1970 })
-            let newlyStarted = await LiveActivityRunner.sync(wanted: wanted, mayStart: mayStart, until: endOfDay)
+            let newlyStarted = await LiveActivityRunner.sync(wanted: wanted, mayStart: mayStart, until: endOfDay,
+                                                             ends: ends)
             remember(newlyStarted, on: today)
         }
     }
@@ -67,7 +76,7 @@ nonisolated enum LiveActivityRunner {
     /// that may start and aren't running. Returns the IDs of the countdowns it started.
     @concurrent
     static func sync(wanted: [UUID: CountdownActivityAttributes.ContentState], mayStart: Set<UUID>,
-                     until endOfDay: Date) async -> Set<UUID> {
+                     until endOfDay: Date, ends: [UUID: Date] = [:]) async -> Set<UUID> {
         var running = Set<UUID>()
         for activity in Activity<CountdownActivityAttributes>.activities {
             let id = activity.attributes.countdownID
@@ -75,7 +84,7 @@ nonisolated enum LiveActivityRunner {
             if let state = wanted[id], isLive, !running.contains(id) {
                 running.insert(id)
                 if activity.content.state != state {
-                    await activity.update(ActivityContent(state: state, staleDate: endOfDay))
+                    await activity.update(ActivityContent(state: state, staleDate: ends[id] ?? endOfDay))
                 }
             } else if isLive {
                 await activity.end(nil, dismissalPolicy: .immediate)
@@ -88,7 +97,7 @@ nonisolated enum LiveActivityRunner {
             // Fails when the app isn't in the foreground (like when Siri changed something); tried again next time.
             if (try? Activity<CountdownActivityAttributes>.request(
                 attributes: CountdownActivityAttributes(countdownID: id),
-                content: ActivityContent(state: state, staleDate: endOfDay),
+                content: ActivityContent(state: state, staleDate: ends[id] ?? endOfDay),
                 pushType: nil)) != nil {
                 started.insert(id)
             }

@@ -173,8 +173,14 @@ struct SettingsView: View {
                     Label("Turn On Live Activities in Settings", systemImage: "exclamationmark.circle")
                 }
             }
-            ForEach(countdowns.filter { !$0.isArchived }) { countdown in
-                Toggle(isOn: liveActivityBinding(for: countdown)) {
+            ForEach(countdowns.filter { !$0.isArchived && !$0.isTimer }) { countdown in
+                Picker(selection: liveActivityBinding(for: countdown)) {
+                    Text("Off").tag(-1)
+                    Text("On the Day").tag(0)
+                    Text("1 Day Before").tag(1)
+                    Text("3 Days Before").tag(3)
+                    Text("A Week Before").tag(7)
+                } label: {
                     Label {
                         Text(countdown.title)
                     } icon: {
@@ -182,13 +188,13 @@ struct SettingsView: View {
                             .foregroundStyle(countdown.color.color)
                     }
                 }
-                .tint(countdown.color.color)
             }
         } header: {
             Text("Live Activities")
         } footer: {
-            Text("On the day itself, on the Lock Screen and in the Dynamic Island. It appears once you open Since "
-                 + "that day, and only once. Keep it for the days that matter most.")
+            Text("On the Lock Screen and in the Dynamic Island, on the day or from some days before it. It appears "
+                 + "when you open Since, once a day, and iOS takes it away after a few hours. Keep it for the days "
+                 + "that matter most.")
         }
         .sectionReveal(isRevealed, delay: 0.18)
     }
@@ -273,14 +279,18 @@ struct SettingsView: View {
         }
     }
 
-    private func liveActivityBinding(for countdown: Countdown) -> Binding<Bool> {
+    /// -1 for off, otherwise how many days before the day it starts.
+    private func liveActivityBinding(for countdown: Countdown) -> Binding<Int> {
         Binding {
-            countdown.showsLiveActivity
-        } set: { isOn in
-            if isOn {
+            countdown.showsLiveActivity ? countdown.liveActivityLead : -1
+        } set: { lead in
+            if lead >= 0 {
                 LiveActivities.allowRestart(of: countdown.id)
+                countdown.liveActivityLead = lead
+            } else {
+                countdown.liveActivityForced = false
             }
-            countdown.showsLiveActivity = isOn
+            countdown.showsLiveActivity = lead >= 0
             saveChanges(context)
         }
     }

@@ -19,6 +19,13 @@ nonisolated struct CountdownActivityAttributes: ActivityAttributes {
         var isBirthday: Bool
         /// How many days the wait took. Optional, so a state saved by an earlier version still reads.
         var waited: Int? = nil
+        /// Days still to go, when it's shown ahead of the day; nil or 0 on the day.
+        var daysLeft: Int? = nil
+        /// When it comes, when it has a time (or when a timer ends): ticks down to it.
+        var moment: Date? = nil
+        /// A quick timer, counted from `start` to `moment`.
+        var isTimer: Bool? = nil
+        var start: Date? = nil
     }
 
     var countdownID: UUID
