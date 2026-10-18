@@ -18,13 +18,19 @@ struct CountdownCard: View {
 
     var body: some View {
         let tint = countdown.color.color.onCard(tinted: countdown.tinted)
-        let fills = countdown.style == .fill && !needsDecision
+        let fills = countdown.style == .fill && !needsDecision && !countdown.isParcel
 
         // A new style swaps in through a blur.
         ZStack(alignment: .topLeading) {
             Group {
                 if countdown.isTimer {
                     timer(tint: tint)
+                } else if countdown.isParcel {
+                    switch countdown.size {
+                    case .m: parcelCompact(tint: tint)
+                    case .l: parcelWide(tint: tint)
+                    case .xl: parcelLarge(tint: tint)
+                    }
                 } else {
                     switch countdown.size {
                     case .m: compact(tint: tint)
@@ -215,6 +221,96 @@ struct CountdownCard: View {
                 }
             }
             map(tint: tint, height: 120)
+        }
+    }
+
+    // MARK: - Parcels
+
+    /// A parcel to mark received right on the card: its window has come, or gone by.
+    private var parcelIsDue: Bool {
+        !countdown.isArchived && (countdown.isTheDay() || countdown.hasPassed())
+    }
+
+    private func parcelPicture(tint: Color) -> some View {
+        ParcelPicture(photo: countdown.photoData, symbol: countdown.symbol, tint: tint)
+    }
+
+    private func parcelTitle(tint: Color, lines: Int) -> some View {
+        Text(countdown.title)
+            .font(.headline)
+            .foregroundStyle(tint)
+            .lineLimit(lines)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// M: the picture across the top, edge to edge; the name, days to go, dates and shop compact under it.
+    private func parcelCompact(tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            parcelPicture(tint: tint)
+                .frame(maxHeight: .infinity)
+                .padding([.horizontal, .top], -CardSize.m.padding)
+            VStack(alignment: .leading, spacing: 1) {
+                parcelTitle(tint: tint, lines: 1)
+                DaysLeftText(countdown, size: 30)
+                dateLine
+                if !parcelIsDue, let shop = countdown.shopName {
+                    Text(shop)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            if parcelIsDue {
+                doneButton(tint: tint)
+            }
+        }
+    }
+
+    /// L: the picture as a big square on the left; the name, days to go, dates, shop and number beside it.
+    private func parcelWide(tint: Color) -> some View {
+        let side: CGFloat = 132
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 14) {
+                parcelPicture(tint: tint)
+                    .frame(width: side, height: side)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    parcelTitle(tint: tint, lines: 2)
+                    Spacer(minLength: 6)
+                    DaysLeftText(countdown, size: 40)
+                    dateLine
+                    placeLine
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(height: side)
+            }
+            if parcelIsDue {
+                doneButton(tint: tint)
+            }
+        }
+    }
+
+    /// XL: the picture big across the top, the name, dates and days under it, then the delivery window.
+    private func parcelLarge(tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            parcelPicture(tint: tint)
+                .frame(height: 240)
+                .padding([.horizontal, .top], -CardSize.xl.padding)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    parcelTitle(tint: tint, lines: 2)
+                    dateLine
+                    placeLine
+                }
+                Spacer(minLength: 8)
+                DaysLeftText(countdown, size: 56)
+            }
+            if parcelIsDue {
+                doneButton(tint: tint)
+            } else {
+                twoMonths(tint: tint)
+                    .frame(height: 170)
+            }
         }
     }
 
@@ -431,19 +527,22 @@ struct CountdownMenuPreview: View {
         let target = countdown.target()
 
         VStack(alignment: .leading, spacing: 0) {
-            Group {
-                if countdown.isParcel && countdown.photoData != nil {
-                    HStack(spacing: 6) {
-                        ItemPhoto(data: countdown.photoData, symbol: countdown.symbol, tint: tint, side: 18)
-                        Text(countdown.title)
-                    }
-                } else {
-                    Label(countdown.title, systemImage: countdown.symbol)
-                }
+            if countdown.isParcel {
+                // The product big across the top, like on its card.
+                ParcelPicture(photo: countdown.photoData, symbol: countdown.symbol, tint: tint)
+                    .frame(height: 78)
+                    .padding([.horizontal, .top], -16)
+                Text(countdown.title)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                    .foregroundStyle(tint)
+                    .padding(.top, 8)
+            } else {
+                Label(countdown.title, systemImage: countdown.symbol)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                    .foregroundStyle(tint)
             }
-            .font(.subheadline.weight(.semibold))
-            .lineLimit(1)
-            .foregroundStyle(tint)
             Spacer(minLength: 4)
             DaysLeftText(countdown, size: 40)
                 .minimumScaleFactor(0.5)
@@ -451,7 +550,7 @@ struct CountdownMenuPreview: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer(minLength: 8)
-            switch countdown.style {
+            switch countdown.isParcel ? .calendar : countdown.style {
             case .calendar:
                 GeometryReader { proxy in
                     ZStack(alignment: .leading) {
@@ -510,5 +609,31 @@ private struct PlaceLabelStyle: LabelStyle {
                 .imageScale(.small)
             configuration.title
         }
+    }
+}
+
+/// A parcel's product big, so it's found at a glance; its icon on its color when there's no picture.
+struct ParcelPicture: View {
+    let photo: Data?
+    let symbol: String
+    let tint: Color
+
+    var body: some View {
+        Color.clear
+            .overlay {
+                if let photo, let image = UIImage(data: photo) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    ZStack {
+                        tint.opacity(0.16)
+                        Image(systemName: symbol)
+                            .font(.system(size: 40, weight: .semibold))
+                            .foregroundStyle(tint)
+                    }
+                }
+            }
+            .clipped()
     }
 }

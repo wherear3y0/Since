@@ -50,6 +50,13 @@ struct CountdownDetailView: View {
                         .blurIn(contentShown, delay: 0.05)
                 }
 
+                // The product's picture comes before the time left: it's what the page is found by.
+                if countdown.isParcel {
+                    ParcelCard(countdown: countdown)
+                        .detailCard()
+                        .blurIn(contentShown, delay: 0.08)
+                }
+
                 if showsTimeCard {
                     Group {
                         if countdown.hasPassed() {
@@ -60,12 +67,6 @@ struct CountdownDetailView: View {
                     }
                     .detailCard()
                     .blurIn(contentShown, delay: 0.1)
-                }
-
-                if countdown.isParcel {
-                    ParcelCard(countdown: countdown)
-                        .detailCard()
-                        .blurIn(contentShown, delay: 0.08)
                 }
 
                 if countdown.hasPlace {

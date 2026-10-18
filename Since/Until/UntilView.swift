@@ -448,21 +448,23 @@ extension UntilView {
         SizeMenu(current: countdown.size) { size in
             setSize(size, of: countdown)
         }
-        // Buttons rather than a Picker, for the same reason as the size menu.
-        Menu {
-            ForEach(CountdownStyle.allCases) { style in
-                Button {
-                    setStyle(style, of: countdown)
-                } label: {
-                    if countdown.style == style {
-                        Label(style.title, systemImage: "checkmark")
-                    } else {
-                        Text(style.title)
+        // Buttons rather than a Picker, for the same reason as the size menu. A parcel's card is its picture.
+        if !countdown.isParcel {
+            Menu {
+                ForEach(CountdownStyle.allCases) { style in
+                    Button {
+                        setStyle(style, of: countdown)
+                    } label: {
+                        if countdown.style == style {
+                            Label(style.title, systemImage: "checkmark")
+                        } else {
+                            Text(style.title)
+                        }
                     }
                 }
+            } label: {
+                Label("Style", systemImage: countdown.style.symbol)
             }
-        } label: {
-            Label("Style", systemImage: countdown.style.symbol)
         }
 
         Section {
