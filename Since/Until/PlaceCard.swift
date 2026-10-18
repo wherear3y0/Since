@@ -26,17 +26,17 @@ struct PlaceCard: View {
                     .padding(.top, -8)
             }
 
+            // A picture, not a live map: next to the time ticking down on the day, a live map was made
+            // again on every tick and froze the page. Tapping it shows the place in Apple Maps.
             if let coordinate = countdown.coordinate {
-                Map(initialPosition: .region(MKCoordinateRegion(center: coordinate, latitudinalMeters: 900,
-                                                                longitudinalMeters: 900)),
-                    interactionModes: []) {
-                    Marker(countdown.placeName ?? "", systemImage: countdown.symbol, coordinate: coordinate)
-                        .tint(tint)
-                }
-                .frame(height: 170)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                // A new place moves the map along with it.
-                .id("\(coordinate.latitude),\(coordinate.longitude)")
+                MapSnapshot(coordinate: coordinate, symbol: countdown.symbol, tint: tint, height: 170)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        let item = MKMapItem(location: CLLocation(latitude: coordinate.latitude,
+                                                                  longitude: coordinate.longitude), address: nil)
+                        item.name = countdown.placeName
+                        item.openInMaps()
+                    }
             }
 
             HStack(spacing: 8) {

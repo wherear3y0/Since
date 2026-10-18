@@ -26,6 +26,9 @@ nonisolated struct CountdownActivityAttributes: ActivityAttributes {
         /// A quick timer, counted from `start` to `moment`.
         var isTimer: Bool? = nil
         var start: Date? = nil
+        /// Where it is, and when to leave to get there on time, when that's known.
+        var place: String? = nil
+        var leaveTime: Date? = nil
     }
 
     var countdownID: UUID

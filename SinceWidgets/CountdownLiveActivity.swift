@@ -93,8 +93,12 @@ struct CountdownLiveActivity: Widget {
         if isTheDay(state), let turns = state.turns {
             return state.isBirthday ? "Turns \(turns) today" : (turns == 1 ? "1 year today" : "\(turns) years today")
         }
+        if isTheDay(state), let leave = state.leaveTime, !isOver, leave > .now {
+            return "Leave by \(leave.formatted(date: .omitted, time: .shortened))"
+        }
         if isTheDay(state), let moment = state.moment {
             return "Today at \(moment.formatted(date: .omitted, time: .shortened))"
+                + (state.place.map { " · \($0)" } ?? "")
         }
         // Ahead of the day: "Tue, Oct 27", with the time when it has one.
         let day = state.day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
@@ -173,6 +177,7 @@ struct CountdownActivityView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
                 Spacer(minLength: 8)
                 ActivityTimeLeft(state: state, isOver: isOver)

@@ -209,6 +209,13 @@ struct CalendarImportView: View {
                                           : event.date,
                                       rule: event.rule ?? .never, sortOrder: order)
             countdown.hasTime = !event.isAllDay
+            // The event's place comes along; one known only by name is found on the map when its page opens.
+            if let location = event.location, !location.isEmpty {
+                countdown.placeName = location.components(separatedBy: "\n").first ?? location
+                countdown.placeAddress = location.contains("\n")
+                    ? location.components(separatedBy: "\n").dropFirst().joined(separator: ", ") : nil
+                countdown.coordinate = event.coordinate
+            }
             // Calendar gives the next time, not the first, so there's no telling how many years it's been.
             countdown.countsYears = false
             countdown.isBirthday = countdown.looksLikeBirthday
@@ -233,6 +240,9 @@ struct CalendarEvent: Identifiable {
     let date: Date
     /// No time of day, just the day.
     var isAllDay = true
+    /// Where it happens, as written in the event, and the point on the map when Calendar has one.
+    var location: String? = nil
+    var coordinate: CLLocationCoordinate2D? = nil
     /// Calendar's repeat as Since can follow it; nil for a one-off, or a repeat too fine to follow.
     let rule: RepeatRule?
     let repeatsInCalendar: Bool
@@ -266,6 +276,8 @@ struct CalendarEvent: Identifiable {
             let calendarRule = event.recurrenceRules?.first
             return CalendarEvent(id: event.calendarItemIdentifier, externalID: event.calendarItemExternalIdentifier,
                                  title: title, date: event.startDate, isAllDay: event.isAllDay,
+                                 location: event.location?.trimmingCharacters(in: .whitespacesAndNewlines),
+                                 coordinate: event.structuredLocation?.geoLocation?.coordinate,
                                  rule: calendarRule.flatMap {
                                      RepeatRule($0, start: event.startDate, lastTime: lastTime[event.calendarItemIdentifier])
                                  },

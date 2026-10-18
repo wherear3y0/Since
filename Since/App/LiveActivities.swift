@@ -23,7 +23,8 @@ enum LiveActivities {
                 day: countdown.target(now: now, calendar: calendar), turns: countdown.turns(now: now, calendar: calendar),
                 isBirthday: countdown.isBirthday, waited: countdown.waited(now: now, calendar: calendar),
                 daysLeft: countdown.isInWindow(now: now, calendar: calendar) ? 0 : max(0, countdown.daysLeft(now: now, calendar: calendar)),
-                moment: moment, isTimer: countdown.isTimer, start: countdown.isTimer ? countdown.createdAt : nil)
+                moment: moment, isTimer: countdown.isTimer, start: countdown.isTimer ? countdown.createdAt : nil,
+                place: countdown.placeName, leaveTime: countdown.leaveTime(now: now, calendar: calendar))
             // A timer's activity goes stale when it's up, and shows that it is.
             if countdown.isTimer, let moment {
                 ends[countdown.id] = moment
