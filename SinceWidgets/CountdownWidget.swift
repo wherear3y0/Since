@@ -277,6 +277,8 @@ struct SmallCountdownView: View {
                 WidgetWaitBar(countdown: countdown)
             case .fill:
                 CountdownFillFooter(waited: countdown.waited, daysLeft: countdown.daysLeft, progress: countdown.progress)
+            case .arc:
+                CountdownArc(progress: countdown.progress, tint: countdown.tint, height: 42)
             case .timeline:
                 TimelineTrack(waited: countdown.waited, daysLeft: countdown.daysLeft, tint: countdown.tint,
                               now: countdown.date)
@@ -311,6 +313,12 @@ struct MediumCountdownView: View {
                 CountdownFillFooter(waited: countdown.waited, daysLeft: countdown.daysLeft, progress: countdown.progress)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        case .arc:
+            HStack(spacing: 14) {
+                header
+                CountdownArc(progress: countdown.progress, tint: countdown.tint, height: 100)
+                    .frame(width: 140)
+            }
         case .timeline:
             VStack(alignment: .leading, spacing: 0) {
                 header
@@ -382,6 +390,9 @@ struct LargeCountdownView: View {
                         .minimumScaleFactor(0.8)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            case .arc:
+                CountdownArc(progress: countdown.progress, tint: countdown.tint, height: 170)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .timeline:
                 VStack(alignment: .leading, spacing: 16) {
                     CountdownTimeline(start: countdown.waitStart, target: countdown.target, waited: countdown.waited,

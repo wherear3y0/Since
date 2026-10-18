@@ -129,6 +129,8 @@ struct MilestonesAndBackupTests {
         countdown.remindsToLeave = true
         countdown.isParcel = true
         countdown.trackingNumber = "RA123456785RU"
+        countdown.trackingURL = "https://www.pochta.ru/tracking?barcode=RA123456785RU"
+        countdown.style = .arc
         countdown.shopName = "Ozon"
         countdown.photoData = Data([1, 2, 3])
         countdown.pickupCode = "4521"
@@ -188,6 +190,8 @@ struct MilestonesAndBackupTests {
         #expect(restoredCountdowns[0].travelMode == .transit)
         #expect(restoredCountdowns[0].remindsToLeave)
         #expect(restoredCountdowns[0].isParcel)
+        #expect(restoredCountdowns[0].style == .arc)
+        #expect(restoredCountdowns[0].trackingURL == "https://www.pochta.ru/tracking?barcode=RA123456785RU")
         #expect(restoredCountdowns[0].carrier == .russianPost)
         #expect(restoredCountdowns[0].parcelLine == "Ozon · RA123…85RU")
         #expect(restoredCountdowns[0].photoData == Data([1, 2, 3]))

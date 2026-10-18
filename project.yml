@@ -68,6 +68,8 @@ targets:
         com.apple.security.application-groups: [group.me.wherar3y0.since]
     dependencies:
       - target: SinceWidgets
+      - target: SinceShare
+      - target: SinceMessages
 
   SinceWidgets:
     type: app-extension
@@ -87,6 +89,65 @@ targets:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
       path: SinceWidgets/SinceWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.me.wherar3y0.since]
+
+  SinceShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - SinceShare
+      - Shared
+      - Since/Until/ParcelScanner.swift
+      - Since/App/Milestones.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.wherar3y0.since.share
+        TARGETED_DEVICE_FAMILY: "1"
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+    info:
+      path: SinceShare/Info.plist
+      properties:
+        CFBundleDisplayName: Since
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsImageWithMaxCount: 1
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsText: true
+    entitlements:
+      path: SinceShare/SinceShare.entitlements
+      properties:
+        com.apple.security.application-groups: [group.me.wherar3y0.since]
+
+  SinceMessages:
+    type: app-extension.messages
+    platform: iOS
+    sources: [SinceMessages, Shared, Since/App/Milestones.swift]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.wherar3y0.since.messages
+        TARGETED_DEVICE_FAMILY: "1"
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        # No separate icon catalog yet; use the extension's display name in Messages.
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+    info:
+      path: SinceMessages/Info.plist
+      properties:
+        CFBundleDisplayName: Since
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.message-payload-provider
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).MessagesViewController
+    entitlements:
+      path: SinceMessages/SinceMessages.entitlements
       properties:
         com.apple.security.application-groups: [group.me.wherar3y0.since]
 

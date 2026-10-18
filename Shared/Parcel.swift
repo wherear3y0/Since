@@ -2,7 +2,7 @@ import Foundation
 
 /// Who brings a parcel: where "Track" opens with the number filled in.
 nonisolated enum Carrier: String, CaseIterable, Identifiable {
-    case russianPost, cdek, boxberry, avito, cainiao, dhl, ups, fedex
+    case russianPost, cdek, boxberry, ozon, avito, cainiao, dhl, ups, fedex
 
     var id: String { rawValue }
 
@@ -11,6 +11,7 @@ nonisolated enum Carrier: String, CaseIterable, Identifiable {
         case .russianPost: "Russian Post"
         case .cdek: "CDEK"
         case .boxberry: "Boxberry"
+        case .ozon: "Ozon"
         case .avito: "Avito Delivery"
         case .cainiao: "Cainiao"
         case .dhl: "DHL"
@@ -25,7 +26,8 @@ nonisolated enum Carrier: String, CaseIterable, Identifiable {
         case .russianPost: "https://www.pochta.ru/tracking?barcode=\(number)"
         case .cdek: "https://www.cdek.ru/ru/tracking/?order_id=\(number)"
         case .boxberry: "https://boxberry.ru/tracking-page?id=\(number)"
-        // Avito has no page that takes a number: its orders, which open in the Avito app when it's there.
+        // Marketplace delivery is tracked inside the buyer's account, not through a public number lookup.
+        case .ozon: "https://www.ozon.ru/my/orderlist/"
         case .avito: "https://www.avito.ru/orders"
         case .cainiao: "https://global.cainiao.com/newDetail.htm?mailNoList=\(number)"
         case .dhl: "https://www.dhl.com/global-en/home/tracking.html?tracking-id=\(number)&submit=1"
@@ -36,7 +38,7 @@ nonisolated enum Carrier: String, CaseIterable, Identifiable {
     }
 
     /// Its tracking page has the number filled in. When it doesn't, the number is copied for pasting there.
-    var takesNumber: Bool { self != .avito }
+    var takesNumber: Bool { self != .avito && self != .ozon }
 
     /// The carrier a tracking number looks like it's from, when that can be told from the number alone.
     static func guess(_ number: String) -> Carrier? {
@@ -97,9 +99,18 @@ nonisolated enum ParcelParser {
         draft.pickupPoint = pickupPoint(in: lines)
         draft.shop = shop(in: lines)
         (draft.trackingNumber, draft.carrier) = tracking(in: lines)
-        // Bought on Avito with no other carrier named or told by the number: Avito's own delivery.
-        if draft.carrier == nil && draft.shop == "Avito" {
-            draft.carrier = .avito
+        // Marketplace delivery when no other carrier is named or identified by the number.
+        if draft.carrier == nil {
+            if draft.shop == "Avito" { draft.carrier = .avito }
+            if draft.shop == "Ozon" { draft.carrier = .ozon }
+        }
+        if draft.shop == "Ozon", draft.trackingNumber == nil {
+            for line in lines where line.lowercased().contains("заказ") || line.lowercased().contains("order") {
+                if let number = line.firstMatch(of: /\b\d{6,12}-\d{3,8}(?:-\d{1,4})?\b/) {
+                    draft.trackingNumber = String(number.output)
+                    break
+                }
+            }
         }
         // The last day it's kept isn't when it comes; one waiting to be picked up is here already.
         (draft.from, draft.to) = dates(in: lines.filter { !isAboutStorage($0) }, now: now, calendar: calendar)
@@ -136,6 +147,7 @@ nonisolated enum ParcelParser {
         (.boxberry, ["boxberry", "боксберри"]),
         (.avito, ["авито доставка", "авито доставки", "авито доставкой", "авито доставку", "avito доставка",
                   "avito delivery"]),
+        (.ozon, ["ozon доставка", "ozon delivery", "озон доставка", "доставка озон"]),
         (.cainiao, ["cainiao"]),
         (.dhl, ["dhl"]),
         (.ups, ["ups"]),
@@ -482,7 +494,13 @@ nonisolated enum ParcelParser {
 
 extension Countdown {
     var carrier: Carrier? {
-        get { Carrier(rawValue: carrierRaw) ?? trackingNumber.flatMap(Carrier.guess) }
+        get {
+            if let explicit = Carrier(rawValue: carrierRaw) { return explicit }
+            if let guessed = parsedTracking.carrier { return guessed }
+            if shopName?.lowercased() == "ozon" || shopName?.lowercased() == "озон" { return .ozon }
+            if shopName?.lowercased() == "avito" || shopName?.lowercased() == "авито" { return .avito }
+            return nil
+        }
         set { carrierRaw = newValue?.rawValue ?? "" }
     }
 

@@ -129,25 +129,33 @@ struct ParcelsWidgetView: View {
 
     /// Three side by side: each its picture in a rounded square, the days and when under it.
     private var medium: some View {
-        HStack(alignment: .top, spacing: 12) {
-            ForEach(entry.parcels.prefix(3)) { parcel in
-                Link(destination: parcel.countdown.url) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        ParcelWidgetPicture(parcel: parcel)
-                            .aspectRatio(1, contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        WidgetDaysLeft(parcel.countdown, size: 20)
-                        Text(parcel.line)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
+        GeometryReader { proxy in
+            // Reserve room for title, count and date instead of letting square photos push them out.
+            let side = max(20, min((proxy.size.width - 24) / 3, proxy.size.height - 70))
+            HStack(alignment: .top, spacing: 12) {
+                ForEach(entry.parcels.prefix(3)) { parcel in
+                    Link(destination: parcel.countdown.url) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ParcelWidgetPicture(parcel: parcel)
+                                .frame(width: side, height: side)
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            Text(parcel.countdown.title)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(parcel.countdown.tint)
+                                .lineLimit(1)
+                            WidgetDaysLeft(parcel.countdown, size: 20)
+                            Text(parcel.line)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-            }
-            // The same width for each, however many there are.
-            ForEach(entry.parcels.count..<3, id: \.self) { _ in
-                Color.clear.frame(maxWidth: .infinity)
+                // At most three visible cards, even when the provider supplies four for the large widget.
+                ForEach(min(entry.parcels.count, 3)..<3, id: \.self) { _ in
+                    Color.clear.frame(maxWidth: .infinity)
+                }
             }
         }
         .padding(14)
@@ -162,7 +170,7 @@ struct ParcelsWidgetView: View {
                 Link(destination: parcel.countdown.url) {
                     HStack(spacing: 12) {
                         ParcelWidgetPicture(parcel: parcel)
-                            .frame(width: 62, height: 62)
+                            .frame(width: 54, height: 54)
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         VStack(alignment: .leading, spacing: 1) {
                             Text(parcel.countdown.title)

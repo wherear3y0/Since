@@ -78,6 +78,8 @@ final class Countdown {
     /// A parcel on its way: listed with the parcels, and "Received" rather than "Done".
     var isParcel: Bool = false
     var trackingNumber: String? = nil
+    /// An explicitly supplied tracking page. Optional/defaulted for existing stores.
+    var trackingURL: String? = nil
     /// Who brings it (a `Carrier`); empty when it isn't known.
     var carrierRaw: String = ""
     var shopName: String? = nil

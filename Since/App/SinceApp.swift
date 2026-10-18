@@ -30,15 +30,16 @@ struct SinceApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            SharedDatabaseView()
         }
         .modelContainer(Store.container)
         .onChange(of: scenePhase) { _, phase in
             // A new day can bring a new milestone into the scheduling window.
             if phase == .active {
-                Store.removeEndedTimers(Store.container.mainContext)
-                refreshMirrors(Store.container.mainContext)
-                Task { await CalendarSyncRunner.run(Store.container.mainContext) }
+                let context = ModelContext(Store.container)
+                Store.removeEndedTimers(context)
+                refreshMirrors(context)
+                Task { await CalendarSyncRunner.run(context) }
             }
         }
     }

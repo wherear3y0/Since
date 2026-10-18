@@ -88,7 +88,7 @@ struct CountdownEditor: View {
         _waitStart = State(initialValue: countdown?.createdAt ?? .now)
         _liveActivityLead = State(initialValue: countdown?.liveActivityLead ?? 0)
         _place = State(initialValue: countdown?.pickedPlace)
-        _trackingNumber = State(initialValue: countdown?.trackingNumber ?? "")
+        _trackingNumber = State(initialValue: countdown?.trackingInput ?? "")
         _carrierRaw = State(initialValue: countdown?.carrierRaw ?? "")
         _shopName = State(initialValue: countdown?.shopName ?? "")
         _orderURL = State(initialValue: countdown?.orderURL ?? "")
@@ -169,22 +169,19 @@ struct CountdownEditor: View {
                 }
                 .sectionReveal(isPreviewShown, delay: 0.14)
 
-                // A parcel's card is its picture: it has no style to choose.
-                if !isParcel {
-                    Section {
-                        Picker("Style", selection: $style.animation(.smooth(duration: 0.45))) {
-                            ForEach(CountdownStyle.allCases) { option in
-                                Text(option.title).tag(option)
-                            }
+                Section {
+                    Picker("Style", selection: $style.animation(.smooth(duration: 0.45))) {
+                        ForEach(CountdownStyle.allCases) { option in
+                            Text(option.title).tag(option)
                         }
-                        .pickerStyle(.segmented)
-                        .listRowInsets(EdgeInsets())
-                        .sectionReveal(isPreviewShown, delay: 0.17, background: .clear)
-                    } footer: {
-                        Text(style.explanation)
-                            .contentTransition(.opacity)
-                            .blurIn(isPreviewShown, delay: 0.17)
                     }
+                    .pickerStyle(.segmented)
+                    .listRowInsets(EdgeInsets())
+                    .sectionReveal(isPreviewShown, delay: 0.17, background: .clear)
+                } footer: {
+                    Text(style.explanation)
+                        .contentTransition(.opacity)
+                        .blurIn(isPreviewShown, delay: 0.17)
                 }
 
                 Section {
@@ -284,7 +281,7 @@ struct CountdownEditor: View {
                     Button("Save", systemImage: "checkmark", role: .confirm) {
                         save()
                     }
-                    .disabled(trimmedTitle.isEmpty)
+                    .disabled(trimmedTitle.isEmpty || (isParcel && !ParcelTracking(trackingNumber).isValid))
                 }
             }
             .sensoryFeedback(.selection, trigger: color)
@@ -345,13 +342,14 @@ struct CountdownEditor: View {
         return VStack(alignment: .leading, spacing: 14) {
             if isParcel {
                 parcelPreview(tint: tint, days: days)
+                previewVisual(tint: tint, days: days, waited: waited, progress: progress)
             } else {
                 stylePreview(tint: tint, days: days, waited: waited, progress: progress)
             }
         }
         .padding(16)
         .background {
-            if style == .fill && !isParcel {
+            if style == .fill {
                 FillLevel(level: progress, tint: tint)
                     .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
             }
@@ -406,6 +404,10 @@ struct CountdownEditor: View {
             DaysLeftText(days: days, size: 22, isApproximate: draft.isApproximate())
         }
 
+        previewVisual(tint: tint, days: days, waited: waited, progress: progress)
+    }
+
+    private func previewVisual(tint: Color, days: Int, waited: Int, progress: Double) -> some View {
         Group {
             switch style {
             case .calendar:
@@ -418,6 +420,8 @@ struct CountdownEditor: View {
             case .fill:
                 CountdownFillFooter(waited: waited, daysLeft: days, progress: progress)
                     .padding(.top, 90)
+            case .arc:
+                CountdownArc(progress: progress, tint: tint, height: 140)
             case .timeline:
                 CountdownTimeline(start: Calendar.app.date(byAdding: .day, value: -waited, to: .now)!,
                                   target: target, waited: waited, daysLeft: days, tint: tint)
@@ -437,12 +441,18 @@ struct CountdownEditor: View {
                               tint: color.color)
             ItemPhotoRow(title: "Product Photo", photoData: $photoData, symbol: symbol, tint: color.color)
             TextField("Shop", text: $shopName)
-            TextField("Tracking Number", text: $trackingNumber)
-                .textInputAutocapitalization(.characters)
+            TextField("Tracking Number or Link", text: $trackingNumber)
+                .keyboardType(.URL)
+                .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .monospaced()
+            if !ParcelTracking(trackingNumber).isValid {
+                Text("Enter a tracking number or a valid http/https link.").font(.footnote).foregroundStyle(.red)
+            } else if let url = ParcelTracking(trackingNumber).url {
+                Label(url.host ?? "Tracking link", systemImage: "link").font(.footnote).foregroundStyle(.secondary)
+            }
             Picker("Carrier", selection: $carrierRaw) {
-                Text(Carrier.guess(trackingNumber).map { "Auto (\($0.title))" } ?? "Unknown").tag("")
+                Text(ParcelTracking(trackingNumber).carrier.map { "Auto (\($0.title))" } ?? "Unknown").tag("")
                 ForEach(Carrier.allCases) { carrier in
                     Text(carrier.title).tag(carrier.rawValue)
                 }
@@ -489,7 +499,7 @@ struct CountdownEditor: View {
             if let shop = draft.shop {
                 shopName = shop
             }
-            if let number = draft.trackingNumber {
+            if let number = draft.trackingNumber, ParcelTracking(trackingNumber).url == nil {
                 trackingNumber = number
                 carrierRaw = Carrier.guess(number) == nil ? (draft.carrier?.rawValue ?? "") : ""
             } else if let carrier = draft.carrier, carrierRaw.isEmpty {
@@ -528,8 +538,7 @@ struct CountdownEditor: View {
     private func applyParcel(to countdown: Countdown) {
         guard isParcel else { return }
         countdown.isParcel = true
-        let number = trackingNumber.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "")
-        countdown.trackingNumber = number.isEmpty ? nil : number
+        countdown.setTrackingInput(trackingNumber)
         countdown.carrierRaw = carrierRaw
         let shop = shopName.trimmingCharacters(in: .whitespacesAndNewlines)
         countdown.shopName = shop.isEmpty ? nil : shop

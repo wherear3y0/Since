@@ -5,6 +5,15 @@ import UserNotifications
 /// Local notifications for round dates (half a year and every anniversary of a counter's current streak)
 /// and for countdowns (a week before, the day before and on the day).
 enum Milestones {
+    /// A parcel imported from a share extension needs its pickup reminders even before Since opens.
+    /// Does not remove notifications owned by the containing app or other parcels.
+    static func scheduleStorage(for parcel: Countdown) {
+        for reminder in storageReminders(for: parcel) {
+            schedule(title: parcel.title, body: reminder.name, on: reminder.date,
+                     id: parcel.id, url: "since://countdown/\(parcel.id.uuidString)")
+        }
+    }
+
     /// Asks for permission the first time a counter turns reminders on. Returns whether they're allowed.
     static func requestPermission() async -> Bool {
         let center = UNUserNotificationCenter.current()

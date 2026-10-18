@@ -18,7 +18,7 @@ struct CountdownCard: View {
 
     var body: some View {
         let tint = countdown.color.color.onCard(tinted: countdown.tinted)
-        let fills = countdown.style == .fill && !needsDecision && !countdown.isParcel
+        let fills = countdown.style == .fill && !needsDecision
 
         // A new style swaps in through a blur.
         ZStack(alignment: .topLeading) {
@@ -127,6 +127,8 @@ struct CountdownCard: View {
                 case .fill:
                     Spacer(minLength: 0)
                     fillFooter
+                case .arc:
+                    CountdownArc(progress: countdown.progress(), tint: tint, height: 80)
                 case .timeline:
                     Spacer(minLength: 0)
                     if countdown.daysLeft() > 0 {
@@ -166,6 +168,8 @@ struct CountdownCard: View {
                 case .fill:
                     fillFooter
                         .padding(.top, 18)
+                case .arc:
+                    CountdownArc(progress: countdown.progress(), tint: tint, height: 112)
                 case .timeline:
                     timeline(tint: tint)
                         .padding(.top, 4)
@@ -208,6 +212,8 @@ struct CountdownCard: View {
                 case .fill:
                     fillFooter
                         .padding(.top, 56)
+                case .arc:
+                    CountdownArc(progress: countdown.progress(), tint: tint, height: 160)
                 case .timeline:
                     timeline(tint: tint, thickness: 5)
                         .padding(.vertical, 6)
@@ -282,6 +288,8 @@ struct CountdownCard: View {
             }
             if parcelIsDue {
                 doneButton(tint: tint)
+            } else if countdown.style != .calendar {
+                parcelVisual(tint: tint, compact: true)
             }
         }
     }
@@ -307,6 +315,8 @@ struct CountdownCard: View {
             }
             if parcelIsDue {
                 doneButton(tint: tint)
+            } else if countdown.style != .calendar {
+                parcelVisual(tint: tint)
             }
         }
     }
@@ -330,8 +340,26 @@ struct CountdownCard: View {
             if parcelIsDue {
                 doneButton(tint: tint)
             } else {
-                twoMonths(tint: tint)
-                    .frame(height: 170)
+                parcelVisual(tint: tint)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func parcelVisual(tint: Color, compact: Bool = false) -> some View {
+        switch countdown.style {
+        case .calendar:
+            twoMonths(tint: tint).frame(height: 170)
+        case .fill:
+            fillFooter
+        case .arc:
+            CountdownArc(progress: countdown.progress(), tint: tint, height: compact ? 48 : 140)
+        case .timeline:
+            if compact {
+                TimelineTrack(waited: countdown.waited(), daysLeft: countdown.daysLeft(), tint: tint)
+                    .frame(height: 24)
+            } else {
+                timeline(tint: tint)
             }
         }
     }
@@ -572,7 +600,7 @@ struct CountdownMenuPreview: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer(minLength: 8)
-            switch countdown.isParcel ? .calendar : countdown.style {
+            switch countdown.style {
             case .calendar:
                 GeometryReader { proxy in
                     ZStack(alignment: .leading) {
@@ -585,6 +613,8 @@ struct CountdownMenuPreview: View {
             case .fill:
                 Text("\(Int((countdown.progress() * 100).rounded()))%")
                     .font(.headline)
+            case .arc:
+                CountdownArc(progress: countdown.progress(), tint: tint, height: 34)
             case .timeline:
                 TimelineTrack(waited: countdown.waited(), daysLeft: countdown.daysLeft(), tint: tint)
             }

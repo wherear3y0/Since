@@ -5,12 +5,16 @@ import SwiftUI
 
 /// Two tabs: days since (counters) and days until (countdowns).
 struct RootView: View {
-    enum Page: Hashable {
+    enum Page: String, Hashable {
         case since, until
     }
 
     @Environment(\.modelContext) private var context
-    @State private var page: Page = .since
+    @SceneStorage("selectedPage") private var pageRaw = Page.since.rawValue
+    private var page: Page {
+        get { Page(rawValue: pageRaw) ?? .since }
+        nonmutating set { pageRaw = newValue.rawValue }
+    }
     /// Replays the cards' wave on the tab that comes on screen.
     @State private var arrival = TabArrival()
     /// Set by a link from a widget or a notification; each tab opens its item and clears it.

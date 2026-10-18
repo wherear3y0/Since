@@ -133,4 +133,39 @@ struct ParcelTests {
         #expect(Carrier.russianPost.trackURL("RA123456785RU")?.absoluteString
                 == "https://www.pochta.ru/tracking?barcode=RA123456785RU")
     }
+
+    @Test func ozonDeliveryAndItsOrderNumber() {
+        let draft = ParcelParser.parse(["Ozon", "Заказ № 12345678-0001-1", "Доставка завтра"],
+                                       now: now, calendar: calendar)
+        #expect(draft.carrier == .ozon)
+        #expect(draft.trackingNumber == "12345678-0001-1")
+        #expect(!Carrier.ozon.takesNumber)
+        #expect(Carrier.ozon.trackURL(draft.trackingNumber!)?.absoluteString == "https://www.ozon.ru/my/orderlist/")
+        #expect(ParcelParser.parse(["Ozon", "СДЭК", "Трек-номер 1234567890"], now: now, calendar: calendar)
+            .carrier == .cdek)
+    }
+
+    @Test func everyCarrierHasAnHTTPSDestination() {
+        for carrier in Carrier.allCases {
+            let url = carrier.trackURL("A 12&34/56?#")
+            #expect(url?.scheme == "https")
+            #expect(url?.host != nil)
+            if carrier.takesNumber {
+                #expect(url?.absoluteString.contains("A%2012%2634%2F56%3F%23") == true)
+            }
+        }
+    }
+
+    @MainActor @Test func existingOzonParcelsResolveTheirCarrierWithoutAMigration() {
+        let parcel = Countdown(title: "Headphones", symbol: "shippingbox.fill", color: .orange, date: now)
+        parcel.isParcel = true
+        parcel.shopName = "Ozon"
+        #expect(parcel.carrier == .ozon)
+        parcel.trackingNumber = "RA123456785RU"
+        #expect(parcel.carrier == .russianPost)
+        parcel.carrier = .cdek
+        #expect(parcel.carrier == .cdek)
+        parcel.style = .timeline
+        #expect(parcel.style == .timeline)
+    }
 }

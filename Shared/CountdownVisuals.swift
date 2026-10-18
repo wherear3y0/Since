@@ -8,6 +8,8 @@ nonisolated enum CountdownStyle: String, CaseIterable, Identifiable {
     case fill
     /// A line from the start of the wait to the day, with today on it.
     case timeline
+    /// A half-circle showing how much of the wait has passed.
+    case arc
 
     var id: String { rawValue }
 
@@ -16,6 +18,7 @@ nonisolated enum CountdownStyle: String, CaseIterable, Identifiable {
         case .calendar: "Calendar"
         case .fill: "Fill"
         case .timeline: "Timeline"
+        case .arc: "Arc"
         }
     }
 
@@ -24,6 +27,7 @@ nonisolated enum CountdownStyle: String, CaseIterable, Identifiable {
         case .calendar: "calendar"
         case .fill: "square.bottomhalf.filled"
         case .timeline: "flag.checkered"
+        case .arc: "gauge.with.dots.needle.67percent"
         }
     }
 
@@ -32,6 +36,7 @@ nonisolated enum CountdownStyle: String, CaseIterable, Identifiable {
         case .calendar: "The month of the day, with the days still to wait tinted."
         case .fill: "The card fills up with color as the day comes closer."
         case .timeline: "A line from the start of the wait to the day, marked in weeks or months."
+        case .arc: "A rising arc with a glowing marker and the percentage of the wait already behind."
         }
     }
 }

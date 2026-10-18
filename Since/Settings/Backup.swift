@@ -98,6 +98,7 @@ struct Backup: Codable {
         /// Missing in backups made before parcels.
         var isParcel: Bool?
         var trackingNumber: String?
+        var trackingURL: String?
         var carrier: String?
         var shopName: String?
         var orderURL: String?
@@ -132,7 +133,7 @@ struct Backup: Codable {
                           placeLatitude: countdown.placeLatitude, placeLongitude: countdown.placeLongitude,
                           travelMinutes: countdown.travelMinutes, travelMode: countdown.travelModeRaw,
                           remindsToLeave: countdown.remindsToLeave, isParcel: countdown.isParcel,
-                          trackingNumber: countdown.trackingNumber, carrier: countdown.carrierRaw,
+                          trackingNumber: countdown.trackingNumber, trackingURL: countdown.trackingURL, carrier: countdown.carrierRaw,
                           shopName: countdown.shopName, orderURL: countdown.orderURL, photo: countdown.photoData,
                           pickupCode: countdown.pickupCode, storageUntil: countdown.storageUntil)
         }
@@ -243,6 +244,7 @@ struct Backup: Codable {
             countdown.remindsToLeave = data.remindsToLeave ?? false
             countdown.isParcel = data.isParcel ?? false
             countdown.trackingNumber = data.trackingNumber
+            countdown.trackingURL = data.trackingURL
             countdown.carrierRaw = data.carrier ?? ""
             countdown.shopName = data.shopName
             countdown.orderURL = data.orderURL

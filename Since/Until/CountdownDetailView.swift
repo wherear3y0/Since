@@ -391,6 +391,8 @@ struct CountdownHeroCard: View {
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
+                case .arc:
+                    CountdownArc(progress: countdown.progress(), tint: tint, height: 190)
                 case .timeline:
                     CountdownTimeline(start: start, target: target, waited: waited, daysLeft: days, tint: tint,
                                       thickness: 6, animated: animated)
@@ -412,7 +414,7 @@ struct CountdownHeroCard: View {
                         .transition(.blurReplace)
                     Spacer(minLength: 0)
                     if days > 0 && total > 0 {
-                        WaitPills(waited: waited, total: total, tint: tint, showsPercent: countdown.style != .fill)
+                        WaitPills(waited: waited, total: total, tint: tint, showsPercent: countdown.style != .fill && countdown.style != .arc)
                             .frame(width: 170)
                     }
                 }
