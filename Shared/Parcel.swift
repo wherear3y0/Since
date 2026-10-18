@@ -2,7 +2,7 @@ import Foundation
 
 /// Who brings a parcel: where "Track" opens with the number filled in.
 nonisolated enum Carrier: String, CaseIterable, Identifiable {
-    case russianPost, cdek, boxberry, cainiao, dhl, ups, fedex
+    case russianPost, cdek, boxberry, avito, cainiao, dhl, ups, fedex
 
     var id: String { rawValue }
 
@@ -11,6 +11,7 @@ nonisolated enum Carrier: String, CaseIterable, Identifiable {
         case .russianPost: "Russian Post"
         case .cdek: "CDEK"
         case .boxberry: "Boxberry"
+        case .avito: "Avito Delivery"
         case .cainiao: "Cainiao"
         case .dhl: "DHL"
         case .ups: "UPS"
@@ -24,6 +25,8 @@ nonisolated enum Carrier: String, CaseIterable, Identifiable {
         case .russianPost: "https://www.pochta.ru/tracking?barcode=\(number)"
         case .cdek: "https://www.cdek.ru/ru/tracking/?order_id=\(number)"
         case .boxberry: "https://boxberry.ru/tracking-page?id=\(number)"
+        // Avito has no page that takes a number: its orders, which open in the Avito app when it's there.
+        case .avito: "https://www.avito.ru/orders"
         case .cainiao: "https://global.cainiao.com/newDetail.htm?mailNoList=\(number)"
         case .dhl: "https://www.dhl.com/global-en/home/tracking.html?tracking-id=\(number)&submit=1"
         case .ups: "https://www.ups.com/track?tracknum=\(number)"
@@ -31,6 +34,9 @@ nonisolated enum Carrier: String, CaseIterable, Identifiable {
         }
         return URL(string: link)
     }
+
+    /// Its tracking page has the number filled in. When it doesn't, the number is copied for pasting there.
+    var takesNumber: Bool { self != .avito }
 
     /// The carrier a tracking number looks like it's from, when that can be told from the number alone.
     static func guess(_ number: String) -> Carrier? {
@@ -83,6 +89,10 @@ nonisolated enum ParcelParser {
         var draft = ParcelDraft()
         draft.shop = shop(in: lines)
         (draft.trackingNumber, draft.carrier) = tracking(in: lines)
+        // Bought on Avito with no other carrier named or told by the number: Avito's own delivery.
+        if draft.carrier == nil && draft.shop == "Avito" {
+            draft.carrier = .avito
+        }
         (draft.from, draft.to) = dates(in: lines, now: now, calendar: calendar)
         draft.got = got(in: lines, delivery: draft.to ?? draft.from, now: now, calendar: calendar)
         draft.title = title(in: lines, shop: draft.shop)
@@ -112,6 +122,8 @@ nonisolated enum ParcelParser {
         (.russianPost, ["почта россии", "pochta"]),
         (.cdek, ["сдэк", "cdek"]),
         (.boxberry, ["boxberry", "боксберри"]),
+        (.avito, ["авито доставка", "авито доставки", "авито доставкой", "авито доставку", "avito доставка",
+                  "avito delivery"]),
         (.cainiao, ["cainiao"]),
         (.dhl, ["dhl"]),
         (.ups, ["ups"]),

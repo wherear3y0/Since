@@ -76,7 +76,7 @@ struct ParcelCard: View {
             .lineLimit(1)
             .controlSize(.large)
 
-            if copied && countdown.carrier == nil {
+            if copied && countdown.carrier?.takesNumber != true {
                 Text("The number is copied: paste it on the page that opened.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -88,9 +88,13 @@ struct ParcelCard: View {
     }
 
     /// The carrier's tracking page with the number; for an unknown carrier, the number is copied and
-    /// a service that finds the carrier opens.
+    /// a service that finds the carrier opens. A page that doesn't take the number gets it copied too.
     private func track(_ number: String) {
-        if let url = countdown.carrier?.trackURL(number) {
+        if let carrier = countdown.carrier, let url = carrier.trackURL(number) {
+            if !carrier.takesNumber {
+                UIPasteboard.general.string = number
+                withAnimation(.smooth) { copied = true }
+            }
             openURL(url)
         } else {
             UIPasteboard.general.string = number

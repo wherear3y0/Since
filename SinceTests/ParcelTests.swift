@@ -76,6 +76,16 @@ struct ParcelTests {
         #expect(ParcelParser.parse(["Телефон 8 800 1234567"], now: now, calendar: calendar).trackingNumber == nil)
     }
 
+    @Test func avitoDelivery() {
+        let named = ParcelParser.parse(["Авито Доставка", "Номер отправления 1234567890123"], now: now, calendar: calendar)
+        #expect(named.carrier == .avito)
+        // Bought on Avito, sent by a carrier the number tells: that carrier.
+        #expect(ParcelParser.parse(["Avito", "Трек-номер RA123456785RU"], now: now, calendar: calendar).carrier
+                == .russianPost)
+        #expect(ParcelParser.parse(["Avito", "Заказ оформлен"], now: now, calendar: calendar).carrier == .avito)
+        #expect(!Carrier.avito.takesNumber)
+    }
+
     @Test func carriersFromNumbers() {
         #expect(Carrier.guess("RA123456785RU") == .russianPost)
         #expect(Carrier.guess("80085123456789") == .russianPost)
