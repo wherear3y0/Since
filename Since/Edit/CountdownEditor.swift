@@ -29,6 +29,8 @@ struct CountdownEditor: View {
     @State private var editsWaitStart = false
     @State private var waitStart: Date
     @State private var liveActivityLead: Int
+    @State private var place: PickedPlace?
+    @State private var isPickingPlace = false
     @State private var isPickingSymbol = false
     @State private var savedEdits = 0
     @State private var isConfirmingDelete = false
@@ -60,6 +62,7 @@ struct CountdownEditor: View {
                            ?? Calendar.app.date(byAdding: .day, value: 7, to: countdown?.date ?? .now)!)
         _waitStart = State(initialValue: countdown?.createdAt ?? .now)
         _liveActivityLead = State(initialValue: countdown?.liveActivityLead ?? 0)
+        _place = State(initialValue: countdown?.pickedPlace)
     }
 
     private var trimmedTitle: String {
@@ -248,8 +251,14 @@ struct CountdownEditor: View {
             .sensoryFeedback(.selection, trigger: style)
             .sensoryFeedback(.selection, trigger: rule)
             .sensoryFeedback(.selection, trigger: date)
-            .sensoryFeedback(.selection, trigger: [hasTime, hasWindow, editsWaitStart, notifyBefore, showsLiveActivity])
+            .sensoryFeedback(.selection, trigger: [hasTime, hasWindow, editsWaitStart, notifyBefore, showsLiveActivity,
+                                                   place != nil])
             .sensoryFeedback(.success, trigger: savedEdits)
+            .sheet(isPresented: $isPickingPlace) {
+                PlacePicker(calendarLocation: countdown?.calendarLocation, current: place, tint: color.color) { picked in
+                    withAnimation(.smooth) { place = picked }
+                }
+            }
             .sheet(isPresented: $isPickingSymbol) {
                 SymbolPicker(selection: $symbol, tint: color.color)
             }
@@ -381,6 +390,13 @@ struct CountdownEditor: View {
                     }
                 }
             }
+            OptionChip(title: "Place", symbol: "mappin.and.ellipse", isOn: place != nil, tint: color.color) {
+                if place == nil {
+                    isPickingPlace = true
+                } else {
+                    withAnimation(.smooth) { place = nil }
+                }
+            }
             OptionChip(title: "Reminders", symbol: "bell", isOn: notifyBefore, tint: color.color) {
                 withAnimation(.smooth) { notifyBefore.toggle() }
             }
@@ -403,6 +419,30 @@ struct CountdownEditor: View {
             DatePicker("Waiting Since", selection: $waitStart.animation(.smooth), in: ...Date.now,
                        displayedComponents: .date)
                 .transition(.blurReplace)
+        }
+        if let place {
+            Button {
+                isPickingPlace = true
+            } label: {
+                LabeledContent {
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(place.name)
+                            .foregroundStyle(Color.primary)
+                            .lineLimit(1)
+                        if let address = place.address {
+                            Text(address)
+                                .font(.footnote)
+                                .foregroundStyle(Color.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+            }
+            .transition(.blurReplace)
         }
         if notifyBefore {
             LabeledContent("Reminders", value: "A week before, the day before, on the day")
@@ -472,6 +512,9 @@ struct CountdownEditor: View {
             }
             countdown.showsLiveActivity = showsLiveActivity
             countdown.liveActivityLead = liveActivityLead
+            if place != countdown.pickedPlace {
+                countdown.setPlace(place)
+            }
             // Moved to a day still ahead, or made to repeat: it's upcoming again.
             if !countdown.hasPassed() {
                 countdown.isArchived = false
@@ -491,6 +534,7 @@ struct CountdownEditor: View {
             newCountdown.hasTime = finalHasTime
             newCountdown.windowEnd = finalWindowEnd
             newCountdown.liveActivityLead = liveActivityLead
+            newCountdown.setPlace(place)
             if editsWaitStart {
                 newCountdown.createdAt = waitStart
             }

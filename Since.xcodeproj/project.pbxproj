@@ -23,6 +23,7 @@
 		242C9503F8E038A162A889D1 /* TimerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9D0657FF3FE95F13346E25 /* TimerSheet.swift */; };
 		26E8C15AE7E834891DE10A65 /* HabitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74743AFF433DB4CE578B19C2 /* HabitTests.swift */; };
 		27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487E6968B8B9CED3CF2C9F /* Palette.swift */; };
+		2C401E79615DF43254858938 /* PlacePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A7E6ED64D3CAD557E26F80 /* PlacePicker.swift */; };
 		2FC7D75DCA7C6EE02A8A2A44 /* HeatmapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D2AD3EEDB36F1A2B314BC53 /* HeatmapView.swift */; };
 		3484D2B546CC1B8B0654086F /* CardSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18B8C889511EF84DF2C65C08 /* CardSize.swift */; };
 		384212ABF00E00FFA5C3C064 /* UntilTimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3FA6A1A786A25370602156 /* UntilTimeTests.swift */; };
@@ -178,6 +179,7 @@
 		74743AFF433DB4CE578B19C2 /* HabitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTests.swift; sourceTree = "<group>"; };
 		7621BD2DEA526CE7145BBE29 /* MilestonesAndBackupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesAndBackupTests.swift; sourceTree = "<group>"; };
 		7715FFBD6E1378B16839A8ED /* PressEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PressEffect.swift; sourceTree = "<group>"; };
+		78A7E6ED64D3CAD557E26F80 /* PlacePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlacePicker.swift; sourceTree = "<group>"; };
 		7A1EE7AF345BA666004F3E34 /* SinceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinceApp.swift; sourceTree = "<group>"; };
 		7A7EE177525F8A6376A3436D /* CounterEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterEntity.swift; sourceTree = "<group>"; };
 		7AB56ED1685F6BB404855D1B /* PaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteTests.swift; sourceTree = "<group>"; };
@@ -375,6 +377,7 @@
 				8E72A3EEC696BFE2D4E3CA69 /* CountdownCalendarCard.swift */,
 				385CD372B7F7D896D8724CB4 /* CountdownCard.swift */,
 				DD58300EF8A73F6B24D66FEF /* CountdownDetailView.swift */,
+				78A7E6ED64D3CAD557E26F80 /* PlacePicker.swift */,
 				EC18B3B741CAB65DC52065C5 /* PostponeSheet.swift */,
 				0B9D0657FF3FE95F13346E25 /* TimerSheet.swift */,
 				E68D7D478B4571160C35F82A /* UntilView.swift */,
@@ -548,6 +551,7 @@
 				D51CAF2CC76123C2E305E532 /* Models.swift in Sources */,
 				27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */,
 				966F1D6D997AC10136ABA21C /* Place.swift in Sources */,
+				2C401E79615DF43254858938 /* PlacePicker.swift in Sources */,
 				CAC141493347C3642B949E27 /* PostponeSheet.swift in Sources */,
 				80E008887769E725375324D6 /* PressEffect.swift in Sources */,
 				FB8D75FCFCF829DBDBA8FF2A /* PreviewData.swift in Sources */,
