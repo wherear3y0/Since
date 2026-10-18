@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00EAA4BED439FD97070E65EC /* ParcelScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B2F836D6AFE1B6B48E87CAE /* ParcelScanner.swift */; };
 		061280D978346653E37F625A /* CounterKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC1C1E5DB9F0A4985B444B83 /* CounterKind.swift */; };
 		06CB2FA6E295DF7AF5B81733 /* ContactBirthdays.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9BA6312DB34532977870594 /* ContactBirthdays.swift */; };
 		0796D178DF3AA9BD09B4AB5D /* CounterEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7EE177525F8A6376A3436D /* CounterEntity.swift */; };
@@ -51,6 +52,7 @@
 		6820636A50D606A4EDEDC8DD /* CounterDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 231EC4EFF6533FFB35FB3839 /* CounterDetailView.swift */; };
 		6C86446898F6AB7A371084CB /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F4826166E5D9C411E574AE /* Habit.swift */; };
 		6E43F7715CD0E42C52532651 /* CountdownEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E445EF58E5002FF7A2273A3 /* CountdownEditor.swift */; };
+		7ADAFA2F628ABE421C06A645 /* ParcelCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D45D78C026C6E05FDB85130 /* ParcelCard.swift */; };
 		80E008887769E725375324D6 /* PressEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7715FFBD6E1378B16839A8ED /* PressEffect.swift */; };
 		821DC2C4E45B6A26FEDF8703 /* CompletionBurst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC16ADB0799153DB504F61E /* CompletionBurst.swift */; };
 		8725BE5FA717E194F3A7B8ED /* StreakChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E3A5464C2BA6CD190ED2A51 /* StreakChart.swift */; };
@@ -179,6 +181,7 @@
 		48F780858E40DE674183F78D /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		4BFEB5A2A0F2402D4FB5D7C1 /* Milestones.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Milestones.swift; sourceTree = "<group>"; };
 		4CC16ADB0799153DB504F61E /* CompletionBurst.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionBurst.swift; sourceTree = "<group>"; };
+		4D45D78C026C6E05FDB85130 /* ParcelCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParcelCard.swift; sourceTree = "<group>"; };
 		4F59E11FC4F1BD810B383204 /* UntilMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilMath.swift; sourceTree = "<group>"; };
 		5234E8AF202D3DFC0FB13848 /* CounterWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterWidget.swift; sourceTree = "<group>"; };
 		534524136D4F9FD22B3C99DB /* CalendarSyncRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSyncRunner.swift; sourceTree = "<group>"; };
@@ -188,6 +191,7 @@
 		612005A3760F00AB39ED0AA1 /* DetailCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailCards.swift; sourceTree = "<group>"; };
 		65B56F468EE7FBEC2E646268 /* RepeatPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatPicker.swift; sourceTree = "<group>"; };
 		67E5389C7BA2F8F719230640 /* UntilTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UntilTests.swift; sourceTree = "<group>"; };
+		6B2F836D6AFE1B6B48E87CAE /* ParcelScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParcelScanner.swift; sourceTree = "<group>"; };
 		6BD250AC40DF1EFF46C4F3AF /* Place.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Place.swift; sourceTree = "<group>"; };
 		6DE2BC76DE0105DE23534DA2 /* SiriTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriTests.swift; sourceTree = "<group>"; };
 		719EE01F1CF9966F0BB4AFA2 /* EditorParts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorParts.swift; sourceTree = "<group>"; };
@@ -402,6 +406,8 @@
 				385CD372B7F7D896D8724CB4 /* CountdownCard.swift */,
 				DD58300EF8A73F6B24D66FEF /* CountdownDetailView.swift */,
 				5491BE5FA37446FACB4732E9 /* MapSnapshot.swift */,
+				4D45D78C026C6E05FDB85130 /* ParcelCard.swift */,
+				6B2F836D6AFE1B6B48E87CAE /* ParcelScanner.swift */,
 				F030BE4AB9523B2A082FF796 /* PlaceCard.swift */,
 				78A7E6ED64D3CAD557E26F80 /* PlacePicker.swift */,
 				EC18B3B741CAB65DC52065C5 /* PostponeSheet.swift */,
@@ -580,6 +586,8 @@
 				D51CAF2CC76123C2E305E532 /* Models.swift in Sources */,
 				27E0CFA9E8D52738FBFE780C /* Palette.swift in Sources */,
 				33D7D08CC62863EF1E2DE442 /* Parcel.swift in Sources */,
+				7ADAFA2F628ABE421C06A645 /* ParcelCard.swift in Sources */,
+				00EAA4BED439FD97070E65EC /* ParcelScanner.swift in Sources */,
 				966F1D6D997AC10136ABA21C /* Place.swift in Sources */,
 				E31223F636A9B43B8153FAA9 /* PlaceCard.swift in Sources */,
 				2C401E79615DF43254858938 /* PlacePicker.swift in Sources */,

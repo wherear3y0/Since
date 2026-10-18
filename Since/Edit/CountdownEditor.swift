@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 import SwiftData
 
@@ -9,6 +10,8 @@ struct CountdownEditor: View {
 
     let countdown: Countdown?
     let onDelete: () -> Void
+    /// A parcel on its way, with its tracking number, shop and picture.
+    let isParcel: Bool
 
     @State private var title: String
     @State private var date: Date
@@ -30,6 +33,16 @@ struct CountdownEditor: View {
     @State private var waitStart: Date
     @State private var liveActivityLead: Int
     @State private var place: PickedPlace?
+    @State private var trackingNumber: String
+    @State private var carrierRaw: String
+    @State private var shopName: String
+    @State private var orderURL: String
+    @State private var photoData: Data?
+    @State private var photoItem: PhotosPickerItem?
+    @State private var screenshotItem: PhotosPickerItem?
+    @State private var isScanning = false
+    /// What the last screenshot filled in.
+    @State private var scanNote: String?
     @State private var isPickingPlace = false
     @State private var isPickingSymbol = false
     @State private var savedEdits = 0
@@ -38,15 +51,22 @@ struct CountdownEditor: View {
     @State private var isPreviewShown = false
     @FocusState private var isTitleFocused: Bool
 
-    init(countdown: Countdown? = nil, onDelete: @escaping () -> Void = {}) {
+    init(countdown: Countdown? = nil, isParcel: Bool = false, onDelete: @escaping () -> Void = {}) {
         self.countdown = countdown
         self.onDelete = onDelete
-        // A new countdown starts a month out, so the preview has some days to show.
+        let isParcel = countdown?.isParcel ?? isParcel
+        self.isParcel = isParcel
+        let calendar = Calendar.app
+        let today = calendar.startOfDay(for: .now)
+        // A new countdown starts a month out, so the preview has some days to show; a new parcel is due
+        // in a window from a few days to a week and a half out.
         _title = State(initialValue: countdown?.title ?? "")
-        _date = State(initialValue: countdown?.date ?? Calendar.app.date(byAdding: .month, value: 1, to: .now)!)
+        _date = State(initialValue: countdown?.date ?? (isParcel
+            ? calendar.date(byAdding: DateComponents(day: 3, hour: 12), to: today)!
+            : calendar.date(byAdding: .month, value: 1, to: .now)!))
         _rule = State(initialValue: countdown?.rule ?? .never)
-        _symbol = State(initialValue: countdown?.symbol ?? "star.fill")
-        _color = State(initialValue: countdown?.color ?? .cyan)
+        _symbol = State(initialValue: countdown?.symbol ?? (isParcel ? "shippingbox.fill" : "star.fill"))
+        _color = State(initialValue: countdown?.color ?? (isParcel ? .orange : .cyan))
         _tinted = State(initialValue: countdown?.tinted ?? true)
         // A new one starts from the default number format in Settings.
         _numberStyle = State(initialValue: countdown?.numberStyle
@@ -57,12 +77,17 @@ struct CountdownEditor: View {
         _isBirthday = State(initialValue: countdown?.isBirthday ?? false)
         _showsLiveActivity = State(initialValue: countdown?.showsLiveActivity ?? false)
         _hasTime = State(initialValue: countdown?.hasTime ?? false)
-        _hasWindow = State(initialValue: countdown?.windowEnd != nil)
+        _hasWindow = State(initialValue: countdown.map { $0.windowEnd != nil } ?? isParcel)
         _windowEnd = State(initialValue: countdown?.windowEnd
-                           ?? Calendar.app.date(byAdding: .day, value: 7, to: countdown?.date ?? .now)!)
+                           ?? calendar.date(byAdding: DateComponents(day: isParcel ? 10 : 7, hour: 12), to: today)!)
         _waitStart = State(initialValue: countdown?.createdAt ?? .now)
         _liveActivityLead = State(initialValue: countdown?.liveActivityLead ?? 0)
         _place = State(initialValue: countdown?.pickedPlace)
+        _trackingNumber = State(initialValue: countdown?.trackingNumber ?? "")
+        _carrierRaw = State(initialValue: countdown?.carrierRaw ?? "")
+        _shopName = State(initialValue: countdown?.shopName ?? "")
+        _orderURL = State(initialValue: countdown?.orderURL ?? "")
+        _photoData = State(initialValue: countdown?.photoData)
     }
 
     private var trimmedTitle: String {
@@ -101,6 +126,11 @@ struct CountdownEditor: View {
                         .textCase(nil)
                         .padding(.top, 8)
                         .padding(.bottom, 24)
+                }
+
+                if isParcel {
+                    parcelSection
+                        .sectionReveal(isPreviewShown, delay: 0.11)
                 }
 
                 Section {
@@ -229,7 +259,8 @@ struct CountdownEditor: View {
             .scrollContentBackground(.hidden)
             .background(Color.pageBackground)
             .scrollEdgeEffectStyle(.soft, for: .top)
-            .navigationTitle(countdown == nil ? "New Countdown" : "Edit Countdown")
+            .navigationTitle(countdown == nil ? (isParcel ? "New Parcel" : "New Countdown")
+                                              : (isParcel ? "Edit Parcel" : "Edit Countdown"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -297,8 +328,12 @@ struct CountdownEditor: View {
         return VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
                 HStack(spacing: 6) {
-                    Image(systemName: symbol)
-                        .contentTransition(.symbolEffect(.replace))
+                    if isParcel && photoData != nil {
+                        ParcelPhoto(data: photoData, symbol: symbol, tint: tint, side: 22)
+                    } else {
+                        Image(systemName: symbol)
+                            .contentTransition(.symbolEffect(.replace))
+                    }
                     Text(trimmedTitle.isEmpty ? "Title" : trimmedTitle)
                         .lineLimit(1)
                 }
@@ -313,7 +348,7 @@ struct CountdownEditor: View {
                 case .calendar:
                     HStack(spacing: 16) {
                         ForEach(Calendar.app.monthsShown(now: .now, target: target), id: \.self) { month in
-                            MonthGrid(month: month, target: target, tint: tint, showsTitle: true)
+                            MonthGrid(month: month, target: target, tint: tint, showsTitle: true, window: draft.window())
                         }
                     }
                     .frame(height: 150)
@@ -343,6 +378,120 @@ struct CountdownEditor: View {
             try? await Task.sleep(for: .milliseconds(80))
             isPreviewShown = true
         }
+    }
+
+    // MARK: - Parcel
+
+    private var parcelSection: some View {
+        Section {
+            HStack(spacing: 14) {
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    ParcelPhoto(data: photoData, symbol: symbol, tint: color.color, side: 64)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Photo")
+                VStack(alignment: .leading, spacing: 4) {
+                    PhotosPicker(selection: $screenshotItem, matching: .images) {
+                        Label(isScanning ? "Reading…" : "Scan Order Screenshot", systemImage: "text.viewfinder")
+                            .font(.body.weight(.semibold))
+                    }
+                    .disabled(isScanning)
+                    Text(scanNote ?? "The dates, tracking number, shop and photo, read from a screenshot of the order.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .contentTransition(.opacity)
+                }
+            }
+            .padding(.vertical, 4)
+            TextField("Shop", text: $shopName)
+            TextField("Tracking Number", text: $trackingNumber)
+                .textInputAutocapitalization(.characters)
+                .autocorrectionDisabled()
+                .monospaced()
+            Picker("Carrier", selection: $carrierRaw) {
+                Text(Carrier.guess(trackingNumber).map { "Auto (\($0.title))" } ?? "Unknown").tag("")
+                ForEach(Carrier.allCases) { carrier in
+                    Text(carrier.title).tag(carrier.rawValue)
+                }
+            }
+            TextField("Order Link", text: $orderURL)
+                .keyboardType(.URL)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+        } header: {
+            Text("Parcel")
+        }
+        .onChange(of: photoItem) { _, item in
+            guard let item else { return }
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
+                    withAnimation(.smooth) { photoData = ParcelScanner.smallPhoto(image) }
+                }
+                photoItem = nil
+            }
+        }
+        .onChange(of: screenshotItem) { _, item in
+            guard let item else { return }
+            Task { await scan(item) }
+        }
+    }
+
+    /// Fills in what can be read off a screenshot of the order, keeping what's already been typed.
+    private func scan(_ item: PhotosPickerItem) async {
+        isScanning = true
+        defer {
+            isScanning = false
+            screenshotItem = nil
+        }
+        guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else { return }
+        let result = await ParcelScanner.scan(image)
+        let draft = result.draft
+        withAnimation(.smooth) {
+            if trimmedTitle.isEmpty, let name = draft.title ?? draft.shop.map({ "Order from \($0)" }) {
+                title = name
+            }
+            if let shop = draft.shop {
+                shopName = shop
+            }
+            if let number = draft.trackingNumber {
+                trackingNumber = number
+                carrierRaw = Carrier.guess(number) == nil ? (draft.carrier?.rawValue ?? "") : ""
+            } else if let carrier = draft.carrier, carrierRaw.isEmpty {
+                carrierRaw = carrier.rawValue
+            }
+            if let from = draft.from {
+                date = Calendar.app.date(bySettingHour: 12, minute: 0, second: 0, of: from) ?? from
+                hasWindow = draft.to != nil
+                if let to = draft.to {
+                    windowEnd = to
+                }
+                hasTime = false
+            }
+            if photoData == nil, let photo = result.photo {
+                photoData = photo
+            }
+            scanNote = result.found.isEmpty
+                ? "Nothing could be read off that picture."
+                : "Filled in from the screenshot: \(result.found.joined(separator: ", "))."
+        }
+        savedEdits += result.found.isEmpty ? 0 : 1
+    }
+
+    /// The parcel's fields onto the countdown being saved.
+    private func applyParcel(to countdown: Countdown) {
+        guard isParcel else { return }
+        countdown.isParcel = true
+        let number = trackingNumber.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "")
+        countdown.trackingNumber = number.isEmpty ? nil : number
+        countdown.carrierRaw = carrierRaw
+        let shop = shopName.trimmingCharacters(in: .whitespacesAndNewlines)
+        countdown.shopName = shop.isEmpty ? nil : shop
+        var link = orderURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !link.isEmpty && !link.contains("://") {
+            link = "https://" + link
+        }
+        countdown.orderURL = link.isEmpty ? nil : link
+        countdown.photoData = photoData
     }
 
     // MARK: - Extras
@@ -520,6 +669,7 @@ struct CountdownEditor: View {
             if place != countdown.pickedPlace {
                 countdown.setPlace(place)
             }
+            applyParcel(to: countdown)
             // Moved to a day still ahead, or made to repeat: it's upcoming again.
             if !countdown.hasPassed() {
                 countdown.isArchived = false
@@ -540,6 +690,7 @@ struct CountdownEditor: View {
             newCountdown.windowEnd = finalWindowEnd
             newCountdown.liveActivityLead = liveActivityLead
             newCountdown.setPlace(place)
+            applyParcel(to: newCountdown)
             if editsWaitStart {
                 newCountdown.createdAt = waitStart
             }
