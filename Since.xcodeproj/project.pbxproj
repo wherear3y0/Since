@@ -39,6 +39,7 @@
 		46B7671D72D0B9FC356D9C49 /* AppShortcuts.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 98B9CBA5A84DE5C424757FDC /* AppShortcuts.xcstrings */; };
 		49078BB725D7CB1CA531C6CA /* Owned.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9FBFCEBBEACE2A402DE4713 /* Owned.swift */; };
 		4938D303BE75E5DA399C89A1 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F835E8D977E82F6FEBE99F /* Store.swift */; };
+		4BBCFBC07581EEE99F614580 /* ParcelsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09909E09BB84C5A2E218F007 /* ParcelsWidget.swift */; };
 		4F271DEA91897BB58A32E546 /* DayMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 017679D7A023A295B4BC7A02 /* DayMath.swift */; };
 		51D5BD7089368BFF79F33501 /* CardStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19BF10FC363E186A6739CCD6 /* CardStyle.swift */; };
 		520138C8DDB860BB01BC0D84 /* ResetEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D07D1CB121C53EECF41F6F0 /* ResetEditor.swift */; };
@@ -158,6 +159,7 @@
 		017679D7A023A295B4BC7A02 /* DayMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayMath.swift; sourceTree = "<group>"; };
 		018E7276FE46B8060BB112D4 /* SyncSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSettingsView.swift; sourceTree = "<group>"; };
 		02A6A7BC5E8492B366AA8F51 /* SinceWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SinceWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		09909E09BB84C5A2E218F007 /* ParcelsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParcelsWidget.swift; sourceTree = "<group>"; };
 		0B9D0657FF3FE95F13346E25 /* TimerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSheet.swift; sourceTree = "<group>"; };
 		0C164DCB4A53E54B334D5D41 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		108797F464215F67DAA31DA5 /* TabWave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabWave.swift; sourceTree = "<group>"; };
@@ -324,6 +326,7 @@
 				933F83BB1890FE68C76CEA10 /* CounterSnapshot.swift */,
 				5234E8AF202D3DFC0FB13848 /* CounterWidget.swift */,
 				2042BC12683262DCD5055DC8 /* Info.plist */,
+				09909E09BB84C5A2E218F007 /* ParcelsWidget.swift */,
 				C8F575A322A38EC5C5E7F091 /* Providers.swift */,
 				3A649F3EA1C4FC76F164BD93 /* SinceWidgets.entitlements */,
 				989198991BFA00080193D971 /* SinceWidgetsBundle.swift */,
@@ -661,6 +664,7 @@
 				A3D8F167445396B5E9A9808C /* Owned.swift in Sources */,
 				96B137A27560CFEC0490FDA2 /* Palette.swift in Sources */,
 				BCE4E42752C586B5105CC485 /* Parcel.swift in Sources */,
+				4BBCFBC07581EEE99F614580 /* ParcelsWidget.swift in Sources */,
 				9E997942110AD99EE273DE6F /* Place.swift in Sources */,
 				AC79EE0E422B2B79E6C1FBD6 /* PreviewData.swift in Sources */,
 				AB6E79EDDF2535B734E7D891 /* Providers.swift in Sources */,
